@@ -47,7 +47,7 @@ func (c *Contract) Transact(opts *bind.TransactOpts, method string, params ...in
         if err != nil {
             return nil, fmt.Errorf("Could not encode input data: %w", err)
         }
-        gasLimit, err := c.estimateGasLimit(opts, input)
+        gasLimit, err := c.EstimateGasLimit(opts, input)
         if err != nil {
             return nil, err
         }
@@ -71,7 +71,7 @@ func (c *Contract) Transfer(opts *bind.TransactOpts) (*types.Receipt, error) {
 
     // Estimate gas limit
     if opts.GasLimit == 0 {
-        gasLimit, err := c.estimateGasLimit(opts, []byte{})
+        gasLimit, err := c.EstimateGasLimit(opts, []byte{})
         if err != nil {
             return nil, err
         }
@@ -91,7 +91,7 @@ func (c *Contract) Transfer(opts *bind.TransactOpts) (*types.Receipt, error) {
 
 
 // Estimate the gas limit for a contract transaction
-func (c *Contract) estimateGasLimit(opts *bind.TransactOpts, input []byte) (uint64, error) {
+func (c *Contract) EstimateGasLimit(opts *bind.TransactOpts, input []byte) (uint64, error) {
 
     // Estimate gas limit
     gasLimit, err := c.Client.EstimateGas(context.Background(), ethereum.CallMsg{
