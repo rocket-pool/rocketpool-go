@@ -68,7 +68,7 @@ func Deposit(t *testing.T, rp *rocketpool.RocketPool, nodeAccount *accounts.Acco
 	if err != nil {
 		return common.Address{}, nil, fmt.Errorf("Error executing deposit: %w", err)
 	}
-	txReceipt, err := utils.WaitForTransaction(rp.Client, hash)
+	txReceipt, err := utils.WaitForTransaction(rp.Client, hash.Hash())
 	if err != nil {
 		return common.Address{}, nil, fmt.Errorf("Error waiting for deposit transaction: %w", err)
 	}

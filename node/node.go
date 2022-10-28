@@ -39,28 +39,28 @@ type NodeDetails struct {
 }
 
 // Node details
-type nodeDetails_Native struct {
-	exists                           bool
-	registrationTime                 *big.Int
-	timezoneLocation                 string
-	feeDistributorInitialised        bool
-	feeDistributorAddress            common.Address
-	rewardNetwork                    *big.Int
-	rplStake                         *big.Int
-	effectiveRPLStake                *big.Int
-	minimumRPLStake                  *big.Int
-	maximumRPLStake                  *big.Int
-	minipoolLimit                    *big.Int
-	minipoolCount                    *big.Int
-	balanceETH                       *big.Int
-	balanceRETH                      *big.Int
-	balanceRPL                       *big.Int
-	balanceOldRPL                    *big.Int
-	withdrawalAddress                common.Address
-	pendingWithdrawalAddress         common.Address
-	smoothingPoolRegistrationState   bool
-	smoothingPoolRegistrationChanged *big.Int
-}
+//type nodeDetails_Native struct {
+//	exists                           bool
+//	registrationTime                 *big.Int
+//	timezoneLocation                 string
+//	feeDistributorInitialised        bool
+//	feeDistributorAddress            common.Address
+//	rewardNetwork                    *big.Int
+//	rplStake                         *big.Int
+//	effectiveRPLStake                *big.Int
+//	minimumRPLStake                  *big.Int
+//	maximumRPLStake                  *big.Int
+//	minipoolLimit                    *big.Int
+//	minipoolCount                    *big.Int
+//	balanceETH                       *big.Int
+//	balanceRETH                      *big.Int
+//	balanceRPL                       *big.Int
+//	balanceOldRPL                    *big.Int
+//	withdrawalAddress                common.Address
+//	pendingWithdrawalAddress         common.Address
+//	smoothingPoolRegistrationState   bool
+//	smoothingPoolRegistrationChanged *big.Int
+//}
 
 // Count of nodes belonging to a timezone
 type TimezoneCount struct {
