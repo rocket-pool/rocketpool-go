@@ -1,3 +1,4 @@
+// Package minipool is legacy so no linting is applied.
 //nolint:all
 package minipool
 

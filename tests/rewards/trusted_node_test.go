@@ -1,3 +1,5 @@
+// Package rewards has some outdated function references, so no linting is applied for now.
+//
 //nolint:all
 package rewards
 
