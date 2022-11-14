@@ -88,6 +88,9 @@ type ExecutionClient interface {
 	// BlockNumber returns the most recent block number
 	BlockNumber(ctx context.Context) (uint64, error)
 
+	// PeerCount returns the number of p2p peers as reported by the net_peerCount method.
+	PeerCount(ctx context.Context) (uint64, error)
+
 	// BalanceAt returns the wei balance of the given account.
 	// The block number can be nil, in which case the balance is taken from the latest known block.
 	BalanceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (*big.Int, error)
