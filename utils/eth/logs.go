@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -18,8 +19,8 @@ type FilterQuery struct {
 	Topics    [][]common.Hash
 }
 
-func FilterContractLogs(rp *rocketpool.RocketPool, contractName string, q FilterQuery, intervalSize *big.Int) ([]types.Log, error) {
-	rocketDaoNodeTrustedUpgrade, err := rp.GetContract("rocketDAONodeTrustedUpgrade")
+func FilterContractLogs(rp *rocketpool.RocketPool, contractName string, q FilterQuery, intervalSize *big.Int, opts *bind.CallOpts) ([]types.Log, error) {
+	rocketDaoNodeTrustedUpgrade, err := rp.GetContract("rocketDAONodeTrustedUpgrade", opts)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func FilterContractLogs(rp *rocketpool.RocketPool, contractName string, q Filter
 		addresses = append(addresses, common.HexToAddress(log.Topics[2].Hex()))
 	}
 	// Append current address
-	currentAddress, err := rp.GetAddress(contractName)
+	currentAddress, err := rp.GetAddress(contractName, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +87,10 @@ func GetLogs(rp *rocketpool.RocketPool, addressFilter []common.Address, topicFil
 
 		// Set the start and end, clamping on the latest block
 		intervalSize := big.NewInt(0).Sub(intervalSize, big.NewInt(1))
-		start := fromBlock
+		start := big.NewInt(0).Set(fromBlock)
 		end := big.NewInt(0).Add(start, intervalSize)
 		if end.Cmp(toBlock) == 1 {
-			end = toBlock
+			end.Set(toBlock)
 		}
 		for {
 			// Get the logs using the current interval
@@ -116,7 +117,7 @@ func GetLogs(rp *rocketpool.RocketPool, addressFilter []common.Address, topicFil
 			start.Add(end, big.NewInt(1))
 			end.Add(start, intervalSize)
 			if end.Cmp(toBlock) == 1 {
-				end = toBlock
+				end.Set(toBlock)
 			}
 		}
 	}
