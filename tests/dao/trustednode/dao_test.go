@@ -173,12 +173,12 @@ func TestUpgradeContract(t *testing.T) {
 	}
 
 	// Get & check updated contract details
-	if contractAddress, err := rp.GetAddress(contractName); err != nil {
+	if contractAddress, err := rp.GetAddress(contractName, nil); err != nil {
 		t.Error(err)
 	} else if !bytes.Equal(contractAddress.Bytes(), contractNewAddress.Bytes()) {
 		t.Errorf("Incorrect updated contract address %s", contractAddress.Hex())
 	}
-	if contractAbi, err := rp.GetABI(contractName); err != nil {
+	if contractAbi, err := rp.GetABI(contractName, nil); err != nil {
 		t.Error(err)
 	} else if _, ok := contractAbi.Methods["foo"]; !ok {
 		t.Errorf("Incorrect updated contract ABI")

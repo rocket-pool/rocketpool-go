@@ -40,7 +40,7 @@ func Deposit(t *testing.T, rp *rocketpool.RocketPool, nodeAccount *accounts.Acco
 	if err != nil {
 		return common.Address{}, nil, fmt.Errorf("Error getting validator pubkey: %w", err)
 	}
-	expectedMinipoolAddress, err := utils.GenerateAddress(rp, nodeAccount.Address, depositType, salt, nil)
+	expectedMinipoolAddress, err := utils.GenerateAddress(rp, nodeAccount.Address, depositType, salt, nil, nil)
 	if err != nil {
 		return common.Address{}, nil, fmt.Errorf("Error generating minipool address: %w", err)
 	}

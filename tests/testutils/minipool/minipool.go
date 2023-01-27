@@ -45,7 +45,7 @@ func CreateMinipool(t *testing.T, rp *rocketpool.RocketPool, ownerAccount, nodeA
 	}
 
 	// Get minipool manager contract
-	rocketMinipoolManager, err := rp.GetContract("rocketMinipoolManager")
+	rocketMinipoolManager, err := rp.GetContract("rocketMinipoolManager", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func CreateMinipool(t *testing.T, rp *rocketpool.RocketPool, ownerAccount, nodeA
 	}
 
 	// Return minipool instance
-	return minipool.NewMinipool(rp, minipoolAddress)
+	return minipool.NewMinipool(rp, minipoolAddress, nil)
 
 }
 
