@@ -43,7 +43,8 @@ func GetAccount(index uint8) (*Account, error) {
 
 // Get a transactor for an account
 func (a *Account) GetTransactor() *bind.TransactOpts {
-	opts := bind.NewKeyedTransactor(a.PrivateKey)
+	// TODO: Update to `NewKeyedTransactorWithChainID`
+	opts := bind.NewKeyedTransactor(a.PrivateKey) //nolint:all
 	opts.Context = context.Background()
 	return opts
 }

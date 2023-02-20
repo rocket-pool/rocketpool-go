@@ -358,7 +358,9 @@ func TestClose(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error sending ETH to minipool: %s", err.Error())
 	}
-	utils.WaitForTransaction(rp.Client, hash)
+	if _, err := utils.WaitForTransaction(rp.Client, hash); err != nil {
+		t.Fatal(err)
+	}
 
 	// Close minipool
 	if _, err := mp.Close(nodeAccount.GetTransactor()); err != nil {

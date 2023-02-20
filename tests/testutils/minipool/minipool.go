@@ -45,7 +45,7 @@ func CreateMinipool(t *testing.T, rp *rocketpool.RocketPool, ownerAccount, nodeA
 	}
 
 	// Get minipool manager contract
-	rocketMinipoolManager, err := rp.GetContract("rocketMinipoolManager")
+	rocketMinipoolManager, err := rp.GetContract("rocketMinipoolManager", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -59,11 +59,11 @@ func CreateMinipool(t *testing.T, rp *rocketpool.RocketPool, ownerAccount, nodeA
 
 	// Sanity check to verify the created minipool is at the expected address
 	if expectedMinipoolAddress != minipoolAddress {
-		return nil, errors.New(fmt.Sprintf("Expected minipool address %s but got %s", expectedMinipoolAddress.Hex(), minipoolAddress.Hex()))
+		return nil, fmt.Errorf("Expected minipool address %s but got %s", expectedMinipoolAddress.Hex(), minipoolAddress.Hex())
 	}
 
 	// Return minipool instance
-	return minipool.NewMinipool(rp, minipoolAddress)
+	return minipool.NewMinipool(rp, minipoolAddress, nil)
 
 }
 

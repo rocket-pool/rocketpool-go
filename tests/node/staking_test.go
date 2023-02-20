@@ -50,7 +50,7 @@ func TestStakeRPL(t *testing.T) {
 	}
 
 	// Approve RPL transfer for staking
-	rocketNodeStakingAddress, err := rp.GetAddress("rocketNodeStaking")
+	rocketNodeStakingAddress, err := rp.GetAddress("rocketNodeStaking", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func TestStakeRPL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mp, err := minipool.NewMinipool(rp, minipoolAddress)
+	mp, err := minipool.NewMinipool(rp, minipoolAddress, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

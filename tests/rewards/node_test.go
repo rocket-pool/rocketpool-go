@@ -1,3 +1,6 @@
+// Package rewards has some outdated function references, so no linting is applied for now.
+//
+//nolint:all
 package rewards
 
 import (
@@ -119,9 +122,9 @@ func TestNodeRewards(t *testing.T) {
 	}
 
 	// Get & check initial RPL rewards amount
-	if pendingRewards, err := rewards.GetPendingRewards(rp, nil); err != nil {
+	if pendingRewards, err := rewards.GetPendingRPLRewards(rp, nil); err != nil {
 		t.Error(err)
-	} else if pendingRewards != 0 {
+	} else if pendingRewards != big.NewInt(0) {
 		t.Errorf("Incorrect initial pending rewards amount %f", pendingRewards)
 	}
 
