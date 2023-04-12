@@ -13,6 +13,15 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
+// The event for RPL rewards claims
+type RPLTokensClaimed struct {
+	ClaimingContract common.Address `json:"claimingContract"`
+	ClaimingAddress  common.Address `json:"claimingAddress"`
+	Amount           *big.Int       `json:"amount"`
+	TimeRaw          *big.Int       `json:"time"`
+	Time             time.Time      `json:"-"`
+}
+
 // Get whether a claims contract is enabled
 func getEnabled(claimsContract *rocketpool.Contract, claimsName string, opts *bind.CallOpts) (bool, error) {
 	enabled := new(bool)
@@ -141,6 +150,48 @@ func GetTrustedNodeOperatorRewardsPercent(rp *rocketpool.RocketPool, opts *bind.
 		return 0, fmt.Errorf("Could not get trusted node operator rewards percent: %w", err)
 	}
 	return eth.WeiToEth(*perc), nil
+}
+
+// Get all RPLTokensClaimed events for the provided log range
+func GetRPLTokenClaimsForNode(rp *rocketpool.RocketPool, nodeAddress common.Address, startBlock *big.Int, intervalSize *big.Int, legacyRocketRewardsPoolAddress *common.Address, opts *bind.CallOpts) ([]RPLTokensClaimed, error) {
+	rocketRewardsPool, err := getRocketRewardsPool(rp, legacyRocketRewardsPoolAddress, opts)
+	if err != nil {
+		return nil, err
+	}
+	eventSig := rocketRewardsPool.ABI.Events["RPLTokensClaimed"]
+
+	// Construct a filter query for relevant logs
+	addressFilter := []common.Address{*legacyRocketRewardsPoolAddress}
+	topicFilter := [][]common.Hash{{eventSig.ID}}
+	endBlock := big.NewInt(0).Add(startBlock, intervalSize)
+	endBlock.Sub(endBlock, big.NewInt(1))
+
+	// Get the event logs
+	logs, err := eth.GetLogs(rp, addressFilter, topicFilter, intervalSize, startBlock, endBlock, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(logs) == 0 {
+		return []RPLTokensClaimed{}, nil
+	}
+
+	// Record the relevant events
+	events := []RPLTokensClaimed{}
+	for _, log := range logs {
+		events, err := eventSig.Inputs.Unpack(log.Data)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding RPLTokensClaimed data from logs for block %d: %w", log.BlockNumber, err)
+		}
+		for _, event := range events {
+			convertedEvent := event.(RPLTokensClaimed)
+			if convertedEvent.ClaimingAddress == nodeAddress {
+				convertedEvent.Time = time.Unix(convertedEvent.TimeRaw.Int64(), 0)
+				events = append(events, convertedEvent)
+			}
+		}
+	}
+
+	return events, nil
 }
 
 // Get contracts
