@@ -3,14 +3,11 @@ package rocketpool
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
-	"regexp"
 
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -18,11 +15,7 @@ import (
 )
 
 // Transaction settings
-const (
-	GasLimitMultiplier    float64 = 1.5
-	MaxGasLimit           uint64  = 30000000
-	NethermindRevertRegex string  = "Reverted 0x(?P<message>[0-9a-fA-F]+).*"
-)
+const ()
 
 // Contract type wraps go-ethereum bound contract
 type Contract struct {
@@ -57,40 +50,6 @@ func Call[retType *big.Int | uint8](contract *Contract, opts *bind.CallOpts, met
 	return *result, err
 }
 
-// Get Gas Limit for transaction
-func (c *Contract) GetTransactionGasInfo(opts *bind.TransactOpts, method string, params ...interface{}) (GasInfo, error) {
-
-	response := GasInfo{}
-
-	// Pack transaction Info
-	input, err := c.ABI.Pack(method, params...)
-	if err != nil {
-		return response, fmt.Errorf("Error getting transaction gas info: Could not encode input data: %w", err)
-	}
-
-	// Estimate gas limit
-	estGasLimit, safeGasLimit, err := c.estimateGasLimit(opts, input)
-
-	if err != nil {
-		return response, fmt.Errorf("Error getting transaction gas info: could not estimate gas limit: %w", err)
-	}
-	response.EstGasLimit = estGasLimit
-	response.SafeGasLimit = safeGasLimit
-
-	return response, err
-}
-
-// Create a transaction from serialized info, signs it, and submits it to the network if requested in opts
-func (c *Contract) TransactNew(txData string, opts *bind.TransactOpts) (*types.Transaction, error) {
-	// Decode the data
-	data, err := hex.DecodeString(txData)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding body: %w", err)
-	}
-
-	return c.Contract.RawTransact(opts, data)
-}
-
 // Transact on a contract method and wait for a receipt
 func (c *Contract) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 
@@ -100,7 +59,7 @@ func (c *Contract) Transact(opts *bind.TransactOpts, method string, params ...in
 		if err != nil {
 			return nil, fmt.Errorf("Could not encode input data: %w", err)
 		}
-		_, safeGasLimit, err := c.estimateGasLimit(opts, input)
+		_, safeGasLimit, err := estimateGasLimit(c.Client, *c.Address, opts, input)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +69,7 @@ func (c *Contract) Transact(opts *bind.TransactOpts, method string, params ...in
 	// Send transaction
 	tx, err := c.Contract.Transact(opts, method, params...)
 	if err != nil {
-		return nil, c.normalizeErrorMessage(err)
+		return nil, normalizeErrorMessage(err)
 	}
 
 	return tx, nil
@@ -123,7 +82,7 @@ func (c *Contract) GetTransferGasInfo(opts *bind.TransactOpts) (GasInfo, error) 
 	response := GasInfo{}
 
 	// Estimate gas limit
-	estGasLimit, safeGasLimit, err := c.estimateGasLimit(opts, []byte{})
+	estGasLimit, safeGasLimit, err := estimateGasLimit(c.Client, *c.Address, opts, []byte{})
 	if err != nil {
 		return response, fmt.Errorf("Error getting transfer gas info: could not estimate gas limit: %w", err)
 	}
@@ -138,7 +97,7 @@ func (c *Contract) Transfer(opts *bind.TransactOpts) (common.Hash, error) {
 
 	// Estimate gas limit
 	if opts.GasLimit == 0 {
-		_, safeGasLimit, err := c.estimateGasLimit(opts, []byte{})
+		_, safeGasLimit, err := estimateGasLimit(c.Client, *c.Address, opts, []byte{})
 		if err != nil {
 			return common.Hash{}, err
 		}
@@ -148,38 +107,10 @@ func (c *Contract) Transfer(opts *bind.TransactOpts) (common.Hash, error) {
 	// Send transaction
 	tx, err := c.Contract.Transfer(opts)
 	if err != nil {
-		return common.Hash{}, c.normalizeErrorMessage(err)
+		return common.Hash{}, normalizeErrorMessage(err)
 	}
 
 	return tx.Hash(), nil
-
-}
-
-// Estimate the expected and safe gas limits for a contract transaction
-func (c *Contract) estimateGasLimit(opts *bind.TransactOpts, input []byte) (uint64, uint64, error) {
-
-	// Estimate gas limit
-	gasLimit, err := c.Client.EstimateGas(context.Background(), ethereum.CallMsg{
-		From:     opts.From,
-		To:       c.Address,
-		GasPrice: big.NewInt(0), // use 0 gwei for simulation
-		Value:    opts.Value,
-		Data:     input,
-	})
-
-	if err != nil {
-		return 0, 0, fmt.Errorf("Could not estimate gas needed: %w", c.normalizeErrorMessage(err))
-	}
-
-	// Pad and return gas limit
-	safeGasLimit := uint64(float64(gasLimit) * GasLimitMultiplier)
-	if gasLimit > MaxGasLimit {
-		return 0, 0, fmt.Errorf("estimated gas of %d is greater than the max gas limit of %d", gasLimit, MaxGasLimit)
-	}
-	if safeGasLimit > MaxGasLimit {
-		safeGasLimit = MaxGasLimit
-	}
-	return gasLimit, safeGasLimit, nil
 
 }
 
@@ -245,31 +176,4 @@ func (c *Contract) GetTransactionEvents(txReceipt *types.Receipt, eventName stri
 	// Return events
 	return events, nil
 
-}
-
-// Normalize error messages so they're all in ASCII format
-func (c *Contract) normalizeErrorMessage(err error) error {
-	if err == nil {
-		return err
-	}
-
-	// Get the message in hex format, if it exists
-	reg := regexp.MustCompile(NethermindRevertRegex)
-	matches := reg.FindStringSubmatch(err.Error())
-	if matches == nil {
-		return err
-	}
-	messageIndex := reg.SubexpIndex("message")
-	if messageIndex == -1 {
-		return err
-	}
-	message := matches[messageIndex]
-
-	// Convert the hex message to ASCII
-	bytes, err2 := hex.DecodeString(message)
-	if err2 != nil {
-		return err // Return the original error if decoding failed somehow
-	}
-
-	return fmt.Errorf("Reverted: %s", string(bytes))
 }
