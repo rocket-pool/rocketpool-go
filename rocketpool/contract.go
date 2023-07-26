@@ -80,6 +80,17 @@ func (c *Contract) GetTransactionGasInfo(opts *bind.TransactOpts, method string,
 	return response, err
 }
 
+// Create a transaction from serialized info, signs it, and submits it to the network if requested in opts
+func (c *Contract) TransactNew(txData string, opts *bind.TransactOpts) (*types.Transaction, error) {
+	// Decode the data
+	data, err := hex.DecodeString(txData)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding body: %w", err)
+	}
+
+	return c.Contract.RawTransact(opts, data)
+}
+
 // Transact on a contract method and wait for a receipt
 func (c *Contract) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 

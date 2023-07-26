@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/core/types"
 )
 
 // Information of a candidate transaction
@@ -42,15 +41,4 @@ func NewTransactionInfo(contract *Contract, method string, opts *bind.TransactOp
 	}
 
 	return txInfo, nil
-}
-
-// Create a transaction from serialized info, signs it, and submits it to the network if requested in opts
-func Transact(contract *Contract, txInfo *TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
-	// Decode the data
-	data, err := hex.DecodeString(txInfo.Data)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding body: %w", err)
-	}
-
-	return contract.Contract.RawTransact(opts, data)
 }
