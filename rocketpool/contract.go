@@ -39,7 +39,7 @@ func (c *Contract) Call(opts *bind.CallOpts, result interface{}, method string, 
 }
 
 // Calls a contract method
-func Call[retType *big.Int | uint8](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
+func Call[retType *big.Int | uint8 | bool](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
 	// Set up the return capture
 	result := new(retType)
 	results := make([]interface{}, 1)
