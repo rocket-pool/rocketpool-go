@@ -119,7 +119,7 @@ func (c *NetworkBalances) GetBalancesBlock(opts *bind.CallOpts) (uint64, error) 
 }
 
 // Get the current network ETH utilization rate
-func (c *NetworkBalances) GetETHUtilizationRate(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
+func (c *NetworkBalances) GetETHUtilizationRate(opts *bind.CallOpts) (float64, error) {
 	raw, err := c.GetETHUtilizationRateRaw(opts)
 	if err != nil {
 		return 0, err
@@ -128,7 +128,7 @@ func (c *NetworkBalances) GetETHUtilizationRate(rp *rocketpool.RocketPool, opts 
 }
 
 // Get the current network ETH utilization rate
-func (c *NetworkBalances) GetLatestReportableBalancesBlock(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
+func (c *NetworkBalances) GetLatestReportableBalancesBlock(opts *bind.CallOpts) (uint64, error) {
 	raw, err := c.GetLatestReportableBalancesBlockRaw(opts)
 	if err != nil {
 		return 0, err
