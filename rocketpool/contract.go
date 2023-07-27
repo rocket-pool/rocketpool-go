@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -39,7 +40,7 @@ func (c *Contract) Call(opts *bind.CallOpts, result interface{}, method string, 
 }
 
 // Calls a contract method
-func Call[retType *big.Int | uint8 | bool](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
+func Call[retType *big.Int | uint8 | bool | string](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
 	// Set up the return capture
 	result := new(retType)
 	results := make([]interface{}, 1)
@@ -48,6 +49,25 @@ func Call[retType *big.Int | uint8 | bool](contract *Contract, opts *bind.CallOp
 	// Run the function
 	err := contract.Call(opts, &results, method, params...)
 	return *result, err
+}
+
+// Calls a contract method for a parameter
+func CallForParameter[FormattedType time.Time | uint64 | float64](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (Parameter[FormattedType], error) {
+	// Set up the return capture
+	result := new(*big.Int)
+	results := make([]interface{}, 1)
+	results[0] = result
+
+	// Run the function
+	var param Parameter[FormattedType]
+	err := contract.Call(opts, &results, method, params...)
+	if err != nil {
+		return param, err
+	}
+
+	// Wrap and return
+	param.RawValue = *result
+	return param, err
 }
 
 // Transact on a contract method and wait for a receipt

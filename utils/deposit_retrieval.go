@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
 // BeaconDepositEvent represents a DepositEvent event raised by the BeaconDeposit contract.
@@ -51,7 +50,7 @@ func GetDeposits(rp *rocketpool.RocketPool, pubkeys map[rptypes.ValidatorPubkey]
 	// Get the deposit events
 	addressFilter := []common.Address{*casperDeposit.Address}
 	topicFilter := [][]common.Hash{{casperDeposit.ABI.Events["DepositEvent"].ID}}
-	logs, err := eth.GetLogs(rp, addressFilter, topicFilter, intervalSize, startBlock, nil, nil)
+	logs, err := GetLogs(rp, addressFilter, topicFilter, intervalSize, startBlock, nil, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -98,11 +99,7 @@ func (c *AuctionManager) GetLotCountRaw(opts *bind.CallOpts) (*big.Int, error) {
 
 // Get the number of lots for auction
 func (c *AuctionManager) GetLotCount(opts *bind.CallOpts) (uint64, error) {
-	raw, err := c.GetLotCountRaw(opts)
-	if err != nil {
-		return 0, err
-	}
-	return raw.Uint64(), nil
+	return utils.ConvertRawToUint(c.GetLotCountRaw(opts))
 }
 
 // ====================
@@ -128,7 +125,7 @@ func (c *AuctionManager) AddMulticallQueries(mc *multicall.MultiCaller, details 
 
 // Postprocess the multicalled data to get the formatted parameters
 func (c *AuctionManager) PostprocessAfterMulticall(details *AuctionManagerDetails) {
-	details.LotCount = details.LotCountRaw.Uint64()
+	details.LotCount = utils.ConvertToUint(details.LotCountRaw)
 }
 
 // ===================
