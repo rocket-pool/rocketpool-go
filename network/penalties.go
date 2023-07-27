@@ -51,6 +51,6 @@ func NewNetworkPenalties(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*Netwo
 // ====================
 
 // Get info for minipool penalty submission
-func (c *NetworkPenalties) GetSubmitPenaltyInfo(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *NetworkPenalties) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.contract, networkPenalties_submitPenalty, opts, minipoolAddress, block)
 }

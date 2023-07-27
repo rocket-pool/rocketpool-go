@@ -36,6 +36,8 @@ type cachedContract struct {
 type RocketPool struct {
 	Client                ExecutionClient
 	RocketStorage         *contracts.RocketStorage
+	MulticallAddress      *common.Address
+	BalanceBatcherAddress *common.Address
 	RocketStorageContract *Contract
 	VersionManager        *VersionManager
 	addresses             map[string]cachedAddress
@@ -47,7 +49,7 @@ type RocketPool struct {
 }
 
 // Create new contract manager
-func NewRocketPool(client ExecutionClient, rocketStorageAddress common.Address) (*RocketPool, error) {
+func NewRocketPool(client ExecutionClient, rocketStorageAddress common.Address, multicallAddress common.Address, balanceBatcherAddress common.Address) (*RocketPool, error) {
 
 	// Initialize RocketStorage contract
 	rocketStorage, err := contracts.NewRocketStorage(rocketStorageAddress, client)
@@ -71,6 +73,8 @@ func NewRocketPool(client ExecutionClient, rocketStorageAddress common.Address) 
 	rp := &RocketPool{
 		Client:                client,
 		RocketStorage:         rocketStorage,
+		MulticallAddress:      &multicallAddress,
+		BalanceBatcherAddress: &balanceBatcherAddress,
 		RocketStorageContract: contract,
 		addresses:             make(map[string]cachedAddress),
 		abis:                  make(map[string]cachedABI),

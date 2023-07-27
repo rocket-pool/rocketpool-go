@@ -37,7 +37,7 @@ type NetworkBalances struct {
 	contract *rocketpool.Contract
 }
 
-// Multicall details for network balances
+// Details for network balances
 type NetworkBalancesDetails struct {
 	// Raw parameters
 	BalancesBlockRaw                 *big.Int `json:"balancesBlockRaw"`
@@ -141,7 +141,7 @@ func (c *NetworkBalances) GetLatestReportableBalancesBlock(opts *bind.CallOpts) 
 // ====================
 
 // Get info for network balance submission
-func (c *NetworkBalances) GetSubmitBalancesInfo(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *NetworkBalances) SubmitBalances(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.contract, networkBalances_submitBalances, opts, block, totalEth, stakingEth, rethSupply)
 }
 

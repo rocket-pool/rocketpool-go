@@ -8,7 +8,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -42,11 +41,12 @@ const (
 
 // Binding for auction lots
 type AuctionLot struct {
-	Index *big.Int
-	mgr   *AuctionManager
+	Index   *big.Int
+	Details AuctionLotDetails
+	mgr     *AuctionManager
 }
 
-// Multicall details for auction lots
+// Details for auction lots
 type AuctionLotDetails struct {
 	// Raw parameters
 	IndexRaw               *big.Int `json:"indexRaw"`
@@ -84,8 +84,9 @@ type AuctionLotDetails struct {
 // Creates a new AuctionLot instance
 func NewAuctionLot(mgr *AuctionManager, index uint64) *AuctionLot {
 	return &AuctionLot{
-		Index: big.NewInt(int64(index)),
-		mgr:   mgr,
+		Index:   big.NewInt(int64(index)),
+		Details: AuctionLotDetails{},
+		mgr:     mgr,
 	}
 }
 
@@ -173,121 +174,6 @@ func (c *AuctionLot) GetLotAddressBidAmount(bidder common.Address, opts *bind.Ca
 	return rocketpool.Call[*big.Int](c.mgr.contract, opts, auctionManager_getLotAddressBidAmount, c.Index, bidder)
 }
 
-// Get a lot's details
-func (c *AuctionLot) GetLotDetails(opts *bind.CallOpts) (AuctionLotDetails, error) {
-	var wg errgroup.Group
-	details := AuctionLotDetails{}
-
-	// Load data
-	wg.Go(func() error {
-		var err error
-		details.Exists, err = c.GetLotExists(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.StartBlockRaw, err = c.GetLotStartBlockRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.EndBlockRaw, err = c.GetLotEndBlockRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.StartPriceRaw, err = c.GetLotStartPriceRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.ReservePriceRaw, err = c.GetLotReservePriceRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.PriceAtCurrentBlockRaw, err = c.GetLotPriceAtCurrentBlockRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.PriceByTotalBidsRaw, err = c.GetLotPriceByTotalBidsRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.CurrentPriceRaw, err = c.GetLotCurrentPriceRaw(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.TotalRplAmount, err = c.GetLotTotalRPLAmount(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.ClaimedRplAmount, err = c.GetLotClaimedRPLAmount(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.RemainingRplAmount, err = c.GetLotRemainingRPLAmount(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.TotalBidAmount, err = c.GetLotTotalBidAmount(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.Cleared, err = c.GetLotIsCleared(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		details.RplRecovered, err = c.GetLotRPLRecovered(opts)
-		return err
-	})
-
-	// Wait for data
-	if err := wg.Wait(); err != nil {
-		return AuctionLotDetails{}, err
-	}
-
-	// Return
-	c.PostprocessAfterMulticall(&details)
-	return details, nil
-}
-
-// Get a lot's details with address bid amounts
-func (c *AuctionLot) GetLotDetailsWithBids(bidder common.Address, opts *bind.CallOpts) (AuctionLotDetails, error) {
-	var wg errgroup.Group
-	var details AuctionLotDetails
-	var addressBidAmount *big.Int
-
-	// Load data
-	wg.Go(func() error {
-		var err error
-		details, err = c.GetLotDetails(opts)
-		return err
-	})
-	wg.Go(func() error {
-		var err error
-		addressBidAmount, err = c.GetLotAddressBidAmount(bidder, opts)
-		return err
-	})
-
-	// Wait for data
-	if err := wg.Wait(); err != nil {
-		return AuctionLotDetails{}, err
-	}
-
-	// Return
-	details.AddressBidAmount = addressBidAmount
-	return details, nil
-}
-
 // =========================
 // === Formatted Getters ===
 // =========================
@@ -369,17 +255,17 @@ func (c *AuctionLot) GetLotPriceAtBlock(blockNumber uint64, opts *bind.CallOpts)
 // ====================
 
 // Get info for placing a bid on a lot
-func (c *AuctionLot) GetPlaceBidInfo(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *AuctionLot) PlaceBid(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.mgr.contract, auctionManager_placeBid, opts, c.Index)
 }
 
 // Get info for claiming RPL from a lot that was bid on
-func (c *AuctionLot) GetClaimBidInfo(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *AuctionLot) ClaimBid(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.mgr.contract, auctionManager_claimBid, opts, c.Index)
 }
 
 // Get info for recovering unclaimed RPL from a lot
-func (c *AuctionLot) GetRecoverUnclaimedRplInfo(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *AuctionLot) RecoverUnclaimedRpl(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.mgr.contract, auctionManager_recoverUnclaimedRPL, opts, c.Index)
 }
 

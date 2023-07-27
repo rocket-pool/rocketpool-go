@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
@@ -39,7 +38,7 @@ type AuctionManager struct {
 	contract *rocketpool.Contract
 }
 
-// Multicall details for auction manager
+// Details for auction manager
 type AuctionManagerDetails struct {
 	// Raw parameters
 	TotalRplBalance     *big.Int `json:"totalRplBalance"`
@@ -93,90 +92,6 @@ func (c *AuctionManager) GetLotCountRaw(opts *bind.CallOpts) (*big.Int, error) {
 	return rocketpool.Call[*big.Int](c.contract, opts, auctionManager_getLotCount)
 }
 
-// Get all lot details
-func (c *AuctionManager) GetLots(rp *rocketpool.RocketPool, opts *bind.CallOpts) ([]AuctionLotDetails, error) {
-	// Get lot count
-	lotCount, err := c.GetLotCount(opts)
-	if err != nil {
-		return []AuctionLotDetails{}, err
-	}
-
-	// Load lot details in batches
-	details := make([]AuctionLotDetails, lotCount)
-	for bsi := uint64(0); bsi < lotCount; bsi += lotDetailsBatchSize {
-
-		// Get batch start & end index
-		lsi := bsi
-		lei := bsi + lotDetailsBatchSize
-		if lei > lotCount {
-			lei = lotCount
-		}
-
-		// Load details
-		var wg errgroup.Group
-		for li := lsi; li < lei; li++ {
-			li := li
-			lot := NewAuctionLot(c, li)
-			wg.Go(func() error {
-				lotDetails, err := lot.GetLotDetails(opts)
-				if err == nil {
-					details[li] = lotDetails
-				}
-				return err
-			})
-		}
-		if err := wg.Wait(); err != nil {
-			return []AuctionLotDetails{}, err
-		}
-
-	}
-
-	// Return
-	return details, nil
-}
-
-// Get all lot details with bids from an address
-func (c *AuctionManager) GetLotsWithBids(rp *rocketpool.RocketPool, bidder common.Address, opts *bind.CallOpts) ([]AuctionLotDetails, error) {
-	// Get lot count
-	lotCount, err := c.GetLotCount(opts)
-	if err != nil {
-		return []AuctionLotDetails{}, err
-	}
-
-	// Load lot details in batches
-	details := make([]AuctionLotDetails, lotCount)
-	for bsi := uint64(0); bsi < lotCount; bsi += lotDetailsBatchSize {
-
-		// Get batch start & end index
-		lsi := bsi
-		lei := bsi + lotDetailsBatchSize
-		if lei > lotCount {
-			lei = lotCount
-		}
-
-		// Load details
-		var wg errgroup.Group
-		for li := lsi; li < lei; li++ {
-			li := li
-			lot := NewAuctionLot(c, li)
-			wg.Go(func() error {
-				lotDetails, err := lot.GetLotDetailsWithBids(bidder, opts)
-				if err == nil {
-					details[li] = lotDetails
-				}
-				return err
-			})
-		}
-		if err := wg.Wait(); err != nil {
-			return []AuctionLotDetails{}, err
-		}
-
-	}
-
-	// Return
-	return details, nil
-}
-
 // =========================
 // === Formatted Getters ===
 // =========================
@@ -195,7 +110,7 @@ func (c *AuctionManager) GetLotCount(opts *bind.CallOpts) (uint64, error) {
 // ====================
 
 // Get info for creating a new lot
-func (c *AuctionManager) GetCreateLotInfo(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.contract, auctionManager_createLot, opts)
 }
 
@@ -216,109 +131,81 @@ func (c *AuctionManager) PostprocessAfterMulticall(details *AuctionManagerDetail
 	details.LotCount = details.LotCountRaw.Uint64()
 }
 
-// Get all lot details
-func (c *AuctionManager) GetLotsViaMulticall(multicallerAddress common.Address, lotCount uint64, opts *bind.CallOpts) ([]AuctionLotDetails, error) {
-	lots := make([]*AuctionLot, lotCount)
-	lotDetails := make([]AuctionLotDetails, lotCount)
+// ===================
+// === Sub-Getters ===
+// ===================
 
-	// Sync
-	var wg errgroup.Group
-	wg.SetLimit(int(lotDetailsBatchSize))
+// Get a lot with details
+func (c *AuctionManager) GetLot(index uint64, opts *bind.CallOpts) (*AuctionLot, error) {
+	return c.getLotImpl(index, nil, opts)
+}
 
-	// Load lot details in batches
-	for i := uint64(0); i < lotCount; i += lotDetailsBatchSize {
-		i := i
-		max := i + lotDetailsBatchSize
-		if max > lotCount {
-			max = lotCount
-		}
+// Get a lot with details and bids from the provided bidder
+func (c *AuctionManager) GetLotWithBids(index uint64, bidder common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
+	return c.getLotImpl(index, &bidder, opts)
+}
 
-		// Load details
-		wg.Go(func() error {
-			var err error
-			mc, err := multicall.NewMultiCaller(c.rp.Client, multicallerAddress)
-			if err != nil {
-				return err
+// Get lot implementation
+func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
+	// Create the lot and get details via a multicall query
+	lot, err := multicall.MulticallQuery[AuctionLot](
+		c.rp,
+		func(mc *multicall.MultiCaller) *AuctionLot {
+			lot := NewAuctionLot(c, index)
+			lot.AddMulticallQueries(mc, &lot.Details)
+			if bidder != nil {
+				lot.AddBidAmountToMulticallQuery(mc, &lot.Details, *bidder)
 			}
-			for j := i; j < max; j++ {
-				lot := NewAuctionLot(c, j)
-				lots[i] = lot
-				details := &lotDetails[j]
-				lot.AddMulticallQueries(mc, details)
-			}
-			_, err = mc.FlexibleCall(true, opts)
-			if err != nil {
-				return fmt.Errorf("error executing multicall: %w", err)
-			}
-			return nil
-		})
-	}
-
-	if err := wg.Wait(); err != nil {
-		return nil, fmt.Errorf("error getting lot details: %w", err)
-	}
-
-	// Do some postprocessing
-	for i := range lotDetails {
-		lot := lots[i]
-		details := &lotDetails[i]
-		lot.PostprocessAfterMulticall(details)
+			return lot
+		},
+		func(lot *AuctionLot) {
+			lot.PostprocessAfterMulticall(&lot.Details)
+		},
+		opts,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error getting lot: %w", err)
 	}
 
 	// Return
-	return lotDetails, nil
+	return lot, nil
+}
+
+// Get all lot details
+func (c *AuctionManager) GetLots(lotCount uint64, opts *bind.CallOpts) ([]*AuctionLot, error) {
+	return c.getLotsImpl(lotCount, nil, opts)
 }
 
 // Get all lot details with bids from an address
-func (c *AuctionManager) GetLotsWithBidsViaMulticall(multicallerAddress common.Address, lotCount uint64, bidder common.Address, opts *bind.CallOpts) ([]AuctionLotDetails, error) {
-	lots := make([]*AuctionLot, lotCount)
-	lotDetails := make([]AuctionLotDetails, lotCount)
+func (c *AuctionManager) GetLotsWithBids(lotCount uint64, bidder common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
+	return c.getLotsImpl(lotCount, &bidder, opts)
+}
 
-	// Sync
-	var wg errgroup.Group
-	wg.SetLimit(int(lotDetailsBatchSize))
-
-	// Load lot details in batches
-	for i := uint64(0); i < lotCount; i += lotDetailsBatchSize {
-		i := i
-		max := i + lotDetailsBatchSize
-		if max > lotCount {
-			max = lotCount
-		}
-
-		// Load details
-		wg.Go(func() error {
-			var err error
-			mc, err := multicall.NewMultiCaller(c.rp.Client, multicallerAddress)
-			if err != nil {
-				return err
+// Get lots implementation
+func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
+	// Run the multicall query for each lot
+	lots, err := multicall.MulticallBatchQuery[AuctionLot](
+		c.rp,
+		lotCount,
+		lotDetailsBatchSize,
+		func(lots []*AuctionLot, index uint64, mc *multicall.MultiCaller) {
+			lot := NewAuctionLot(c, index)
+			lots[index] = lot
+			details := &lot.Details
+			lot.AddMulticallQueries(mc, details)
+			if bidder != nil {
+				lot.AddBidAmountToMulticallQuery(mc, details, *bidder)
 			}
-			for j := i; j < max; j++ {
-				lot := NewAuctionLot(c, j)
-				lots[i] = lot
-				details := &lotDetails[j]
-				lot.AddMulticallQueries(mc, details)
-				lot.AddBidAmountToMulticallQuery(mc, details, bidder)
-			}
-			_, err = mc.FlexibleCall(true, opts)
-			if err != nil {
-				return fmt.Errorf("error executing multicall: %w", err)
-			}
-			return nil
-		})
-	}
-
-	if err := wg.Wait(); err != nil {
+		},
+		func(lot *AuctionLot) {
+			lot.PostprocessAfterMulticall(&lot.Details)
+		},
+		opts,
+	)
+	if err != nil {
 		return nil, fmt.Errorf("error getting lot details: %w", err)
 	}
 
-	// Do some postprocessing
-	for i := range lotDetails {
-		lot := lots[i]
-		details := &lotDetails[i]
-		lot.PostprocessAfterMulticall(details)
-	}
-
 	// Return
-	return lotDetails, nil
+	return lots, nil
 }

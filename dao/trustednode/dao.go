@@ -13,22 +13,56 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/strings"
 )
 
-// Settings
 const (
-	MemberAddressBatchSize = 50
-	MemberDetailsBatchSize = 20
+	// Contract names
+	DaoNodeTrusted_ContractName string = "rocketDAONodeTrusted"
+
+	// Calls
+	networkBalances_getBalancesBlock string = "getBalancesBlock"
+
+	// Transactions
+	networkBalances_submitBalances string = "submitBalances"
+
+	// Settings
+	memberAddressBatchSize = 50
+	memberDetailsBatchSize = 20
 )
 
-// Proposal details
-type MemberDetails struct {
-	Address                common.Address `json:"address"`
-	Exists                 bool           `json:"exists"`
-	ID                     string         `json:"id"`
-	Url                    string         `json:"url"`
-	JoinedTime             uint64         `json:"joinedTime"`
-	LastProposalTime       uint64         `json:"lastProposalTime"`
-	RPLBondAmount          *big.Int       `json:"rplBondAmount"`
-	UnbondedValidatorCount uint64         `json:"unbondedValidatorCount"`
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAONodeTrusted
+type DaoNodeTrusted struct {
+	rp       *rocketpool.RocketPool
+	contract *rocketpool.Contract
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoNodeTrusted contract binding
+func NewDaoNodeTrusted(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DaoNodeTrusted, error) {
+	// Create the contract
+	contract, err := rp.GetContract(DaoNodeTrusted_ContractName, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO node trusted contract: %w", err)
+	}
+
+	return &DaoNodeTrusted{
+		rp:       rp,
+		contract: contract,
+	}, nil
+}
+
+// ===================
+// === Raw Getters ===
+// ===================
+
+// Get the block number which network balances are current for
+func (c *DaoNodeTrusted) GetBalancesBlockRaw(opts *bind.CallOpts) (*big.Int, error) {
+	return rocketpool.Call[*big.Int](c.contract, opts, networkBalances_getBalancesBlock)
 }
 
 // Get all member details

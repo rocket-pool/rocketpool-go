@@ -31,7 +31,7 @@ type NetworkFees struct {
 	contract *rocketpool.Contract
 }
 
-// Multicall details for network fees
+// Details for network fees
 type NetworkFeesDetails struct {
 	// Raw parameters
 	NodeDemand         *big.Int `json:"nodeDemand"`

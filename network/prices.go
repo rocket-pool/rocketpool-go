@@ -34,7 +34,7 @@ type NetworkPrices struct {
 	contract *rocketpool.Contract
 }
 
-// Multicall details for network prices
+// Details for network prices
 type NetworkPricesDetails struct {
 	// Raw parameters
 	PricesBlockRaw                 *big.Int `json:"pricesBlockRaw"`
@@ -120,7 +120,7 @@ func (c *NetworkPrices) GetLatestReportablePricesBlock(opts *bind.CallOpts) (uin
 // ====================
 
 // Get info for network price submission
-func (c *NetworkPrices) GetSubmitPricesInfo(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *NetworkPrices) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.contract, networkPrices_submitPrices, opts, big.NewInt(int64(block)), rplPrice)
 }
 
