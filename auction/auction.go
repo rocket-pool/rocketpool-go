@@ -8,25 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
 	// Settings
 	lotDetailsBatchSize uint64 = 10
-
-	// Contract names
-	AuctionManager_ContractName string = "rocketAuctionManager"
-
-	// Calls
-	auctionManager_getTotalRPLBalance     string = "getTotalRPLBalance"
-	auctionManager_getAllottedRPLBalance  string = "getAllottedRPLBalance"
-	auctionManager_getRemainingRPLBalance string = "getRemainingRPLBalance"
-	auctionManager_getLotCount            string = "getLotCount"
-
-	// Transactions
-	auctionManager_createLot string = "createLot"
 )
 
 // ===============
@@ -35,6 +22,7 @@ const (
 
 // Binding for RocketAuctionManager
 type AuctionManager struct {
+	Details  AuctionManagerDetails
 	rp       *rocketpool.RocketPool
 	contract *rocketpool.Contract
 }
@@ -42,13 +30,10 @@ type AuctionManager struct {
 // Details for auction manager
 type AuctionManagerDetails struct {
 	// Raw parameters
-	TotalRplBalance     *big.Int `json:"totalRplBalance"`
-	AllottedRplBalance  *big.Int `json:"allottedRplBalance"`
-	RemainingRplBalance *big.Int `json:"remainingRplBalance"`
-	LotCountRaw         *big.Int `json:"lotCountRaw"`
-
-	// Formatted parameters
-	LotCount uint64 `json:"lotCount"`
+	TotalRplBalance     *big.Int                     `json:"totalRplBalance"`
+	AllottedRplBalance  *big.Int                     `json:"allottedRplBalance"`
+	RemainingRplBalance *big.Int                     `json:"remainingRplBalance"`
+	LotCount            rocketpool.Parameter[uint64] `json:"lotCount"`
 }
 
 // ====================
@@ -58,48 +43,48 @@ type AuctionManagerDetails struct {
 // Creates a new AuctionManager contract binding
 func NewAuctionManager(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*AuctionManager, error) {
 	// Create the contract
-	contract, err := rp.GetContract(AuctionManager_ContractName, opts)
+	contract, err := rp.GetContract("rocketAuctionManager", opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auction manager contract: %w", err)
 	}
 
 	return &AuctionManager{
+		Details:  AuctionManagerDetails{},
 		rp:       rp,
 		contract: contract,
 	}, nil
 }
 
-// ===================
-// === Raw Getters ===
-// ===================
+// =============
+// === Calls ===
+// =============
 
 // Get the total RPL balance of the auction contract
-func (c *AuctionManager) GetTotalRPLBalance(opts *bind.CallOpts) (*big.Int, error) {
-	return rocketpool.Call[*big.Int](c.contract, opts, auctionManager_getTotalRPLBalance)
+func (c *AuctionManager) GetTotalRPLBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.TotalRplBalance, "getTotalRPLBalance")
 }
 
 // Get the allotted RPL balance of the auction contract
-func (c *AuctionManager) GetAllottedRPLBalance(opts *bind.CallOpts) (*big.Int, error) {
-	return rocketpool.Call[*big.Int](c.contract, opts, auctionManager_getAllottedRPLBalance)
+func (c *AuctionManager) GetAllottedRPLBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.AllottedRplBalance, "getAllottedRPLBalance")
 }
 
 // Get the remaining RPL balance of the auction contract
-func (c *AuctionManager) GetRemainingRPLBalance(opts *bind.CallOpts) (*big.Int, error) {
-	return rocketpool.Call[*big.Int](c.contract, opts, auctionManager_getRemainingRPLBalance)
+func (c *AuctionManager) GetRemainingRPLBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.RemainingRplBalance, "getRemainingRPLBalance")
 }
 
 // Get the number of lots for auction
-func (c *AuctionManager) GetLotCountRaw(opts *bind.CallOpts) (*big.Int, error) {
-	return rocketpool.Call[*big.Int](c.contract, opts, auctionManager_getLotCount)
+func (c *AuctionManager) GetLotCount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LotCount.RawValue, "getLotCount")
 }
 
-// =========================
-// === Formatted Getters ===
-// =========================
-
-// Get the number of lots for auction
-func (c *AuctionManager) GetLotCount(opts *bind.CallOpts) (uint64, error) {
-	return utils.ConvertRawToUint(c.GetLotCountRaw(opts))
+// Get all basic details
+func (c *AuctionManager) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetTotalRPLBalance(mc)
+	c.GetAllottedRPLBalance(mc)
+	c.GetRemainingRPLBalance(mc)
+	c.GetLotCount(mc)
 }
 
 // ====================
@@ -108,24 +93,7 @@ func (c *AuctionManager) GetLotCount(opts *bind.CallOpts) (uint64, error) {
 
 // Get info for creating a new lot
 func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, auctionManager_createLot, opts)
-}
-
-// =================
-// === Multicall ===
-// =================
-
-// Add queries to a multicall batcher
-func (c *AuctionManager) AddMulticallQueries(mc *multicall.MultiCaller, details *AuctionManagerDetails) {
-	mc.AddCall(c.contract, &details.TotalRplBalance, auctionManager_getTotalRPLBalance)
-	mc.AddCall(c.contract, &details.AllottedRplBalance, auctionManager_getAllottedRPLBalance)
-	mc.AddCall(c.contract, &details.RemainingRplBalance, auctionManager_getRemainingRPLBalance)
-	mc.AddCall(c.contract, &details.LotCountRaw, auctionManager_getLotCount)
-}
-
-// Postprocess the multicalled data to get the formatted parameters
-func (c *AuctionManager) PostprocessAfterMulticall(details *AuctionManagerDetails) {
-	details.LotCount = utils.ConvertToUint(details.LotCountRaw)
+	return rocketpool.NewTransactionInfo(c.contract, "createLot", opts)
 }
 
 // ===================
@@ -149,15 +117,13 @@ func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *
 		c.rp,
 		func(mc *multicall.MultiCaller) *AuctionLot {
 			lot := NewAuctionLot(c, index)
-			lot.AddMulticallQueries(mc, &lot.Details)
+			lot.GetAllDetails(mc)
 			if bidder != nil {
-				lot.AddBidAmountToMulticallQuery(mc, &lot.Details, *bidder)
+				lot.GetAllDetailsWithBidAmount(mc, *bidder)
 			}
 			return lot
 		},
-		func(lot *AuctionLot) {
-			lot.PostprocessAfterMulticall(&lot.Details)
-		},
+		nil,
 		opts,
 	)
 	if err != nil {
@@ -188,15 +154,13 @@ func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, op
 		func(lots []*AuctionLot, index uint64, mc *multicall.MultiCaller) {
 			lot := NewAuctionLot(c, index)
 			lots[index] = lot
-			details := &lot.Details
-			lot.AddMulticallQueries(mc, details)
 			if bidder != nil {
-				lot.AddBidAmountToMulticallQuery(mc, details, *bidder)
+				lot.GetAllDetailsWithBidAmount(mc, *bidder)
+			} else {
+				lot.GetAllDetails(mc)
 			}
 		},
-		func(lot *AuctionLot) {
-			lot.PostprocessAfterMulticall(&lot.Details)
-		},
+		nil,
 		opts,
 	)
 	if err != nil {

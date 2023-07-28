@@ -18,6 +18,14 @@ import (
 // Transaction settings
 const ()
 
+type CallReturnType interface {
+	*big.Int | uint8 | bool | string | common.Address
+}
+
+type FormattedType interface {
+	time.Time | uint64 | float64
+}
+
 // Contract type wraps go-ethereum bound contract
 type Contract struct {
 	Contract *bind.BoundContract
@@ -40,7 +48,7 @@ func (c *Contract) Call(opts *bind.CallOpts, result interface{}, method string, 
 }
 
 // Calls a contract method
-func Call[retType *big.Int | uint8 | bool | string](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
+func Call[retType CallReturnType](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
 	// Set up the return capture
 	result := new(retType)
 	results := make([]interface{}, 1)
@@ -52,14 +60,14 @@ func Call[retType *big.Int | uint8 | bool | string](contract *Contract, opts *bi
 }
 
 // Calls a contract method for a parameter
-func CallForParameter[FormattedType time.Time | uint64 | float64](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (Parameter[FormattedType], error) {
+func CallForParameter[fType FormattedType](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (Parameter[fType], error) {
 	// Set up the return capture
 	result := new(*big.Int)
 	results := make([]interface{}, 1)
 	results[0] = result
 
 	// Run the function
-	var param Parameter[FormattedType]
+	var param Parameter[fType]
 	err := contract.Call(opts, &results, method, params...)
 	if err != nil {
 		return param, err

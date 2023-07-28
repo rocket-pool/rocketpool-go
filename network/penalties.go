@@ -10,14 +10,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
-const (
-	// Contract names
-	NetworkPenalties_ContractName string = "rocketNetworkPenalties"
-
-	// Transactions
-	networkPenalties_submitPenalty string = "submitPenalty"
-)
-
 // ===============
 // === Structs ===
 // ===============
@@ -35,7 +27,7 @@ type NetworkPenalties struct {
 // Creates a new NetworkPenalties contract binding
 func NewNetworkPenalties(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NetworkPenalties, error) {
 	// Create the contract
-	contract, err := rp.GetContract(NetworkPenalties_ContractName, opts)
+	contract, err := rp.GetContract("rocketNetworkPenalties", opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network penalties contract: %w", err)
 	}
@@ -52,5 +44,5 @@ func NewNetworkPenalties(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*Netwo
 
 // Get info for minipool penalty submission
 func (c *NetworkPenalties) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, networkPenalties_submitPenalty, opts, minipoolAddress, block)
+	return rocketpool.NewTransactionInfo(c.contract, "submitPenalty", opts, minipoolAddress, block)
 }

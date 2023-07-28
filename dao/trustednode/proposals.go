@@ -3,308 +3,107 @@ package trustednode
 import (
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/rocket-pool/rocketpool-go/dao"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/strings"
 )
 
-// Estimate the gas of ProposeInviteMember
-func EstimateProposeInviteMemberGas(rp *rocketpool.RocketPool, message string, newMemberAddress common.Address, newMemberId, newMemberUrl string, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAONodeTrustedProposals
+type DaoNodeTrustedProposals struct {
+	rp       *rocketpool.RocketPool
+	contract *rocketpool.Contract
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoNodeTrustedProposals contract binding
+func NewDaoNodeTrustedProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DaoNodeTrustedProposals, error) {
+	// Create the contract
+	contract, err := rp.GetContract("rocketDAONodeTrustedProposals", opts)
 	if err != nil {
-		return rocketpool.GasInfo{}, err
+		return nil, fmt.Errorf("error getting DAO node trusted proposals contract: %w", err)
 	}
+
+	return &DaoNodeTrustedProposals{
+		rp:       rp,
+		contract: contract,
+	}, nil
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for proposing to invite a new member to the Oracle DAO
+func (c *DaoNodeTrustedProposals) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId, string, newMemberUrl string, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalInvite", newMemberId, newMemberUrl, newMemberAddress)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode invite member proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
+	return c.submitProposal(opts, message, "proposalInvite", newMemberId, newMemberUrl, newMemberAddress)
 }
 
-// Submit a proposal to invite a new member to the trusted node DAO
-func ProposeInviteMember(rp *rocketpool.RocketPool, message string, newMemberAddress common.Address, newMemberId, newMemberUrl string, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
+// Get info for proposing to leave the Oracle DAO
+func (c *DaoNodeTrustedProposals) ProposeMemberLeave(message string, memberAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return c.submitProposal(opts, message, "proposalLeave", memberAddress)
+}
+
+// Get info for proposing to replace the address of an Oracle DAO member
+func (c *DaoNodeTrustedProposals) ProposeReplaceMember(message string, memberAddress common.Address, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalInvite", newMemberId, newMemberUrl, newMemberAddress)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode invite member proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
+	return c.submitProposal(opts, message, "proposalReplace", memberAddress, newMemberId, newMemberUrl, newMemberAddress)
 }
 
-// Estimate the gas of ProposeMemberLeave
-func EstimateProposeMemberLeaveGas(rp *rocketpool.RocketPool, message string, memberAddress common.Address, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalLeave", memberAddress)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode member leave proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
+// Get info for proposing to kick a member from the Oracle DAO
+func (c *DaoNodeTrustedProposals) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return c.submitProposal(opts, message, "proposalKick", memberAddress, rplFineAmount)
 }
 
-// Submit a proposal for a member to leave the trusted node DAO
-func ProposeMemberLeave(rp *rocketpool.RocketPool, message string, memberAddress common.Address, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalLeave", memberAddress)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode member leave proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
+// Get info for proposing a bool setting
+func (c *DaoNodeTrustedProposals) ProposeSetBool(message string, contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return c.submitProposal(opts, message, "proposalSettingBool", contractName, settingPath, value)
 }
 
-// Estimate the gas of ProposeReplaceMember
-func EstimateProposeReplaceMemberGas(rp *rocketpool.RocketPool, message string, memberAddress, newMemberAddress common.Address, newMemberId, newMemberUrl string, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	newMemberUrl = strings.Sanitize(newMemberUrl)
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalReplace", memberAddress, newMemberId, newMemberUrl, newMemberAddress)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode replace member proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
+// Get info for proposing a uint setting
+func (c *DaoNodeTrustedProposals) ProposeSetUint(message string, contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return c.submitProposal(opts, message, "proposalSettingUint", contractName, settingPath, value)
 }
 
-// Submit a proposal to replace a member in the trusted node DAO
-func ProposeReplaceMember(rp *rocketpool.RocketPool, message string, memberAddress, newMemberAddress common.Address, newMemberId, newMemberUrl string, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	newMemberUrl = strings.Sanitize(newMemberUrl)
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalReplace", memberAddress, newMemberId, newMemberUrl, newMemberAddress)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode replace member proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
-}
-
-// Estimate the gas of ProposeKickMember
-func EstimateProposeKickMemberGas(rp *rocketpool.RocketPool, message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalKick", memberAddress, rplFineAmount)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode kick member proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
-}
-
-// Submit a proposal to kick a member from the trusted node DAO
-func ProposeKickMember(rp *rocketpool.RocketPool, message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalKick", memberAddress, rplFineAmount)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode kick member proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
-}
-
-// Estimate the gas of ProposeSetBool
-func EstimateProposeSetBoolGas(rp *rocketpool.RocketPool, message, contractName, settingPath string, value bool, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalSettingBool", contractName, settingPath, value)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode set bool setting proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
-}
-
-// Submit a proposal to update a bool trusted node DAO setting
-func ProposeSetBool(rp *rocketpool.RocketPool, message, contractName, settingPath string, value bool, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalSettingBool", contractName, settingPath, value)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode set bool setting proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
-}
-
-// Estimate the gas of ProposeSetUint
-func EstimateProposeSetUintGas(rp *rocketpool.RocketPool, message, contractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalSettingUint", contractName, settingPath, value)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode set uint setting proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
-}
-
-// Submit a proposal to update a uint trusted node DAO setting
-func ProposeSetUint(rp *rocketpool.RocketPool, message, contractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalSettingUint", contractName, settingPath, value)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode set uint setting proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
-}
-
-// Estimate the gas of ProposeUpgradeContract
-func EstimateProposeUpgradeContractGas(rp *rocketpool.RocketPool, message, upgradeType, contractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
+// Get info for proposing a contract upgrade
+func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	compressedAbi, err := rocketpool.EncodeAbiStr(contractAbi)
 	if err != nil {
-		return rocketpool.GasInfo{}, err
+		return nil, fmt.Errorf("error compressing ABI: %w", err)
 	}
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalUpgrade", upgradeType, contractName, compressedAbi, contractAddress)
-	if err != nil {
-		return rocketpool.GasInfo{}, fmt.Errorf("Could not encode upgrade contract proposal payload: %w", err)
-	}
-	return EstimateProposalGas(rp, message, payload, opts)
+	return c.submitProposal(opts, message, "proposalUpgrade", upgradeType, contractName, compressedAbi, contractAddress)
 }
 
-// Submit a proposal to upgrade a contract
-func ProposeUpgradeContract(rp *rocketpool.RocketPool, message, upgradeType, contractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	compressedAbi, err := rocketpool.EncodeAbiStr(contractAbi)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	payload, err := rocketDAONodeTrustedProposals.ABI.Pack("proposalUpgrade", upgradeType, contractName, compressedAbi, contractAddress)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not encode upgrade contract proposal payload: %w", err)
-	}
-	return SubmitProposal(rp, message, payload, opts)
+// Get info for cancelling a proposal
+func (c *DaoNodeTrustedActions) CancelProposal(proposalId uint64, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "cancel", opts, big.NewInt(int64(proposalId)))
 }
 
-// Estimate the gas of a proposal submission
-func EstimateProposalGas(rp *rocketpool.RocketPool, message string, payload []byte, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketDAONodeTrustedProposals.GetTransactionGasInfo(opts, "propose", message, payload)
+// Get info for voting on a proposal
+func (c *DaoNodeTrustedActions) VoteOnProposal(proposalId uint64, support bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "vote", opts, big.NewInt(int64(proposalId)), support)
 }
 
-// Submit a trusted node DAO proposal
-// Returns the ID of the new proposal
-func SubmitProposal(rp *rocketpool.RocketPool, message string, payload []byte, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	proposalCount, err := dao.GetProposalCount(rp, nil)
-	if err != nil {
-		return 0, common.Hash{}, err
-	}
-	tx, err := rocketDAONodeTrustedProposals.Transact(opts, "propose", message, payload)
-	if err != nil {
-		return 0, common.Hash{}, fmt.Errorf("Could not submit trusted node DAO proposal: %w", err)
-	}
-	return proposalCount + 1, tx.Hash(), nil
+// Get info for executing a proposal
+func (c *DaoNodeTrustedActions) ExecuteProposal(proposalId uint64, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "execute", opts, big.NewInt(int64(proposalId)))
 }
 
-// Estimate the gas of CancelProposal
-func EstimateCancelProposalGas(rp *rocketpool.RocketPool, proposalId uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
+// Internal method used for actually constructing and submitting a proposal
+func (c *DaoNodeTrustedProposals) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*rocketpool.TransactionInfo, error) {
+	payload, err := c.contract.ABI.Pack(method, args...)
 	if err != nil {
-		return rocketpool.GasInfo{}, err
+		return nil, fmt.Errorf("error encoding payload: %w", err)
 	}
-	return rocketDAONodeTrustedProposals.GetTransactionGasInfo(opts, "cancel", big.NewInt(int64(proposalId)))
-}
-
-// Cancel a submitted proposal
-func CancelProposal(rp *rocketpool.RocketPool, proposalId uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketDAONodeTrustedProposals.Transact(opts, "cancel", big.NewInt(int64(proposalId)))
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not cancel trusted node DAO proposal %d: %w", proposalId, err)
-	}
-	return tx.Hash(), nil
-}
-
-// Estimate the gas of VoteOnProposal
-func EstimateVoteOnProposalGas(rp *rocketpool.RocketPool, proposalId uint64, support bool, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketDAONodeTrustedProposals.GetTransactionGasInfo(opts, "vote", big.NewInt(int64(proposalId)), support)
-}
-
-// Vote on a submitted proposal
-func VoteOnProposal(rp *rocketpool.RocketPool, proposalId uint64, support bool, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketDAONodeTrustedProposals.Transact(opts, "vote", big.NewInt(int64(proposalId)), support)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not vote on trusted node DAO proposal %d: %w", proposalId, err)
-	}
-	return tx.Hash(), nil
-}
-
-// Estimate the gas of ExecuteProposal
-func EstimateExecuteProposalGas(rp *rocketpool.RocketPool, proposalId uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketDAONodeTrustedProposals.GetTransactionGasInfo(opts, "execute", big.NewInt(int64(proposalId)))
-}
-
-// Execute a submitted proposal
-func ExecuteProposal(rp *rocketpool.RocketPool, proposalId uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketDAONodeTrustedProposals, err := getRocketDAONodeTrustedProposals(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketDAONodeTrustedProposals.Transact(opts, "execute", big.NewInt(int64(proposalId)))
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not execute trusted node DAO proposal %d: %w", proposalId, err)
-	}
-	return tx.Hash(), nil
-}
-
-// Get contracts
-var rocketDAONodeTrustedProposalsLock sync.Mutex
-
-func getRocketDAONodeTrustedProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
-	rocketDAONodeTrustedProposalsLock.Lock()
-	defer rocketDAONodeTrustedProposalsLock.Unlock()
-	return rp.GetContract("rocketDAONodeTrustedProposals", opts)
+	return rocketpool.NewTransactionInfo(c.contract, "propose", opts, message, payload)
 }

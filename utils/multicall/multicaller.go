@@ -61,7 +61,7 @@ func NewMultiCaller(client rocketpool.ExecutionClient, multicallerAddress common
 	}, nil
 }
 
-func (caller *MultiCaller) AddCall(contract *rocketpool.Contract, output interface{}, method string, args ...interface{}) error {
+func AddCall[outType rocketpool.CallReturnType](mc *MultiCaller, contract *rocketpool.Contract, output *outType, method string, args ...interface{}) error {
 	callData, err := contract.ABI.Pack(method, args...)
 	if err != nil {
 		return fmt.Errorf("error adding call [%s]: %w", method, err)
@@ -73,7 +73,7 @@ func (caller *MultiCaller) AddCall(contract *rocketpool.Contract, output interfa
 		Contract: contract,
 		output:   output,
 	}
-	caller.calls = append(caller.calls, call)
+	mc.calls = append(mc.calls, call)
 	return nil
 }
 
