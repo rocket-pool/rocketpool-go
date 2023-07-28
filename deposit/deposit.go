@@ -3,102 +3,86 @@ package deposit
 import (
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Get the deposit pool balance
-func GetBalance(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	balance := new(*big.Int)
-	if err := rocketDepositPool.Call(opts, balance, "getBalance"); err != nil {
-		return nil, fmt.Errorf("Could not get deposit pool balance: %w", err)
-	}
-	return *balance, nil
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDepositPool
+type DepositPool struct {
+	Details  DepositPoolDetails
+	rp       *rocketpool.RocketPool
+	contract *rocketpool.Contract
 }
 
-// Get the deposit pool balance
-func GetUserBalance(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, opts)
+// Details for RocketDepositPool
+type DepositPoolDetails struct {
+	Balance       *big.Int `json:"balance"`
+	UserBalance   *big.Int `json:"userBalance"`
+	ExcessBalance *big.Int `json:"excessBalance"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DepositPool contract binding
+func NewDepositPool(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DepositPool, error) {
+	// Create the contract
+	contract, err := rp.GetContract("rocketDepositPool", opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting deposit pool contract: %w", err)
 	}
-	balance := new(*big.Int)
-	if err := rocketDepositPool.Call(opts, balance, "getUserBalance"); err != nil {
-		return nil, fmt.Errorf("Could not get deposit pool user balance: %w", err)
-	}
-	return *balance, nil
+
+	return &DepositPool{
+		Details:  DepositPoolDetails{},
+		rp:       rp,
+		contract: contract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get the deposit pool balance
+func (c *DepositPool) GetBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.Balance, "getBalance")
+}
+
+// Get the deposit pool balance provided by pool stakers
+func (c *DepositPool) GetUserBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.Balance, "getUserBalance")
 }
 
 // Get the excess deposit pool balance
-func GetExcessBalance(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	excessBalance := new(*big.Int)
-	if err := rocketDepositPool.Call(opts, excessBalance, "getExcessBalance"); err != nil {
-		return nil, fmt.Errorf("Could not get deposit pool excess balance: %w", err)
-	}
-	return *excessBalance, nil
+func (c *DepositPool) GetExcessBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.Balance, "getExcessBalance")
 }
 
-// Estimate the gas of Deposit
-func EstimateDepositGas(rp *rocketpool.RocketPool, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketDepositPool.GetTransactionGasInfo(opts, "deposit")
+// Get all basic details
+func (c *DepositPool) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetBalance(mc)
+	c.GetUserBalance(mc)
+	c.GetExcessBalance(mc)
 }
 
-// Make a deposit
-func Deposit(rp *rocketpool.RocketPool, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketDepositPool.Transact(opts, "deposit")
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not deposit: %w", err)
-	}
-	return tx.Hash(), nil
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for making a deposit
+func (c *DepositPool) Deposit(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "deposit", opts)
 }
 
-// Estimate the gas of AssignDeposits
-func EstimateAssignDepositsGas(rp *rocketpool.RocketPool, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketDepositPool.GetTransactionGasInfo(opts, "assignDeposits")
-}
-
-// Assign deposits
-func AssignDeposits(rp *rocketpool.RocketPool, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketDepositPool, err := getRocketDepositPool(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketDepositPool.Transact(opts, "assignDeposits")
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not assign deposits: %w", err)
-	}
-	return tx.Hash(), nil
-}
-
-// Get contracts
-var rocketDepositPoolLock sync.Mutex
-
-func getRocketDepositPool(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
-	rocketDepositPoolLock.Lock()
-	defer rocketDepositPoolLock.Unlock()
-	return rp.GetContract("rocketDepositPool", opts)
+// Get info for assigning deposits
+func (c *DepositPool) AssignDeposits(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "assignDeposits", opts)
 }

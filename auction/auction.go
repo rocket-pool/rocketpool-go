@@ -27,9 +27,8 @@ type AuctionManager struct {
 	contract *rocketpool.Contract
 }
 
-// Details for auction manager
+// Details for RocketAuctionManager
 type AuctionManagerDetails struct {
-	// Raw parameters
 	TotalRplBalance     *big.Int                     `json:"totalRplBalance"`
 	AllottedRplBalance  *big.Int                     `json:"allottedRplBalance"`
 	RemainingRplBalance *big.Int                     `json:"remainingRplBalance"`

@@ -3,141 +3,113 @@ package minipool
 import (
 	"fmt"
 	"math/big"
-	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Estimate the gas required to vote to cancel a minipool's bond reduction
-func EstimateVoteCancelReductionGas(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketMinipoolBondReducer.GetTransactionGasInfo(opts, "voteCancelReduction", minipoolAddress)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketMinipoolBondReducer
+type MinipoolBondReducer struct {
+	rp       *rocketpool.RocketPool
+	contract *rocketpool.Contract
 }
 
-// Vote to cancel a minipool's bond reduction
-func VoteCancelReduction(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketMinipoolBondReducer.Transact(opts, "voteCancelReduction", minipoolAddress)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not vote to cancel bond reduction for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return tx.Hash(), nil
+// Details for RocketMinipoolBondReducer for a specific minipool
+type MinipoolBondReducerDetails struct {
+	Address                      common.Address                  `json:"address"`
+	IsBondReduceCancelled        bool                            `json:"isBondReduceCancelled"`
+	ReduceBondTime               rocketpool.Parameter[time.Time] `json:"reduceBondTime"`
+	ReduceBondValue              *big.Int                        `json:"reduceBondValue"`
+	LastBondReductionTime        rocketpool.Parameter[time.Time] `json:"lastBondReductionTime"`
+	LastBondReductionPrevValue   *big.Int                        `json:"lastBondReductionPrevValue"`
+	LastBondReductionPrevNodeFee rocketpool.Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
 }
 
-// Gets whether or not the bond reduction process for this minipool has already been cancelled
-func GetReduceBondCancelled(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (bool, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new MinipoolBondReducer contract binding
+func NewMinipoolBondReducer(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*MinipoolBondReducer, error) {
+	// Create the contract
+	contract, err := rp.GetContract("rocketMinipoolBondReducer", opts)
 	if err != nil {
-		return false, err
+		return nil, fmt.Errorf("error getting minipool bond reducer contract: %w", err)
 	}
-	isCancelled := new(bool)
-	if err := rocketMinipoolBondReducer.Call(opts, isCancelled, "getReduceBondCancelled", minipoolAddress); err != nil {
-		return false, fmt.Errorf("Could not get reduce bond cancelled status for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return *isCancelled, nil
+
+	return &MinipoolBondReducer{
+		rp:       rp,
+		contract: contract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Gets whether or not the bond reduction process for the minipool has already been cancelled
+// The output will be stored in details - note that the Address must already be set!
+func (c *MinipoolBondReducer) GetReduceBondCancelled(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	multicall.AddCall(mc, c.contract, &details.IsBondReduceCancelled, "getReduceBondCancelled", details.Address)
 }
 
 // Gets the time at which the MP owner started the bond reduction process
-func GetReduceBondTime(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (time.Time, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return time.Time{}, err
-	}
-	reduceBondTime := new(*big.Int)
-	if err := rocketMinipoolBondReducer.Call(opts, reduceBondTime, "getReduceBondTime", minipoolAddress); err != nil {
-		return time.Time{}, fmt.Errorf("Could not get reduce bond time for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return time.Unix((*reduceBondTime).Int64(), 0), nil
+// The output will be stored in details - note that the Address must already be set!
+func (c *MinipoolBondReducer) GetReduceBondTime(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	multicall.AddCall(mc, c.contract, &details.ReduceBondTime.RawValue, "getReduceBondTime", details.Address)
 }
 
 // Gets the amount of ETH a minipool is reducing its bond to
-func GetReduceBondValue(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return nil, err
-	}
-	reduceBondValue := new(*big.Int)
-	if err := rocketMinipoolBondReducer.Call(opts, reduceBondValue, "getReduceBondValue", minipoolAddress); err != nil {
-		return nil, fmt.Errorf("Could not get reduce bond value for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return *reduceBondValue, nil
+// The output will be stored in details - note that the Address must already be set!
+func (c *MinipoolBondReducer) GetReduceBondValue(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	multicall.AddCall(mc, c.contract, &details.ReduceBondValue, "getReduceBondValue", details.Address)
 }
 
 // Gets the timestamp at which the bond was last reduced
-func GetLastBondReductionTime(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (time.Time, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return time.Time{}, err
-	}
-	lastBondReductionTime := new(*big.Int)
-	if err := rocketMinipoolBondReducer.Call(opts, lastBondReductionTime, "getLastBondReductionTime", minipoolAddress); err != nil {
-		return time.Time{}, fmt.Errorf("Could not get last bond reduction time for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return time.Unix((*lastBondReductionTime).Int64(), 0), nil
+// The output will be stored in details - note that the Address must already be set!
+func (c *MinipoolBondReducer) GetLastBondReductionTime(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	multicall.AddCall(mc, c.contract, &details.LastBondReductionTime.RawValue, "getLastBondReductionTime", details.Address)
 }
 
 // Gets the previous bond amount of the minipool prior to its last reduction
-func GetLastBondReductionPrevValue(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return nil, err
-	}
-	lastBondReductionPrevValue := new(*big.Int)
-	if err := rocketMinipoolBondReducer.Call(opts, lastBondReductionPrevValue, "getLastBondReductionPrevValue", minipoolAddress); err != nil {
-		return nil, fmt.Errorf("Could not get last bond reduction previous value for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return *lastBondReductionPrevValue, nil
+// The output will be stored in details - note that the Address must already be set!
+func (c *MinipoolBondReducer) GetLastBondReductionPrevValue(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	multicall.AddCall(mc, c.contract, &details.LastBondReductionPrevValue, "getLastBondReductionPrevValue", details.Address)
 }
 
 // Gets the previous node fee (commission) of the minipool prior to its last reduction
-func GetLastBondReductionPrevNodeFee(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return nil, err
-	}
-	lastBondReductionPrevNodeFee := new(*big.Int)
-	if err := rocketMinipoolBondReducer.Call(opts, lastBondReductionPrevNodeFee, "getLastBondReductionPrevNodeFee", minipoolAddress); err != nil {
-		return nil, fmt.Errorf("Could not get last bond reduction previous node fee for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return *lastBondReductionPrevNodeFee, nil
+// The output will be stored in details - note that the Address must already be set!
+func (c *MinipoolBondReducer) GetLastBondReductionPrevNodeFee(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	multicall.AddCall(mc, c.contract, &details.LastBondReductionPrevNodeFee.RawValue, "getLastBondReductionPrevNodeFee", details.Address)
 }
 
-// Estimate the gas required to begin a minipool bond reduction
-func EstimateBeginReduceBondAmountGas(rp *rocketpool.RocketPool, minipoolAddress common.Address, newBondAmount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketMinipoolBondReducer.GetTransactionGasInfo(opts, "beginReduceBondAmount", minipoolAddress, newBondAmount)
+// Get all basic details
+func (c *MinipoolBondReducer) GetAllDetails(mc *multicall.MultiCaller, details *MinipoolBondReducerDetails) {
+	c.GetReduceBondCancelled(mc, details)
+	c.GetReduceBondTime(mc, details)
+	c.GetReduceBondValue(mc, details)
+	c.GetLastBondReductionTime(mc, details)
+	c.GetLastBondReductionPrevValue(mc, details)
+	c.GetLastBondReductionPrevNodeFee(mc, details)
 }
 
-// Begin a minipool bond reduction
-func BeginReduceBondAmount(rp *rocketpool.RocketPool, minipoolAddress common.Address, newBondAmount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketMinipoolBondReducer, err := getRocketMinipoolBondReducer(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketMinipoolBondReducer.Transact(opts, "beginReduceBondAmount", minipoolAddress, newBondAmount)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not begin bond reduction for minipool %s: %w", minipoolAddress.Hex(), err)
-	}
-	return tx.Hash(), nil
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for beginning a minipool bond reduction
+func (c *MinipoolBondReducer) BeginReduceBondAmount(minipoolAddress common.Address, newBondAmount *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "beginReduceBondAmount", opts, minipoolAddress, newBondAmount)
 }
 
-// Get contracts
-var rocketMinipoolBondReducerLock sync.Mutex
-
-func getRocketMinipoolBondReducer(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
-	rocketMinipoolBondReducerLock.Lock()
-	defer rocketMinipoolBondReducerLock.Unlock()
-	return rp.GetContract("rocketMinipoolBondReducer", opts)
+// Get info for voting to cancel a minipool's bond reduction
+func (c *MinipoolBondReducer) VoteCancelReduction(minipoolAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+	return rocketpool.NewTransactionInfo(c.contract, "voteCancelReduction", opts, minipoolAddress)
 }
