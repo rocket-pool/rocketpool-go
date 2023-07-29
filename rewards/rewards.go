@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -12,13 +11,38 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/utils"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
 	rewardsSnapshotSubmittedNodeKey string = "rewards.snapshot.submitted.node.key"
 )
+
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketRewardsPool
+type RewardsPool struct {
+	Details  RewardsPoolDetails
+	rp       *rocketpool.RocketPool
+	contract *core.Contract
+}
+
+// Details for RocketRewardsPool
+type RewardsPoolDetails struct {
+	RewardIndex                core.Parameter[uint64]        `json:"rewardIndex"`
+	IntervalStart              core.Parameter[time.Time]     `json:"intervalStart"`
+	IntervalDuration           core.Parameter[time.Duration] `json:"intervalDuration"`
+	NodeOperatorRewardsPercent core.Parameter[float64]       `json:"nodeOperatorRewardsPercent"`
+	OracleDaoRewardsPercent    core.Parameter[float64]       `json:"oracleDaoRewardsPercent"`
+	ProtocolDaoRewardsPercent  core.Parameter[float64]       `json:"protocolDaoRewardsPercent"`
+	PendingRplRewards          *big.Int                      `json:"pendingRplRewards"`
+	PendingEthRewards          *big.Int                      `json:"pendingEthRewards"`
+}
 
 // Info for a rewards snapshot event
 type RewardsEvent struct {
@@ -53,128 +77,78 @@ type RewardSubmission struct {
 	UserETH         *big.Int   `json:"userETH"`
 }
 
-// Get the index of the active rewards period
-func GetRewardIndex(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new RewardsPool contract binding
+func NewRewardsPool(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*RewardsPool, error) {
+	// Create the contract
+	contract, err := rp.GetContract("rocketRewardsPool", opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting rewards pool contract: %w", err)
 	}
-	index := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, index, "getRewardIndex"); err != nil {
-		return nil, fmt.Errorf("Could not get current reward index: %w", err)
-	}
-	return *index, nil
+
+	return &RewardsPool{
+		Details:  RewardsPoolDetails{},
+		rp:       rp,
+		contract: contract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get the index of the active rewards period
+func (c *RewardsPool) GetRewardIndex(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.RewardIndex.RawValue, "getRewardIndex")
 }
 
 // Get the timestamp that the current rewards interval started
-func GetClaimIntervalTimeStart(rp *rocketpool.RocketPool, opts *bind.CallOpts) (time.Time, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return time.Time{}, err
-	}
-	unixTime := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, unixTime, "getClaimIntervalTimeStart"); err != nil {
-		return time.Time{}, fmt.Errorf("Could not get claim interval time start: %w", err)
-	}
-	return time.Unix((*unixTime).Int64(), 0), nil
+func (c *RewardsPool) GetIntervalStart(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IntervalStart.RawValue, "getClaimIntervalTimeStart")
 }
 
 // Get the number of seconds in a claim interval
-func GetClaimIntervalTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (time.Duration, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	unixTime := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, unixTime, "getClaimIntervalTime"); err != nil {
-		return 0, fmt.Errorf("Could not get claim interval time: %w", err)
-	}
-	return time.Duration((*unixTime).Int64()) * time.Second, nil
+func (c *RewardsPool) GetIntervalDuration(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IntervalDuration.RawValue, "getClaimIntervalTime")
 }
 
 // Get the percent of checkpoint rewards that goes to node operators
-func GetNodeOperatorRewardsPercent(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	perc := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, perc, "getClaimingContractPerc", "rocketClaimNode"); err != nil {
-		return nil, fmt.Errorf("Could not get node operator rewards percent: %w", err)
-	}
-	return *perc, nil
+func (c *RewardsPool) GetNodeOperatorRewardsPercent(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.NodeOperatorRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimNode")
 }
 
-// Get the percent of checkpoint rewards that goes to ODAO members
-func GetTrustedNodeOperatorRewardsPercent(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	perc := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, perc, "getClaimingContractPerc", "rocketClaimTrustedNode"); err != nil {
-		return nil, fmt.Errorf("Could not get trusted node operator rewards percent: %w", err)
-	}
-	return *perc, nil
+// Get the percent of checkpoint rewards that goes to Ooracle DAO members
+func (c *RewardsPool) GetOracleDaoRewardsPercent(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.OracleDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimTrustedNode")
 }
 
-// Get the percent of checkpoint rewards that goes to the PDAO
-func GetProtocolDaoRewardsPercent(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	perc := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, perc, "getClaimingContractPerc", "rocketClaimDAO"); err != nil {
-		return nil, fmt.Errorf("Could not get protocol DAO rewards percent: %w", err)
-	}
-	return *perc, nil
+// Get the percent of checkpoint rewards that goes to the Protocol DAO
+func (c *RewardsPool) GetProtocolDaoRewardsPercent(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.ProtocolDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimDAO")
 }
 
-// Get the amount of RPL rewards that will be provided to node operators
-func GetPendingRPLRewards(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	rewards := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, rewards, "getPendingRPLRewards"); err != nil {
-		return nil, fmt.Errorf("Could not get pending RPL rewards: %w", err)
-	}
-	return *rewards, nil
+// Get the amount of RPL rewards that are currently pending distribution
+func (c *RewardsPool) GetPendingRplRewards(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.PendingRplRewards, "getPendingRPLRewards")
 }
 
-// Get the amount of ETH rewards that will be provided to node operators
-func GetPendingETHRewards(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	rewards := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, rewards, "getPendingETHRewards"); err != nil {
-		return nil, fmt.Errorf("Could not get pending ETH rewards: %w", err)
-	}
-	return *rewards, nil
+// Get the amount of ETH rewards that are currently pending distribution
+func (c *RewardsPool) GetPendingEthRewards(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.PendingRplRewards, "getPendingETHRewards")
 }
 
 // Check whether or not the given address has submitted for the given rewards interval
-func GetTrustedNodeSubmitted(rp *rocketpool.RocketPool, nodeAddress common.Address, rewardsIndex uint64, opts *bind.CallOpts) (bool, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return false, err
-	}
-
+func (c *RewardsPool) GetTrustedNodeSubmitted(mc *multicall.MultiCaller, nodeAddress common.Address, rewardsIndex uint64, hasSubmitted_Out *bool, opts *bind.CallOpts) {
 	indexBig := big.NewInt(0).SetUint64(rewardsIndex)
-	hasSubmitted := new(bool)
-	if err := rocketRewardsPool.Call(opts, hasSubmitted, "getTrustedNodeSubmitted", nodeAddress, indexBig); err != nil {
-		return false, fmt.Errorf("Could not get trusted node submission status: %w", err)
-	}
-	return *hasSubmitted, nil
+	multicall.AddCall(mc, c.contract, hasSubmitted_Out, "getTrustedNodeSubmitted", nodeAddress, indexBig)
 }
 
 // Check whether or not the given address has submitted specific rewards info
-func GetTrustedNodeSubmittedSpecificRewards(rp *rocketpool.RocketPool, nodeAddress common.Address, submission RewardSubmission, opts *bind.CallOpts) (bool, error) {
-	// NOTE: this doesn't have a view yet so we have to construct it manually, and RLP
+func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *multicall.MultiCaller, nodeAddress common.Address, submission RewardSubmission, hasSubmitted_Out *bool, opts *bind.CallOpts) error {
+	// NOTE: this doesn't have a view yet so we have to construct it manually, and RLP encode it
 	stringTy, _ := abi.NewType("string", "string", nil)
 	addressTy, _ := abi.NewType("address", "address", nil)
 
@@ -200,57 +174,39 @@ func GetTrustedNodeSubmittedSpecificRewards(rp *rocketpool.RocketPool, nodeAddre
 
 	bytes, err := args.Pack(rewardsSnapshotSubmittedNodeKey, nodeAddress, &submission)
 	if err != nil {
-		return false, fmt.Errorf("error encoding submission data into ABI format: %w", err)
+		return fmt.Errorf("error encoding submission data into ABI format: %w", err)
 	}
 
 	key := crypto.Keccak256Hash(bytes)
-	result, err := rp.RocketStorage.GetBool(opts, key)
-	if err != nil {
-		return false, fmt.Errorf("error checking if trusted node submitted specific rewards: %w", err)
-	}
-	return result, nil
+	c.rp.Storage.GetBool(mc, hasSubmitted_Out, key)
+	return nil
 }
 
-// Estimate the gas for submiting a Merkle Tree-based snapshot for a rewards interval
-func EstimateSubmitRewardSnapshotGas(rp *rocketpool.RocketPool, submission RewardSubmission, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketRewardsPool.GetTransactionGasInfo(opts, "submitRewardSnapshot", submission)
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for submitting a Merkle Tree-based snapshot for a rewards interval
+func (c *RewardsPool) SubmitRewardSnapshot(submission RewardSubmission, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "submitRewardSnapshot", opts, submission)
 }
 
-// Submit a Merkle Tree-based snapshot for a rewards interval
-func SubmitRewardSnapshot(rp *rocketpool.RocketPool, submission RewardSubmission, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketRewardsPool, err := getRocketRewardsPool(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketRewardsPool.Transact(opts, "submitRewardSnapshot", submission)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not submit rewards snapshot: %w", err)
-	}
-	return tx.Hash(), nil
-}
+// =============
+// === Utils ===
+// =============
 
 // Get the event info for a rewards snapshot using the Atlas getter
-func GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, rocketRewardsPoolAddresses []common.Address, opts *bind.CallOpts) (bool, RewardsEvent, error) {
-	// Get contracts
-	rocketRewardsPool, err := getRocketRewardsPool(rp, opts)
-	if err != nil {
-		return false, RewardsEvent{}, err
-	}
-
+func (c *RewardsPool) GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, rocketRewardsPoolAddresses []common.Address, opts *bind.CallOpts) (bool, RewardsEvent, error) {
 	// Get the block that the event was emitted on
 	indexBig := big.NewInt(0).SetUint64(index)
 	blockWrapper := new(*big.Int)
-	if err := rocketRewardsPool.Call(opts, blockWrapper, "getClaimIntervalExecutionBlock", indexBig); err != nil {
+	if err := c.contract.Call(opts, blockWrapper, "getClaimIntervalExecutionBlock", indexBig); err != nil {
 		return false, RewardsEvent{}, fmt.Errorf("error getting the event block for interval %d: %w", index, err)
 	}
 	block := *blockWrapper
 
 	// Create the list of addresses to check
-	currentAddress := *rocketRewardsPool.Address
+	currentAddress := *c.contract.Address
 	if rocketRewardsPoolAddresses == nil {
 		rocketRewardsPoolAddresses = []common.Address{currentAddress}
 	} else {
@@ -270,10 +226,10 @@ func GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, rocketRewardsPoolA
 	indexBytes := [32]byte{}
 	indexBig.FillBytes(indexBytes[:])
 	addressFilter := rocketRewardsPoolAddresses
-	topicFilter := [][]common.Hash{{rocketRewardsPool.ABI.Events["RewardSnapshot"].ID}, {indexBytes}}
+	topicFilter := [][]common.Hash{{c.contract.ABI.Events["RewardSnapshot"].ID}, {indexBytes}}
 
 	// Get the event logs
-	logs, err := eth.GetLogs(rp, addressFilter, topicFilter, big.NewInt(1), block, block, nil)
+	logs, err := utils.GetLogs(rp, addressFilter, topicFilter, big.NewInt(1), block, block, nil)
 	if err != nil {
 		return false, RewardsEvent{}, err
 	}
@@ -283,7 +239,7 @@ func GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, rocketRewardsPoolA
 	if len(logs) == 0 {
 		return false, RewardsEvent{}, nil
 	}
-	err = rocketRewardsPool.ABI.Events["RewardSnapshot"].Inputs.UnpackIntoMap(values, logs[0].Data)
+	err = c.contract.ABI.Events["RewardSnapshot"].Inputs.UnpackIntoMap(values, logs[0].Data)
 	if err != nil {
 		return false, RewardsEvent{}, err
 	}
@@ -318,13 +274,4 @@ func GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, rocketRewardsPoolA
 	}
 
 	return true, eventData, nil
-}
-
-// Get contracts
-var rocketRewardsPoolLock sync.Mutex
-
-func getRocketRewardsPool(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
-	rocketRewardsPoolLock.Lock()
-	defer rocketRewardsPoolLock.Unlock()
-	return rp.GetContract("rocketRewardsPool", opts)
 }

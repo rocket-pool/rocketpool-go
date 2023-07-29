@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -18,18 +19,18 @@ import (
 // Binding for RocketMinipoolBondReducer
 type MinipoolBondReducer struct {
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for RocketMinipoolBondReducer for a specific minipool
 type MinipoolBondReducerDetails struct {
-	Address                      common.Address                  `json:"address"`
-	IsBondReduceCancelled        bool                            `json:"isBondReduceCancelled"`
-	ReduceBondTime               rocketpool.Parameter[time.Time] `json:"reduceBondTime"`
-	ReduceBondValue              *big.Int                        `json:"reduceBondValue"`
-	LastBondReductionTime        rocketpool.Parameter[time.Time] `json:"lastBondReductionTime"`
-	LastBondReductionPrevValue   *big.Int                        `json:"lastBondReductionPrevValue"`
-	LastBondReductionPrevNodeFee rocketpool.Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
+	Address                      common.Address            `json:"address"`
+	IsBondReduceCancelled        bool                      `json:"isBondReduceCancelled"`
+	ReduceBondTime               core.Parameter[time.Time] `json:"reduceBondTime"`
+	ReduceBondValue              *big.Int                  `json:"reduceBondValue"`
+	LastBondReductionTime        core.Parameter[time.Time] `json:"lastBondReductionTime"`
+	LastBondReductionPrevValue   *big.Int                  `json:"lastBondReductionPrevValue"`
+	LastBondReductionPrevNodeFee core.Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
 }
 
 // ====================
@@ -105,11 +106,11 @@ func (c *MinipoolBondReducer) GetAllDetails(mc *multicall.MultiCaller, details *
 // ====================
 
 // Get info for beginning a minipool bond reduction
-func (c *MinipoolBondReducer) BeginReduceBondAmount(minipoolAddress common.Address, newBondAmount *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "beginReduceBondAmount", opts, minipoolAddress, newBondAmount)
+func (c *MinipoolBondReducer) BeginReduceBondAmount(minipoolAddress common.Address, newBondAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "beginReduceBondAmount", opts, minipoolAddress, newBondAmount)
 }
 
 // Get info for voting to cancel a minipool's bond reduction
-func (c *MinipoolBondReducer) VoteCancelReduction(minipoolAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "voteCancelReduction", opts, minipoolAddress)
+func (c *MinipoolBondReducer) VoteCancelReduction(minipoolAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "voteCancelReduction", opts, minipoolAddress)
 }

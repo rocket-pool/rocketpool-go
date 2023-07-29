@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -103,11 +104,11 @@ type Erc20Contract struct {
 	Name     string
 	Symbol   string
 	Decimals uint8
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Creates a contract wrapper for the ERC20 at the given address
-func NewErc20Contract(address common.Address, client rocketpool.ExecutionClient, opts *bind.CallOpts) (*Erc20Contract, error) {
+func NewErc20Contract(address common.Address, client core.ExecutionClient, opts *bind.CallOpts) (*Erc20Contract, error) {
 	// Parse the ABI
 	if erc20Abi == nil {
 		abiParsed, err := abi.JSON(strings.NewReader(Erc20AbiString))
@@ -118,7 +119,7 @@ func NewErc20Contract(address common.Address, client rocketpool.ExecutionClient,
 	}
 
 	// Create contract
-	contract := &rocketpool.Contract{
+	contract := &core.Contract{
 		Contract: bind.NewBoundContract(address, *erc20Abi, client, client, client),
 		Address:  &address,
 		ABI:      erc20Abi,

@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
@@ -20,14 +21,14 @@ import (
 type NetworkPrices struct {
 	Details  NetworkPricesDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for network prices
 type NetworkPricesDetails struct {
-	PricesBlock                 rocketpool.Parameter[uint64]  `json:"pricesBlock"`
-	RplPrice                    rocketpool.Parameter[float64] `json:"rplPrice"`
-	LatestReportablePricesBlock rocketpool.Parameter[uint64]  `json:"latestReportablePricesBlock"`
+	PricesBlock                 core.Parameter[uint64]  `json:"pricesBlock"`
+	RplPrice                    core.Parameter[float64] `json:"rplPrice"`
+	LatestReportablePricesBlock core.Parameter[uint64]  `json:"latestReportablePricesBlock"`
 }
 
 // ====================
@@ -79,8 +80,8 @@ func (c *NetworkPrices) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 // Get info for network price submission
-func (c *NetworkPrices) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "submitPrices", opts, big.NewInt(int64(block)), rplPrice)
+func (c *NetworkPrices) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "submitPrices", opts, big.NewInt(int64(block)), rplPrice)
 }
 
 // =============

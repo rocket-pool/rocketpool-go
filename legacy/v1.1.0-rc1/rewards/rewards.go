@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
@@ -295,7 +296,7 @@ func GetRewardSnapshotEventWithUpgrades(rp *rocketpool.RocketPool, index uint64,
 // Get contracts
 var rocketRewardsPoolLock sync.Mutex
 
-func getRocketRewardsPool(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketRewardsPool(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketRewardsPoolLock.Lock()
 	defer rocketRewardsPoolLock.Unlock()
 	if address == nil {

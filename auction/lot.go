@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -21,22 +21,22 @@ type AuctionLot struct {
 
 // Details for auction lots
 type AuctionLotDetails struct {
-	Index               rocketpool.Parameter[uint64]  `json:"index"`
-	Exists              bool                          `json:"exists"`
-	StartBlock          rocketpool.Parameter[uint64]  `json:"startBlock"`
-	EndBlock            rocketpool.Parameter[uint64]  `json:"endBlock"`
-	StartPrice          rocketpool.Parameter[float64] `json:"startPrice"`
-	ReservePrice        rocketpool.Parameter[float64] `json:"reservePrice"`
-	PriceAtCurrentBlock rocketpool.Parameter[float64] `json:"priceAtCurrentBlock"`
-	PriceByTotalBids    rocketpool.Parameter[float64] `json:"priceByTotalBids"`
-	CurrentPrice        rocketpool.Parameter[float64] `json:"currentPrice"`
-	TotalRplAmount      *big.Int                      `json:"totalRplAmount"`
-	ClaimedRplAmount    *big.Int                      `json:"claimedRplAmount"`
-	RemainingRplAmount  *big.Int                      `json:"remainingRplAmount"`
-	TotalBidAmount      *big.Int                      `json:"totalBidAmount"`
-	AddressBidAmount    *big.Int                      `json:"addressBidAmount"`
-	Cleared             bool                          `json:"cleared"`
-	RplRecovered        bool                          `json:"rplRecovered"`
+	Index               core.Parameter[uint64]  `json:"index"`
+	Exists              bool                    `json:"exists"`
+	StartBlock          core.Parameter[uint64]  `json:"startBlock"`
+	EndBlock            core.Parameter[uint64]  `json:"endBlock"`
+	StartPrice          core.Parameter[float64] `json:"startPrice"`
+	ReservePrice        core.Parameter[float64] `json:"reservePrice"`
+	PriceAtCurrentBlock core.Parameter[float64] `json:"priceAtCurrentBlock"`
+	PriceByTotalBids    core.Parameter[float64] `json:"priceByTotalBids"`
+	CurrentPrice        core.Parameter[float64] `json:"currentPrice"`
+	TotalRplAmount      *big.Int                `json:"totalRplAmount"`
+	ClaimedRplAmount    *big.Int                `json:"claimedRplAmount"`
+	RemainingRplAmount  *big.Int                `json:"remainingRplAmount"`
+	TotalBidAmount      *big.Int                `json:"totalBidAmount"`
+	AddressBidAmount    *big.Int                `json:"addressBidAmount"`
+	Cleared             bool                    `json:"cleared"`
+	RplRecovered        bool                    `json:"rplRecovered"`
 }
 
 // ====================
@@ -47,7 +47,7 @@ type AuctionLotDetails struct {
 func NewAuctionLot(mgr *AuctionManager, index uint64) *AuctionLot {
 	return &AuctionLot{
 		Details: AuctionLotDetails{
-			Index: rocketpool.Parameter[uint64]{
+			Index: core.Parameter[uint64]{
 				RawValue: big.NewInt(int64(index)),
 			},
 		},
@@ -130,8 +130,8 @@ func (c *AuctionLot) GetLotIsCleared(mc *multicall.MultiCaller) {
 }
 
 // Get the price of the lot at the given block
-func (c *AuctionLot) GetLotPriceAtBlock(mc *multicall.MultiCaller, blockNumber uint64, price_Out *rocketpool.Parameter[float64]) {
-	*price_Out = rocketpool.Parameter[float64]{}
+func (c *AuctionLot) GetLotPriceAtBlock(mc *multicall.MultiCaller, blockNumber uint64, price_Out *core.Parameter[float64]) {
+	*price_Out = core.Parameter[float64]{}
 	multicall.AddCall(mc, c.mgr.contract, &price_Out.RawValue, "getLotPriceAtBlock", c.Details.Index.RawValue, big.NewInt(int64(blockNumber)))
 }
 
@@ -169,16 +169,16 @@ func (c *AuctionLot) GetAllDetailsWithBidAmount(mc *multicall.MultiCaller, bidde
 // ====================
 
 // Get info for placing a bid on a lot
-func (c *AuctionLot) PlaceBid(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "placeBid", opts, c.Details.Index.RawValue)
+func (c *AuctionLot) PlaceBid(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "placeBid", opts, c.Details.Index.RawValue)
 }
 
 // Get info for claiming RPL from a lot that was bid on
-func (c *AuctionLot) ClaimBid(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "claimBid", opts, c.Details.Index.RawValue)
+func (c *AuctionLot) ClaimBid(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "claimBid", opts, c.Details.Index.RawValue)
 }
 
 // Get info for recovering unclaimed RPL from a lot
-func (c *AuctionLot) RecoverUnclaimedRpl(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "recoverUnclaimedRPL", opts, c.Details.Index.RawValue)
+func (c *AuctionLot) RecoverUnclaimedRpl(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "recoverUnclaimedRPL", opts, c.Details.Index.RawValue)
 }

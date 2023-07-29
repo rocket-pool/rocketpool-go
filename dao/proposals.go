@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -640,7 +641,7 @@ func GetProposalMemberSupported(rp *rocketpool.RocketPool, proposalId uint64, me
 // Get contracts
 var rocketDAOProposalLock sync.Mutex
 
-func getRocketDAOProposal(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketDAOProposal(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketDAOProposalLock.Lock()
 	defer rocketDAOProposalLock.Unlock()
 	return rp.GetContract("rocketDAOProposal", opts)

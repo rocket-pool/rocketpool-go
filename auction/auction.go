@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -24,15 +25,15 @@ const (
 type AuctionManager struct {
 	Details  AuctionManagerDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for RocketAuctionManager
 type AuctionManagerDetails struct {
-	TotalRplBalance     *big.Int                     `json:"totalRplBalance"`
-	AllottedRplBalance  *big.Int                     `json:"allottedRplBalance"`
-	RemainingRplBalance *big.Int                     `json:"remainingRplBalance"`
-	LotCount            rocketpool.Parameter[uint64] `json:"lotCount"`
+	TotalRplBalance     *big.Int               `json:"totalRplBalance"`
+	AllottedRplBalance  *big.Int               `json:"allottedRplBalance"`
+	RemainingRplBalance *big.Int               `json:"remainingRplBalance"`
+	LotCount            core.Parameter[uint64] `json:"lotCount"`
 }
 
 // ====================
@@ -91,8 +92,8 @@ func (c *AuctionManager) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 // Get info for creating a new lot
-func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "createLot", opts)
+func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "createLot", opts)
 }
 
 // ===================
@@ -113,7 +114,8 @@ func (c *AuctionManager) GetLotWithBids(index uint64, bidder common.Address, opt
 func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
 	// Create the lot and get details via a multicall query
 	lot, err := multicall.MulticallQuery[AuctionLot](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		func(mc *multicall.MultiCaller) (*AuctionLot, error) {
 			lot := NewAuctionLot(c, index)
 			lot.GetAllDetails(mc)
@@ -147,7 +149,8 @@ func (c *AuctionManager) GetLotsWithBids(lotCount uint64, bidder common.Address,
 func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
 	// Run the multicall query for each lot
 	lots, err := multicall.MulticallBatchQuery[AuctionLot](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		lotCount,
 		lotDetailsBatchSize,
 		func(lots []*AuctionLot, index uint64, mc *multicall.MultiCaller) error {

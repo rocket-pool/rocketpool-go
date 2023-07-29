@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -21,20 +21,20 @@ type OracleDaoMember struct {
 
 // Details for Oracle DAO members
 type OracleDaoMemberDetails struct {
-	Index                  rocketpool.Parameter[uint64]    `json:"index"`
-	Address                common.Address                  `json:"address"`
-	Exists                 bool                            `json:"exists"`
-	ID                     string                          `json:"id"`
-	Url                    string                          `json:"url"`
-	InvitedTime            rocketpool.Parameter[time.Time] `json:"invitedTime"`
-	JoinedTime             rocketpool.Parameter[time.Time] `json:"joinedTime"`
-	ReplacedTime           rocketpool.Parameter[time.Time] `json:"replacedTime"`
-	LeftTime               rocketpool.Parameter[time.Time] `json:"leftTime"`
-	LastProposalTime       rocketpool.Parameter[time.Time] `json:"lastProposalTime"`
-	RPLBondAmount          *big.Int                        `json:"rplBondAmount"`
-	ReplacementAddress     common.Address                  `json:"replacementAddress"`
-	IsChallenged           bool                            `json:"isChallenged"`
-	UnbondedValidatorCount rocketpool.Parameter[uint64]    `json:"unbondedValidatorCount"`
+	Index                  core.Parameter[uint64]    `json:"index"`
+	Address                common.Address            `json:"address"`
+	Exists                 bool                      `json:"exists"`
+	ID                     string                    `json:"id"`
+	Url                    string                    `json:"url"`
+	InvitedTime            core.Parameter[time.Time] `json:"invitedTime"`
+	JoinedTime             core.Parameter[time.Time] `json:"joinedTime"`
+	ReplacedTime           core.Parameter[time.Time] `json:"replacedTime"`
+	LeftTime               core.Parameter[time.Time] `json:"leftTime"`
+	LastProposalTime       core.Parameter[time.Time] `json:"lastProposalTime"`
+	RPLBondAmount          *big.Int                  `json:"rplBondAmount"`
+	ReplacementAddress     common.Address            `json:"replacementAddress"`
+	IsChallenged           bool                      `json:"isChallenged"`
+	UnbondedValidatorCount core.Parameter[uint64]    `json:"unbondedValidatorCount"`
 }
 
 // ====================
@@ -45,7 +45,7 @@ type OracleDaoMemberDetails struct {
 func NewOracleDaoMember(mgr *DaoNodeTrusted, index uint64, address common.Address) *OracleDaoMember {
 	return &OracleDaoMember{
 		Details: OracleDaoMemberDetails{
-			Index: rocketpool.Parameter[uint64]{
+			Index: core.Parameter[uint64]{
 				RawValue: big.NewInt(int64(index)),
 			},
 			Address: address,

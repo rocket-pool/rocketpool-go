@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -25,13 +26,13 @@ const (
 type DaoNodeTrusted struct {
 	Details  DaoNodeTrustedDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for DaoNodeTrusted
 type DaoNodeTrustedDetails struct {
-	MemberCount        rocketpool.Parameter[uint64] `json:"memberCount"`
-	MinimumMemberCount rocketpool.Parameter[uint64] `json:"minimumMemberCount"`
+	MemberCount        core.Parameter[uint64] `json:"memberCount"`
+	MinimumMemberCount core.Parameter[uint64] `json:"minimumMemberCount"`
 }
 
 // ====================
@@ -77,7 +78,8 @@ func (c *DaoNodeTrusted) GetAllDetails(mc *multicall.MultiCaller) {
 func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallOpts) ([]*common.Address, error) {
 	// Run the multicall query for each address
 	addresses, err := multicall.MulticallBatchQuery[common.Address](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		memberCount,
 		memberAddressBatchSize,
 		func(addresses []*common.Address, index uint64, mc *multicall.MultiCaller) error {
@@ -102,27 +104,27 @@ func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallO
 // ====================
 
 // Bootstrap a bool setting
-func (c *DaoNodeTrusted) BootstrapBool(contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
+func (c *DaoNodeTrusted) BootstrapBool(contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
 }
 
 // Bootstrap a uint setting
-func (c *DaoNodeTrusted) BootstrapUint(contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
+func (c *DaoNodeTrusted) BootstrapUint(contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
 }
 
 // Bootstrap a member into the Oracle DAO
-func (c *DaoNodeTrusted) BootstrapMember(id string, url string, nodeAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapMember", opts, id, url, nodeAddress)
+func (c *DaoNodeTrusted) BootstrapMember(id string, url string, nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapMember", opts, id, url, nodeAddress)
 }
 
 // Bootstrap a contract upgrade
-func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	compressedAbi, err := rocketpool.EncodeAbiStr(contractAbi)
+func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)
 	}
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapUpgrade", opts, upgradeType, contractName, compressedAbi, contractAddress)
+	return core.NewTransactionInfo(c.contract, "bootstrapUpgrade", opts, upgradeType, contractName, compressedAbi, contractAddress)
 }
 
 // ===================
@@ -133,7 +135,8 @@ func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName strin
 func (c *DaoNodeTrusted) GetMemberAt(index uint64, address common.Address, opts *bind.CallOpts) (*OracleDaoMember, error) {
 	// Create the member and get details via a multicall query
 	member, err := multicall.MulticallQuery[OracleDaoMember](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		func(mc *multicall.MultiCaller) (*OracleDaoMember, error) {
 			member := NewOracleDaoMember(c, index, address)
 			member.GetAllDetails(mc)
@@ -154,7 +157,8 @@ func (c *DaoNodeTrusted) GetMemberAt(index uint64, address common.Address, opts 
 func (c *DaoNodeTrusted) GetAllMembers(addresses []*common.Address, opts *bind.CallOpts) ([]*OracleDaoMember, error) {
 	// Run the multicall query for each lot
 	members, err := multicall.MulticallBatchQuery[OracleDaoMember](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		uint64(len(addresses)),
 		memberDetailsBatchSize,
 		func(members []*OracleDaoMember, index uint64, mc *multicall.MultiCaller) error {

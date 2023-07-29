@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -179,7 +180,7 @@ func BootstrapTargetRethCollateralRate(rp *rocketpool.RocketPool, value float64,
 // Get contracts
 var networkSettingsContractLock sync.Mutex
 
-func getNetworkSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getNetworkSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	networkSettingsContractLock.Lock()
 	defer networkSettingsContractLock.Unlock()
 	return rp.GetContract(NetworkSettingsContractName, opts)

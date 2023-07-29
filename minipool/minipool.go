@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
@@ -619,7 +620,7 @@ func GetMinipoolDepositType(rp *rocketpool.RocketPool, minipoolAddress common.Ad
 // Get contracts
 var rocketMinipoolManagerLock sync.Mutex
 
-func getRocketMinipoolManager(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketMinipoolManager(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketMinipoolManagerLock.Lock()
 	defer rocketMinipoolManagerLock.Unlock()
 	return rp.GetContract("rocketMinipoolManager", opts)

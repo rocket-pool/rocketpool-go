@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -17,7 +18,7 @@ import (
 // Binding for RocketNetworkPenalties
 type NetworkPenalties struct {
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // ====================
@@ -43,6 +44,6 @@ func NewNetworkPenalties(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*Netwo
 // ====================
 
 // Get info for minipool penalty submission
-func (c *NetworkPenalties) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "submitPenalty", opts, minipoolAddress, block)
+func (c *NetworkPenalties) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "submitPenalty", opts, minipoolAddress, block)
 }

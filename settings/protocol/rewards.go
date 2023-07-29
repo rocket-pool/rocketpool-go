@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -74,7 +75,7 @@ func BootstrapRewardsClaimIntervalTime(rp *rocketpool.RocketPool, value uint64, 
 // Get contracts
 var rewardsSettingsContractLock sync.Mutex
 
-func getRewardsSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRewardsSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rewardsSettingsContractLock.Lock()
 	defer rewardsSettingsContractLock.Unlock()
 	return rp.GetContract(RewardsSettingsContractName, opts)

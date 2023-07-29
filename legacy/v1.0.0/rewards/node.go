@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
@@ -117,7 +118,7 @@ func GetNodeTotalClaimed(rp *rocketpool.RocketPool, opts *bind.CallOpts, legacyR
 // Get contracts
 var rocketClaimNodeLock sync.Mutex
 
-func getRocketClaimNode(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketClaimNode(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketClaimNodeLock.Lock()
 	defer rocketClaimNodeLock.Unlock()
 	if address == nil {

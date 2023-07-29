@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
@@ -20,17 +21,17 @@ import (
 type NetworkBalances struct {
 	Details  NetworkBalancesDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for network balances
 type NetworkBalancesDetails struct {
-	BalancesBlock                 rocketpool.Parameter[uint64]  `json:"balancesBlock"`
-	TotalETHBalance               *big.Int                      `json:"totalEthBalance"`
-	StakingETHBalance             *big.Int                      `json:"stakingEthBalance"`
-	TotalRETHSupply               *big.Int                      `json:"totalRethSupply"`
-	ETHUtilizationRate            rocketpool.Parameter[float64] `json:"ethUtilizationRate"`
-	LatestReportableBalancesBlock rocketpool.Parameter[uint64]  `json:"latestReportableBalancesBlock"`
+	BalancesBlock                 core.Parameter[uint64]  `json:"balancesBlock"`
+	TotalETHBalance               *big.Int                `json:"totalEthBalance"`
+	StakingETHBalance             *big.Int                `json:"stakingEthBalance"`
+	TotalRETHSupply               *big.Int                `json:"totalRethSupply"`
+	ETHUtilizationRate            core.Parameter[float64] `json:"ethUtilizationRate"`
+	LatestReportableBalancesBlock core.Parameter[uint64]  `json:"latestReportableBalancesBlock"`
 }
 
 // ====================
@@ -101,8 +102,8 @@ func (c *NetworkBalances) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 // Get info for network balance submission
-func (c *NetworkBalances) SubmitBalances(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "submitBalances", opts, block, totalEth, stakingEth, rethSupply)
+func (c *NetworkBalances) SubmitBalances(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "submitBalances", opts, block, totalEth, stakingEth, rethSupply)
 }
 
 // =============

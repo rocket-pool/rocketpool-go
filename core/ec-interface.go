@@ -1,4 +1,4 @@
-package rocketpool
+package core
 
 import (
 	"context"

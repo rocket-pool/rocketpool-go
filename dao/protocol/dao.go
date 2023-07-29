@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
@@ -18,7 +19,7 @@ import (
 // Binding for RocketDAOProtocol
 type DaoProtocol struct {
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // ====================
@@ -44,21 +45,21 @@ func NewDaoProtocol(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DaoProtoco
 // ====================
 
 // Get info for bootstrapping a bool setting
-func (c *DaoProtocol) BootstrapBool(contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
+func (c *DaoProtocol) BootstrapBool(contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
 }
 
 // Get info for bootstrapping a uint256 setting
-func (c *DaoProtocol) BootstrapUint(contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
+func (c *DaoProtocol) BootstrapUint(contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
 }
 
 // Get info for bootstrapping an address setting
-func (c *DaoProtocol) BootstrapAddress(contractName string, settingPath string, value common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapSettingAddress", opts, contractName, settingPath, value)
+func (c *DaoProtocol) BootstrapAddress(contractName string, settingPath string, value common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapSettingAddress", opts, contractName, settingPath, value)
 }
 
 // Get info for bootstrapping a rewards claimer
-func (c *DaoProtocol) BootstrapClaimer(contractName string, amount float64, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "bootstrapSettingClaimer", opts, contractName, eth.EthToWei(amount))
+func (c *DaoProtocol) BootstrapClaimer(contractName string, amount float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "bootstrapSettingClaimer", opts, contractName, eth.EthToWei(amount))
 }

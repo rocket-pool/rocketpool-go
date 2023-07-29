@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -51,7 +52,7 @@ func BootstrapInflationStartTime(rp *rocketpool.RocketPool, value uint64, opts *
 // Get contracts
 var inflationSettingsContractLock sync.Mutex
 
-func getInflationSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getInflationSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	inflationSettingsContractLock.Lock()
 	defer inflationSettingsContractLock.Unlock()
 	return rp.GetContract(InflationSettingsContractName, opts)

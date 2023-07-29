@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/hashicorp/go-version"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -24,37 +25,37 @@ type NetworkContracts struct {
 	Version *version.Version
 
 	// Redstone
-	RocketDAONodeTrusted                 *rocketpool.Contract
-	RocketDAONodeTrustedSettingsMinipool *rocketpool.Contract
-	RocketDAOProtocolSettingsMinipool    *rocketpool.Contract
-	RocketDAOProtocolSettingsNetwork     *rocketpool.Contract
-	RocketDAOProtocolSettingsNode        *rocketpool.Contract
-	RocketDepositPool                    *rocketpool.Contract
-	RocketMinipoolManager                *rocketpool.Contract
-	RocketMinipoolQueue                  *rocketpool.Contract
-	RocketNetworkBalances                *rocketpool.Contract
-	RocketNetworkFees                    *rocketpool.Contract
-	RocketNetworkPrices                  *rocketpool.Contract
-	RocketNodeDeposit                    *rocketpool.Contract
-	RocketNodeDistributorFactory         *rocketpool.Contract
-	RocketNodeManager                    *rocketpool.Contract
-	RocketNodeStaking                    *rocketpool.Contract
-	RocketRewardsPool                    *rocketpool.Contract
-	RocketSmoothingPool                  *rocketpool.Contract
-	RocketStorage                        *rocketpool.Contract
-	RocketTokenRETH                      *rocketpool.Contract
-	RocketTokenRPL                       *rocketpool.Contract
-	RocketTokenRPLFixedSupply            *rocketpool.Contract
+	RocketDAONodeTrusted                 *core.Contract
+	RocketDAONodeTrustedSettingsMinipool *core.Contract
+	RocketDAOProtocolSettingsMinipool    *core.Contract
+	RocketDAOProtocolSettingsNetwork     *core.Contract
+	RocketDAOProtocolSettingsNode        *core.Contract
+	RocketDepositPool                    *core.Contract
+	RocketMinipoolManager                *core.Contract
+	RocketMinipoolQueue                  *core.Contract
+	RocketNetworkBalances                *core.Contract
+	RocketNetworkFees                    *core.Contract
+	RocketNetworkPrices                  *core.Contract
+	RocketNodeDeposit                    *core.Contract
+	RocketNodeDistributorFactory         *core.Contract
+	RocketNodeManager                    *core.Contract
+	RocketNodeStaking                    *core.Contract
+	RocketRewardsPool                    *core.Contract
+	RocketSmoothingPool                  *core.Contract
+	RocketStorage                        *core.Contract
+	RocketTokenRETH                      *core.Contract
+	RocketTokenRPL                       *core.Contract
+	RocketTokenRPLFixedSupply            *core.Contract
 
 	// Atlas
-	RocketMinipoolBondReducer *rocketpool.Contract
+	RocketMinipoolBondReducer *core.Contract
 }
 
 type contractArtifacts struct {
 	name       string
 	address    common.Address
 	abiEncoded string
-	contract   **rocketpool.Contract
+	contract   **core.Contract
 }
 
 // Get a new network contracts container
@@ -184,7 +185,7 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 		}
 
 		// Create the contract binding
-		contract := &rocketpool.Contract{
+		contract := &core.Contract{
 			Contract: bind.NewBoundContract(wrapper.address, *abi, rp.Client, rp.Client, rp.Client),
 			Address:  &wrappers[i].address,
 			ABI:      abi,

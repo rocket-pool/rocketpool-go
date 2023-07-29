@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 )
@@ -115,7 +116,7 @@ func sortDepositData(data []DepositData) {
 // Get contracts
 var casperDepositLock sync.Mutex
 
-func getCasperDeposit(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getCasperDeposit(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	casperDepositLock.Lock()
 	defer casperDepositLock.Unlock()
 	return rp.GetContract("casperDeposit", opts)

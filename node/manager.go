@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -27,13 +28,13 @@ const (
 type NodeManager struct {
 	Details  NodeManagerDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for RocketNodeManager
 type NodeManagerDetails struct {
-	Version   uint8                        `json:"version"`
-	NodeCount rocketpool.Parameter[uint64] `json:"nodeCount"`
+	Version   uint8                  `json:"version"`
+	NodeCount core.Parameter[uint64] `json:"nodeCount"`
 }
 
 // Count of nodes belonging to a timezone
@@ -85,7 +86,8 @@ func (c *NodeManager) GetAllDetails(mc *multicall.MultiCaller) {
 func (c *NodeManager) GetNodeAddresses(nodeCount uint64, opts *bind.CallOpts) ([]*common.Address, error) {
 	// Run the multicall query for each address
 	addresses, err := multicall.MulticallBatchQuery[common.Address](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		nodeCount,
 		nodeAddressBatchSize,
 		func(addresses []*common.Address, index uint64, mc *multicall.MultiCaller) error {
@@ -113,7 +115,8 @@ func (c *NodeManager) GetNodeAddresses(nodeCount uint64, opts *bind.CallOpts) ([
 func (c *NodeManager) GetNodeAt(index uint64, address common.Address, staking *NodeStaking, opts *bind.CallOpts) (*Node, error) {
 	// Create the node and get details via a multicall query
 	node, err := multicall.MulticallQuery[Node](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		func(mc *multicall.MultiCaller) (*Node, error) {
 			node := NewNode(c, staking, index, address)
 			node.GetAllDetails(mc)
@@ -134,7 +137,8 @@ func (c *NodeManager) GetNodeAt(index uint64, address common.Address, staking *N
 func (c *NodeManager) GetAllNodes(addresses []*common.Address, staking *NodeStaking, opts *bind.CallOpts) ([]*Node, error) {
 	// Run the multicall query for each lot
 	nodes, err := multicall.MulticallBatchQuery[Node](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		uint64(len(addresses)),
 		nodeDetailsBatchSize,
 		func(nodes []*Node, index uint64, mc *multicall.MultiCaller) error {
@@ -162,14 +166,14 @@ func (c *NodeManager) GetAllNodes(addresses []*common.Address, staking *NodeStak
 // NOTE: you will have to call this several times, iterating through subset ranges,
 // to get the complete result since a single call for the complete node set may run out of gas
 func (c *NodeManager) GetNodeCountPerTimezone(offset *big.Int, limit *big.Int, opts *bind.CallOpts) ([]TimezoneCount, error) {
-	return rocketpool.CallUntyped[[]TimezoneCount](c.contract, opts, "getNodeCountPerTimezone", offset, limit)
+	return core.CallUntyped[[]TimezoneCount](c.contract, opts, "getNodeCountPerTimezone", offset, limit)
 }
 
 // Get the number of nodes in the Smoothing Pool for the subset of nodes provided
 // NOTE: you will have to call this several times, iterating through subset ranges,
 // to get the complete result since a single call for the complete node set may run out of gas
 func (c *NodeManager) GetSmoothingPoolRegisteredNodeCount(offset *big.Int, limit *big.Int, opts *bind.CallOpts) (uint64, error) {
-	count, err := rocketpool.Call[*big.Int](c.contract, opts, "getSmoothingPoolRegisteredNodeCount", offset, limit)
+	count, err := core.Call[*big.Int](c.contract, opts, "getSmoothingPoolRegisteredNodeCount", offset, limit)
 	if err != nil {
 		return 0, err
 	}

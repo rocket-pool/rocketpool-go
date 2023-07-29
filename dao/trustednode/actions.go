@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils"
 )
@@ -18,7 +19,7 @@ import (
 // Binding for RocketDAONodeTrustedActions
 type DaoNodeTrustedActions struct {
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // ====================
@@ -44,23 +45,23 @@ func NewDaoNodeTrustedActions(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*
 // ====================
 
 // Get info for joining the Oracle DAO
-func (c *DaoNodeTrustedActions) Join(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "actionJoin", opts)
+func (c *DaoNodeTrustedActions) Join(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "actionJoin", opts)
 }
 
 // Get info for leaving the Oracle DAO
-func (c *DaoNodeTrustedActions) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "actionLeave", opts, rplBondRefundAddress)
+func (c *DaoNodeTrustedActions) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "actionLeave", opts, rplBondRefundAddress)
 }
 
 // Get info for making a challenge to an Oracle DAO member
-func (c *DaoNodeTrustedActions) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "actionChallengeMake", opts, memberAddress)
+func (c *DaoNodeTrustedActions) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "actionChallengeMake", opts, memberAddress)
 }
 
 // Get info for deciding a challenge to an Oracle DAO member
-func (c *DaoNodeTrustedActions) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "actionChallengeDecide", opts, memberAddress)
+func (c *DaoNodeTrustedActions) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "actionChallengeDecide", opts, memberAddress)
 }
 
 // =============

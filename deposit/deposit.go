@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -18,7 +19,7 @@ import (
 type DepositPool struct {
 	Details  DepositPoolDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for RocketDepositPool
@@ -78,11 +79,11 @@ func (c *DepositPool) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 // Get info for making a deposit
-func (c *DepositPool) Deposit(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "deposit", opts)
+func (c *DepositPool) Deposit(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "deposit", opts)
 }
 
 // Get info for assigning deposits
-func (c *DepositPool) AssignDeposits(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "assignDeposits", opts)
+func (c *DepositPool) AssignDeposits(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "assignDeposits", opts)
 }

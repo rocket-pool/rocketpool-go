@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -20,12 +20,12 @@ const (
 )
 
 type BalanceBatcher struct {
-	Client          rocketpool.ExecutionClient
+	Client          core.ExecutionClient
 	ABI             abi.ABI
 	ContractAddress common.Address
 }
 
-func NewBalanceBatcher(client rocketpool.ExecutionClient, address common.Address) (*BalanceBatcher, error) {
+func NewBalanceBatcher(client core.ExecutionClient, address common.Address) (*BalanceBatcher, error) {
 	abi, err := abi.JSON(strings.NewReader(BalancesABI))
 	if err != nil {
 		return nil, err

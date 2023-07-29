@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -35,7 +36,7 @@ func SubmitMinipoolWithdrawable(rp *rocketpool.RocketPool, minipoolAddress commo
 // Get contracts
 var rocketMinipoolStatusLock sync.Mutex
 
-func getRocketMinipoolStatus(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketMinipoolStatus(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketMinipoolStatusLock.Lock()
 	defer rocketMinipoolStatusLock.Unlock()
 	return rp.GetContract("rocketMinipoolStatus", opts)

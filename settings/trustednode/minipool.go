@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	trustednodedao "github.com/rocket-pool/rocketpool-go/dao/trustednode"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -135,7 +136,7 @@ func EstimateProposeBondReductionWindowLengthGas(rp *rocketpool.RocketPool, valu
 // Get contracts
 var minipoolSettingsContractLock sync.Mutex
 
-func getMinipoolSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getMinipoolSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	minipoolSettingsContractLock.Lock()
 	defer minipoolSettingsContractLock.Unlock()
 	return rp.GetContract(MinipoolSettingsContractName, opts)

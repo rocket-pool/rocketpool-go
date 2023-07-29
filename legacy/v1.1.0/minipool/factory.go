@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -26,7 +27,7 @@ func GetMinipoolBytecode(rp *rocketpool.RocketPool, opts *bind.CallOpts, legacyR
 // Get contracts
 var rocketMinipoolFactoryLock sync.Mutex
 
-func getRocketMinipoolFactory(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketMinipoolFactory(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketMinipoolFactoryLock.Lock()
 	defer rocketMinipoolFactoryLock.Unlock()
 	if address == nil {

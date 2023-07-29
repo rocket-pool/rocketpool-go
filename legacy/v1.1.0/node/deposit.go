@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -53,7 +54,7 @@ func GetDepositType(rp *rocketpool.RocketPool, amount *big.Int, opts *bind.CallO
 // Get contracts
 var rocketNodeDepositLock sync.Mutex
 
-func getRocketNodeDeposit(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketNodeDeposit(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketNodeDepositLock.Lock()
 	defer rocketNodeDepositLock.Unlock()
 	if address == nil {

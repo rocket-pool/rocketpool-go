@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	trustednodedao "github.com/rocket-pool/rocketpool-go/dao/trustednode"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -182,7 +183,7 @@ func EstimateProposeChallengeCostGas(rp *rocketpool.RocketPool, value *big.Int, 
 // Get contracts
 var membersSettingsContractLock sync.Mutex
 
-func getMembersSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getMembersSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	membersSettingsContractLock.Lock()
 	defer membersSettingsContractLock.Unlock()
 	return rp.GetContract(MembersSettingsContractName, opts)

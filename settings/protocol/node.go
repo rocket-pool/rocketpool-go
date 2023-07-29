@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -125,7 +126,7 @@ func BootstrapMaximumPerMinipoolStake(rp *rocketpool.RocketPool, value float64, 
 // Get contracts
 var nodeSettingsContractLock sync.Mutex
 
-func getNodeSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getNodeSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	nodeSettingsContractLock.Lock()
 	defer nodeSettingsContractLock.Unlock()
 	return rp.GetContract(NodeSettingsContractName, opts)

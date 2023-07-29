@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -16,7 +17,7 @@ import (
 // Binding for RocketNodeDistributorFactory
 type NodeDistributorFactory struct {
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // ====================
@@ -54,7 +55,8 @@ func (c *NodeDistributorFactory) GetDistributorAddress(mc *multicall.MultiCaller
 func (c *NodeDistributorFactory) GetNodeDistributor(nodeAddress common.Address, distributorAddress common.Address, opts *bind.CallOpts) (*NodeDistributor, error) {
 	// Create the distributor and get details via a multicall query
 	distributor, err := multicall.MulticallQuery[NodeDistributor](
-		c.rp,
+		c.rp.Client,
+		*c.rp.MulticallAddress,
 		func(mc *multicall.MultiCaller) (*NodeDistributor, error) {
 			distributor, err := NewNodeDistributor(c.rp, nodeAddress, distributorAddress, opts)
 			if err != nil {

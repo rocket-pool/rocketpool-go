@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -51,7 +52,7 @@ func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, v
 }
 
 // Create a minipool contract directly from its ABI, encoded in string form
-func createMinipoolContractFromEncodedAbi(rp *rocketpool.RocketPool, address common.Address, encodedAbi string) (*rocketpool.Contract, error) {
+func createMinipoolContractFromEncodedAbi(rp *rocketpool.RocketPool, address common.Address, encodedAbi string) (*core.Contract, error) {
 	// Decode ABI
 	abi, err := rocketpool.DecodeAbi(encodedAbi)
 	if err != nil {
@@ -59,7 +60,7 @@ func createMinipoolContractFromEncodedAbi(rp *rocketpool.RocketPool, address com
 	}
 
 	// Create and return
-	return &rocketpool.Contract{
+	return &core.Contract{
 		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
 		Address:  &address,
 		ABI:      abi,
@@ -68,9 +69,9 @@ func createMinipoolContractFromEncodedAbi(rp *rocketpool.RocketPool, address com
 }
 
 // Create a minipool contract directly from its ABI
-func createMinipoolContractFromAbi(rp *rocketpool.RocketPool, address common.Address, abi *abi.ABI) (*rocketpool.Contract, error) {
+func createMinipoolContractFromAbi(rp *rocketpool.RocketPool, address common.Address, abi *abi.ABI) (*core.Contract, error) {
 	// Create and return
-	return &rocketpool.Contract{
+	return &core.Contract{
 		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
 		Address:  &address,
 		ABI:      abi,
@@ -81,7 +82,7 @@ func createMinipoolContractFromAbi(rp *rocketpool.RocketPool, address common.Add
 // Get a minipool contract
 var rocketMinipoolLock sync.Mutex
 
-func getMinipoolContract(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getMinipoolContract(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketMinipoolLock.Lock()
 	defer rocketMinipoolLock.Unlock()
 	return rp.MakeContract("rocketMinipool", minipoolAddress, opts)

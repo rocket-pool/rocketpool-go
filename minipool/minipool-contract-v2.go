@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -35,7 +36,7 @@ type MinipoolV2 interface {
 type minipool_v2 struct {
 	Address    common.Address
 	Version    uint8
-	Contract   *rocketpool.Contract
+	Contract   *core.Contract
 	RocketPool *rocketpool.RocketPool
 }
 
@@ -45,7 +46,7 @@ var minipoolV2Abi *abi.ABI
 // Create new minipool contract
 func newMinipool_v2(rp *rocketpool.RocketPool, address common.Address) (Minipool, error) {
 
-	var contract *rocketpool.Contract
+	var contract *core.Contract
 	var err error
 	if minipoolV2Abi == nil {
 		// Get contract
@@ -78,7 +79,7 @@ func GetMinipoolAsV2(mp Minipool) (MinipoolV2, bool) {
 }
 
 // Get the contract
-func (mp *minipool_v2) GetContract() *rocketpool.Contract {
+func (mp *minipool_v2) GetContract() *core.Contract {
 	return mp.Contract
 }
 

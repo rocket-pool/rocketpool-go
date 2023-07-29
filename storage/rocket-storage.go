@@ -1,55 +1,89 @@
 package storage
 
 import (
-	"fmt"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Get a node's withdrawal address
-func GetNodeWithdrawalAddress(rp *rocketpool.RocketPool, nodeAddress common.Address, opts *bind.CallOpts) (common.Address, error) {
-	withdrawalAddress := new(common.Address)
-	if err := rp.RocketStorageContract.Call(opts, withdrawalAddress, "getNodeWithdrawalAddress", nodeAddress); err != nil {
-		return common.Address{}, fmt.Errorf("Could not get node %s withdrawal address: %w", nodeAddress.Hex(), err)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketStorage
+type Storage struct {
+	contract *core.Contract
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new Storage contract binding
+func NewStorage(client core.ExecutionClient, rocketStorageAddress common.Address) (*Storage, error) {
+	// Create a Contract for the underlying raw RocketStorage binding
+	rsAbi, err := abi.JSON(strings.NewReader(RocketStorageABI))
+	if err != nil {
+		return nil, err
 	}
-	return *withdrawalAddress, nil
+	contract := &core.Contract{
+		Contract: bind.NewBoundContract(rocketStorageAddress, rsAbi, client, client, client),
+		Address:  &rocketStorageAddress,
+		ABI:      &rsAbi,
+		Client:   client,
+	}
+
+	return &Storage{
+		contract: contract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get a boolean value
+func (c *Storage) GetBool(mc *multicall.MultiCaller, result_Out *bool, key common.Hash) {
+	multicall.AddCall(mc, c.contract, result_Out, "getBool", key)
+}
+
+// Get an address
+func (c *Storage) GetAddress(mc *multicall.MultiCaller, address_Out *common.Address, contractName string) {
+	key := crypto.Keccak256Hash([]byte("contract.address"), []byte(contractName))
+	multicall.AddCall(mc, c.contract, address_Out, "getAddress", key)
+}
+
+// Get an ABI
+func (c *Storage) GetAbi(mc *multicall.MultiCaller, abiEncoded_Out *string, contractName string) {
+	key := crypto.Keccak256Hash([]byte("contract.abi"), []byte(contractName))
+	multicall.AddCall(mc, c.contract, abiEncoded_Out, "getString", key)
+}
+
+// Get a node's withdrawal address
+func (c *Storage) GetNodeWithdrawalAddress(mc *multicall.MultiCaller, result_Out *common.Address, nodeAddress common.Address) {
+	multicall.AddCall(mc, c.contract, result_Out, "getNodeWithdrawalAddress", nodeAddress)
 }
 
 // Get a node's pending withdrawal address
-func GetNodePendingWithdrawalAddress(rp *rocketpool.RocketPool, nodeAddress common.Address, opts *bind.CallOpts) (common.Address, error) {
-	withdrawalAddress := new(common.Address)
-	if err := rp.RocketStorageContract.Call(opts, withdrawalAddress, "getNodePendingWithdrawalAddress", nodeAddress); err != nil {
-		return common.Address{}, fmt.Errorf("Could not get node %s pending withdrawal address: %w", nodeAddress.Hex(), err)
-	}
-	return *withdrawalAddress, nil
+func (c *Storage) GetNodePendingWithdrawalAddress(mc *multicall.MultiCaller, result_Out *common.Address, nodeAddress common.Address) {
+	multicall.AddCall(mc, c.contract, result_Out, "getNodePendingWithdrawalAddress", nodeAddress)
 }
 
-// Estimate the gas of SetWithdrawalAddress
-func EstimateSetWithdrawalAddressGas(rp *rocketpool.RocketPool, nodeAddress common.Address, withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return rp.RocketStorageContract.GetTransactionGasInfo(opts, "setWithdrawalAddress", nodeAddress, withdrawalAddress, confirm)
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for setting a node's withdrawal address
+func (c *Storage) SetWithdrawalAddress(nodeAddress common.Address, withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "setWithdrawalAddress", opts, nodeAddress, withdrawalAddress, confirm)
 }
 
-// Set a node's withdrawal address
-func SetWithdrawalAddress(rp *rocketpool.RocketPool, nodeAddress common.Address, withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (common.Hash, error) {
-	tx, err := rp.RocketStorageContract.Transact(opts, "setWithdrawalAddress", nodeAddress, withdrawalAddress, confirm)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not set node withdrawal address: %w", err)
-	}
-	return tx.Hash(), nil
-}
-
-// Estimate the gas of ConfirmWithdrawalAddress
-func EstimateConfirmWithdrawalAddressGas(rp *rocketpool.RocketPool, nodeAddress common.Address, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return rp.RocketStorageContract.GetTransactionGasInfo(opts, "confirmWithdrawalAddress", nodeAddress)
-}
-
-// Set a node's withdrawal address
-func ConfirmWithdrawalAddress(rp *rocketpool.RocketPool, nodeAddress common.Address, opts *bind.TransactOpts) (common.Hash, error) {
-	tx, err := rp.RocketStorageContract.Transact(opts, "confirmWithdrawalAddress", nodeAddress)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not confirm node withdrawal address: %w", err)
-	}
-	return tx.Hash(), nil
+// Get info for confirming a node's withdrawal address
+func (c *Storage) ConfirmWithdrawalAddress(nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "confirmWithdrawalAddress", opts, nodeAddress)
 }

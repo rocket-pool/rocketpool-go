@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -88,7 +89,7 @@ func GetLatestReportablePricesBlock(rp *rocketpool.RocketPool, opts *bind.CallOp
 // Get contracts
 var rocketNetworkPricesLock sync.Mutex
 
-func getRocketNetworkPrices(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketNetworkPrices(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketNetworkPricesLock.Lock()
 	defer rocketNetworkPricesLock.Unlock()
 	if address == nil {

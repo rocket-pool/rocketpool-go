@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/strings"
 )
@@ -18,7 +19,7 @@ import (
 // Binding for RocketDAONodeTrustedProposals
 type DaoNodeTrustedProposals struct {
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // ====================
@@ -44,40 +45,40 @@ func NewDaoNodeTrustedProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts) 
 // ====================
 
 // Get info for proposing to invite a new member to the Oracle DAO
-func (c *DaoNodeTrustedProposals) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId, string, newMemberUrl string, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId, string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
 	return c.submitProposal(opts, message, "proposalInvite", newMemberId, newMemberUrl, newMemberAddress)
 }
 
 // Get info for proposing to leave the Oracle DAO
-func (c *DaoNodeTrustedProposals) ProposeMemberLeave(message string, memberAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeMemberLeave(message string, memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalLeave", memberAddress)
 }
 
 // Get info for proposing to replace the address of an Oracle DAO member
-func (c *DaoNodeTrustedProposals) ProposeReplaceMember(message string, memberAddress common.Address, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeReplaceMember(message string, memberAddress common.Address, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
 	return c.submitProposal(opts, message, "proposalReplace", memberAddress, newMemberId, newMemberUrl, newMemberAddress)
 }
 
 // Get info for proposing to kick a member from the Oracle DAO
-func (c *DaoNodeTrustedProposals) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalKick", memberAddress, rplFineAmount)
 }
 
 // Get info for proposing a bool setting
-func (c *DaoNodeTrustedProposals) ProposeSetBool(message string, contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeSetBool(message string, contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalSettingBool", contractName, settingPath, value)
 }
 
 // Get info for proposing a uint setting
-func (c *DaoNodeTrustedProposals) ProposeSetUint(message string, contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeSetUint(message string, contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalSettingUint", contractName, settingPath, value)
 }
 
 // Get info for proposing a contract upgrade
-func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	compressedAbi, err := rocketpool.EncodeAbiStr(contractAbi)
+func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)
 	}
@@ -85,25 +86,25 @@ func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgrade
 }
 
 // Get info for cancelling a proposal
-func (c *DaoNodeTrustedActions) CancelProposal(proposalId uint64, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "cancel", opts, big.NewInt(int64(proposalId)))
+func (c *DaoNodeTrustedActions) CancelProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "cancel", opts, big.NewInt(int64(proposalId)))
 }
 
 // Get info for voting on a proposal
-func (c *DaoNodeTrustedActions) VoteOnProposal(proposalId uint64, support bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "vote", opts, big.NewInt(int64(proposalId)), support)
+func (c *DaoNodeTrustedActions) VoteOnProposal(proposalId uint64, support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "vote", opts, big.NewInt(int64(proposalId)), support)
 }
 
 // Get info for executing a proposal
-func (c *DaoNodeTrustedActions) ExecuteProposal(proposalId uint64, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "execute", opts, big.NewInt(int64(proposalId)))
+func (c *DaoNodeTrustedActions) ExecuteProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "execute", opts, big.NewInt(int64(proposalId)))
 }
 
 // Internal method used for actually constructing and submitting a proposal
-func (c *DaoNodeTrustedProposals) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*rocketpool.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*core.TransactionInfo, error) {
 	payload, err := c.contract.ABI.Pack(method, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding payload: %w", err)
 	}
-	return rocketpool.NewTransactionInfo(c.contract, "propose", opts, message, payload)
+	return core.NewTransactionInfo(c.contract, "propose", opts, message, payload)
 }

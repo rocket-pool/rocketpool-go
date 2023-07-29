@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -200,7 +201,7 @@ func CalculateTotalEffectiveRPLStake(rp *rocketpool.RocketPool, offset, limit, r
 // Get contracts
 var rocketNodeStakingLock sync.Mutex
 
-func getRocketNodeStaking(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketNodeStaking(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketNodeStakingLock.Lock()
 	defer rocketNodeStakingLock.Unlock()
 	if address == nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rocket-pool/rocketpool-go/core"
 	v110_minipool "github.com/rocket-pool/rocketpool-go/legacy/v1.1.0/minipool"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
@@ -64,7 +65,7 @@ func GenerateAddress(rp *rocketpool.RocketPool, nodeAddress common.Address, depo
 // Get contracts
 var rocketMinipoolFactoryLock sync.Mutex
 
-func getRocketMinipoolFactory(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketMinipoolFactory(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketMinipoolFactoryLock.Lock()
 	defer rocketMinipoolFactoryLock.Unlock()
 	return rp.GetContract("rocketMinipoolFactory", opts)

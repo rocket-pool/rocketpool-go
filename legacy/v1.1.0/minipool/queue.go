@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/minipool"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/storage"
@@ -291,7 +292,7 @@ func GetQueueMinipoolAtPosition(rp *rocketpool.RocketPool, position uint64, opts
 // Get contracts
 var rocketMinipoolQueueLock sync.Mutex
 
-func getRocketMinipoolQueue(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketMinipoolQueue(rp *rocketpool.RocketPool, address *common.Address, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketMinipoolQueueLock.Lock()
 	defer rocketMinipoolQueueLock.Unlock()
 	if address == nil {

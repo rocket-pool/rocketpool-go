@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
@@ -204,7 +205,7 @@ func BurnRETH(rp *rocketpool.RocketPool, amount *big.Int, opts *bind.TransactOpt
 // Get contracts
 var rocketTokenRETHLock sync.Mutex
 
-func getRocketTokenRETH(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketTokenRETH(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketTokenRETHLock.Lock()
 	defer rocketTokenRETHLock.Unlock()
 	return rp.GetContract("rocketTokenRETH", opts)

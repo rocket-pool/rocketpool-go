@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -19,7 +20,7 @@ import (
 type NodeDistributor struct {
 	Details  NodeDistributorDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for RocketNodeDistributorDelegate
@@ -77,6 +78,6 @@ func (c *NodeDistributor) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 // Get info for distributing the contract's balance to the rETH contract and the user
-func (c *NodeDistributor) PlaceBid(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.contract, "distribute", opts)
+func (c *NodeDistributor) PlaceBid(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "distribute", opts)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -102,7 +103,7 @@ func TransferFromFixedSupplyRPL(rp *rocketpool.RocketPool, from, to common.Addre
 // Get contracts
 var rocketTokenFixedSupplyRPLLock sync.Mutex
 
-func getRocketTokenRPLFixedSupply(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketTokenRPLFixedSupply(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketTokenFixedSupplyRPLLock.Lock()
 	defer rocketTokenFixedSupplyRPLLock.Unlock()
 	return rp.GetContract("rocketTokenRPLFixedSupply", opts)

@@ -1,4 +1,4 @@
-package rocketpool
+package core
 
 import (
 	"math/big"
@@ -33,6 +33,8 @@ func (p *Parameter[fType]) Formatted() fType {
 		*f = p.RawValue.Uint64()
 	case *float64:
 		*f = eth.WeiToEth(p.RawValue)
+	case *time.Duration:
+		*f = time.Duration(p.RawValue.Int64()) * time.Second
 	}
 
 	// Cache and return

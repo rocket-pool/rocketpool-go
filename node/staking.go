@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -18,7 +19,7 @@ import (
 type NodeStaking struct {
 	Details  NodeStakingDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for RocketNodeStaking
@@ -74,5 +75,5 @@ func (c *NodeStaking) GetAllDetails(mc *multicall.MultiCaller) {
 // NOTE: you will have to call this several times, iterating through subset ranges,
 // to get the complete result since a single call for the complete node set may run out of gas
 func (c *NodeStaking) CalculateTotalEffectiveRplStake(offset *big.Int, limit *big.Int, rplPrice *big.Int, opts *bind.CallOpts) (*big.Int, error) {
-	return rocketpool.Call[*big.Int](c.contract, opts, "calculateTotalEffectiveRPLStake", offset, limit, rplPrice)
+	return core.Call[*big.Int](c.contract, opts, "calculateTotalEffectiveRPLStake", offset, limit, rplPrice)
 }

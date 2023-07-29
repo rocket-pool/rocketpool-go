@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -164,7 +165,7 @@ func GetRPLInflationIntervalRate(rp *rocketpool.RocketPool, opts *bind.CallOpts)
 // Get contracts
 var rocketTokenRPLLock sync.Mutex
 
-func getRocketTokenRPL(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getRocketTokenRPL(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	rocketTokenRPLLock.Lock()
 	defer rocketTokenRPLLock.Unlock()
 	return rp.GetContract("rocketTokenRPL", opts)

@@ -13,7 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -21,7 +21,7 @@ type Call struct {
 	Method   string         `json:"method"`
 	Target   common.Address `json:"target"`
 	CallData []byte         `json:"call_data"`
-	Contract *rocketpool.Contract
+	Contract *core.Contract
 	output   interface{}
 }
 
@@ -41,13 +41,13 @@ func (call Call) GetMultiCall() MultiCall {
 }
 
 type MultiCaller struct {
-	Client          rocketpool.ExecutionClient
+	Client          core.ExecutionClient
 	ABI             abi.ABI
 	ContractAddress common.Address
 	calls           []Call
 }
 
-func NewMultiCaller(client rocketpool.ExecutionClient, multicallerAddress common.Address) (*MultiCaller, error) {
+func NewMultiCaller(client core.ExecutionClient, multicallerAddress common.Address) (*MultiCaller, error) {
 	mcAbi, err := abi.JSON(strings.NewReader(MulticallABI))
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func NewMultiCaller(client rocketpool.ExecutionClient, multicallerAddress common
 	}, nil
 }
 
-func AddCall[outType rocketpool.CallReturnType](mc *MultiCaller, contract *rocketpool.Contract, output *outType, method string, args ...interface{}) error {
+func AddCall[outType core.CallReturnType](mc *MultiCaller, contract *core.Contract, output *outType, method string, args ...interface{}) error {
 	callData, err := contract.ABI.Pack(method, args...)
 	if err != nil {
 		return fmt.Errorf("error adding call [%s]: %w", method, err)
@@ -134,12 +134,12 @@ func (caller *MultiCaller) FlexibleCall(requireSuccess bool, opts *bind.CallOpts
 }
 
 // Run a single query using multicall
-func MulticallQuery[ObjType any](rp *rocketpool.RocketPool, queryAdder func(*MultiCaller) (*ObjType, error), postprocess func(*ObjType) error, opts *bind.CallOpts) (*ObjType, error) {
+func MulticallQuery[ObjType any](client core.ExecutionClient, multicallAddress common.Address, queryAdder func(*MultiCaller) (*ObjType, error), postprocess func(*ObjType) error, opts *bind.CallOpts) (*ObjType, error) {
 	// The query object
 	var obj *ObjType
 
 	// Create the multicaller
-	mc, err := NewMultiCaller(rp.Client, *rp.MulticallAddress)
+	mc, err := NewMultiCaller(client, multicallAddress)
 	if err != nil {
 		return nil, fmt.Errorf("error creating multicaller: %w", err)
 	}
@@ -169,8 +169,30 @@ func MulticallQuery[ObjType any](rp *rocketpool.RocketPool, queryAdder func(*Mul
 	return obj, nil
 }
 
+// Run a single query using multicall
+func MulticallQuery2(client core.ExecutionClient, multicallAddress common.Address, queryAdder func(*MultiCaller), opts *bind.CallOpts) error {
+	// Create the multicaller
+	mc, err := NewMultiCaller(client, multicallAddress)
+	if err != nil {
+		return fmt.Errorf("error creating multicaller: %w", err)
+	}
+
+	// Run the query adder
+	if queryAdder != nil {
+		queryAdder(mc)
+	}
+
+	// Execute the multicall
+	_, err = mc.FlexibleCall(true, opts)
+	if err != nil {
+		return fmt.Errorf("error executing multicall: %w", err)
+	}
+
+	return nil
+}
+
 // Run a batch query using multicall
-func MulticallBatchQuery[ObjType any](rp *rocketpool.RocketPool, count uint64, batchSize uint64, queryAdder func([]*ObjType, uint64, *MultiCaller) error, postprocess func(*ObjType) error, opts *bind.CallOpts) ([]*ObjType, error) {
+func MulticallBatchQuery[ObjType any](client core.ExecutionClient, multicallAddress common.Address, count uint64, batchSize uint64, queryAdder func([]*ObjType, uint64, *MultiCaller) error, postprocess func(*ObjType) error, opts *bind.CallOpts) ([]*ObjType, error) {
 	// Create the array of query objects
 	objs := make([]*ObjType, count)
 
@@ -188,7 +210,7 @@ func MulticallBatchQuery[ObjType any](rp *rocketpool.RocketPool, count uint64, b
 
 		// Load details
 		wg.Go(func() error {
-			mc, err := NewMultiCaller(rp.Client, *rp.MulticallAddress)
+			mc, err := NewMultiCaller(client, multicallAddress)
 			if err != nil {
 				return err
 			}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -29,23 +29,23 @@ type NodeDetails struct {
 	Address common.Address `json:"address"`
 
 	// NodeManager
-	Exists                           bool                            `json:"exists"`
-	RegistrationTime                 rocketpool.Parameter[time.Time] `json:"registrationTime"`
-	TimezoneLocation                 string                          `json:"timezoneLocation"`
-	RewardNetwork                    rocketpool.Parameter[uint64]    `json:"rewardNetwork"`
-	IsFeeDistributorInitialized      bool                            `json:"isFeeDistributorInitialized"`
-	AverageFee                       rocketpool.Parameter[float64]   `json:"averageFee"`
-	SmoothingPoolRegistrationState   bool                            `json:"smoothingPoolRegistrationState"`
-	SmoothingPoolRegistrationChanged rocketpool.Parameter[time.Time] `json:"smoothingPoolRegistrationChanged"`
+	Exists                           bool                      `json:"exists"`
+	RegistrationTime                 core.Parameter[time.Time] `json:"registrationTime"`
+	TimezoneLocation                 string                    `json:"timezoneLocation"`
+	RewardNetwork                    core.Parameter[uint64]    `json:"rewardNetwork"`
+	IsFeeDistributorInitialized      bool                      `json:"isFeeDistributorInitialized"`
+	AverageFee                       core.Parameter[float64]   `json:"averageFee"`
+	SmoothingPoolRegistrationState   bool                      `json:"smoothingPoolRegistrationState"`
+	SmoothingPoolRegistrationChanged core.Parameter[time.Time] `json:"smoothingPoolRegistrationChanged"`
 
 	// NodeStaking
-	RplStake          *big.Int                        `json:"rplStake"`
-	EffectiveRplStake *big.Int                        `json:"effectiveRplStake"`
-	MinimumRplStake   *big.Int                        `json:"minimumRplStake"`
-	MaximumRplStake   *big.Int                        `json:"maximumRplStake"`
-	RplStakedTime     rocketpool.Parameter[time.Time] `json:"rplStakedTime"`
-	EthMatched        *big.Int                        `json:"ethMatched"`
-	EthMatchedLimit   *big.Int                        `json:"ethMatchedLimit"`
+	RplStake          *big.Int                  `json:"rplStake"`
+	EffectiveRplStake *big.Int                  `json:"effectiveRplStake"`
+	MinimumRplStake   *big.Int                  `json:"minimumRplStake"`
+	MaximumRplStake   *big.Int                  `json:"maximumRplStake"`
+	RplStakedTime     core.Parameter[time.Time] `json:"rplStakedTime"`
+	EthMatched        *big.Int                  `json:"ethMatched"`
+	EthMatchedLimit   *big.Int                  `json:"ethMatchedLimit"`
 }
 
 // ====================
@@ -167,44 +167,44 @@ func (c *Node) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 // Get info for registering a node
-func (c *Node) Register(timezoneLocation string, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *Node) Register(timezoneLocation string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	_, err := time.LoadLocation(timezoneLocation)
 	if err != nil {
 		return nil, fmt.Errorf("error verifying timezone [%s]: %w", timezoneLocation, err)
 	}
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "registerNode", opts, timezoneLocation)
+	return core.NewTransactionInfo(c.mgr.contract, "registerNode", opts, timezoneLocation)
 }
 
 // Get info for setting a node's timezone location
-func (c *Node) SetTimezoneLocation(timezoneLocation string, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
+func (c *Node) SetTimezoneLocation(timezoneLocation string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	_, err := time.LoadLocation(timezoneLocation)
 	if err != nil {
 		return nil, fmt.Errorf("error verifying timezone [%s]: %w", timezoneLocation, err)
 	}
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "setTimezoneLocation", opts, timezoneLocation)
+	return core.NewTransactionInfo(c.mgr.contract, "setTimezoneLocation", opts, timezoneLocation)
 }
 
 // Get info for initializing (creating) the node's fee distributor
-func (c *Node) InitializeFeeDistributor(opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "initialiseFeeDistributor", opts)
+func (c *Node) InitializeFeeDistributor(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "initialiseFeeDistributor", opts)
 }
 
 // Get info for opting in or out of the smoothing pool
-func (c *Node) SetSmoothingPoolRegistrationState(optIn bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "setSmoothingPoolRegistrationState", opts, optIn)
+func (c *Node) SetSmoothingPoolRegistrationState(optIn bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "setSmoothingPoolRegistrationState", opts, optIn)
 }
 
 // Get info for staking RPL
-func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "stakeRPL", opts, rplAmount)
+func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "stakeRPL", opts, rplAmount)
 }
 
 // Get info for adding or removing an address from the stake-RPL-on-behalf allowlist
-func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "setStakeRPLForAllowed", opts, caller, allowed)
+func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "setStakeRPLForAllowed", opts, caller, allowed)
 }
 
 // Get info for withdrawing staked RPL
-func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
-	return rocketpool.NewTransactionInfo(c.mgr.contract, "withdrawRPL", opts, rplAmount)
+func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mgr.contract, "withdrawRPL", opts, rplAmount)
 }

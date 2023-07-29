@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -98,7 +99,7 @@ func BootstrapMaximumDepositAssignments(rp *rocketpool.RocketPool, value uint64,
 // Get contracts
 var depositSettingsContractLock sync.Mutex
 
-func getDepositSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*rocketpool.Contract, error) {
+func getDepositSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	depositSettingsContractLock.Lock()
 	defer depositSettingsContractLock.Unlock()
 	return rp.GetContract(DepositSettingsContractName, opts)

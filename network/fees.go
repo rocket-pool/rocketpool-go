@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -18,14 +19,14 @@ import (
 type NetworkFees struct {
 	Details  NetworkFeesDetails
 	rp       *rocketpool.RocketPool
-	contract *rocketpool.Contract
+	contract *core.Contract
 }
 
 // Details for network fees
 type NetworkFeesDetails struct {
-	NodeDemand      *big.Int                      `json:"nodeDemand"`
-	NodeFee         rocketpool.Parameter[float64] `json:"nodeFee"`
-	NodeFeeByDemand rocketpool.Parameter[float64] `json:"nodeFeeByDemand"`
+	NodeDemand      *big.Int                `json:"nodeDemand"`
+	NodeFee         core.Parameter[float64] `json:"nodeFee"`
+	NodeFeeByDemand core.Parameter[float64] `json:"nodeFeeByDemand"`
 }
 
 // ====================

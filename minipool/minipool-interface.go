@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 )
@@ -51,7 +52,7 @@ type PrestakeData struct {
 }
 
 type Minipool interface {
-	GetContract() *rocketpool.Contract
+	GetContract() *core.Contract
 	GetAddress() common.Address
 	GetVersion() uint8
 	GetStatusDetails(opts *bind.CallOpts) (StatusDetails, error)
