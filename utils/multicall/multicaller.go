@@ -134,7 +134,7 @@ func (caller *MultiCaller) FlexibleCall(requireSuccess bool, opts *bind.CallOpts
 }
 
 // Run a single query using multicall
-func MulticallQuery[ObjType any](rp *rocketpool.RocketPool, queryAdder func(*MultiCaller) *ObjType, postprocess func(*ObjType), opts *bind.CallOpts) (*ObjType, error) {
+func MulticallQuery[ObjType any](rp *rocketpool.RocketPool, queryAdder func(*MultiCaller) (*ObjType, error), postprocess func(*ObjType) error, opts *bind.CallOpts) (*ObjType, error) {
 	// The query object
 	var obj *ObjType
 
@@ -146,7 +146,10 @@ func MulticallQuery[ObjType any](rp *rocketpool.RocketPool, queryAdder func(*Mul
 
 	// Run the query adder
 	if queryAdder != nil {
-		obj = queryAdder(mc)
+		obj, err = queryAdder(mc)
+		if err != nil {
+			return nil, fmt.Errorf("error running query adder: %w", err)
+		}
 	}
 
 	// Execute the multicall
@@ -157,14 +160,17 @@ func MulticallQuery[ObjType any](rp *rocketpool.RocketPool, queryAdder func(*Mul
 
 	// Postprocess
 	if postprocess != nil {
-		postprocess(obj)
+		err = postprocess(obj)
+		if err != nil {
+			return nil, fmt.Errorf("error executing postprocessor: %w", err)
+		}
 	}
 
 	return obj, nil
 }
 
 // Run a batch query using multicall
-func MulticallBatchQuery[ObjType any](rp *rocketpool.RocketPool, count uint64, batchSize uint64, queryAdder func([]*ObjType, uint64, *MultiCaller), postprocess func(*ObjType), opts *bind.CallOpts) ([]*ObjType, error) {
+func MulticallBatchQuery[ObjType any](rp *rocketpool.RocketPool, count uint64, batchSize uint64, queryAdder func([]*ObjType, uint64, *MultiCaller) error, postprocess func(*ObjType) error, opts *bind.CallOpts) ([]*ObjType, error) {
 	// Create the array of query objects
 	objs := make([]*ObjType, count)
 
@@ -188,7 +194,10 @@ func MulticallBatchQuery[ObjType any](rp *rocketpool.RocketPool, count uint64, b
 			}
 			for j := i; j < max; j++ {
 				if queryAdder != nil {
-					queryAdder(objs, j, mc)
+					err = queryAdder(objs, j, mc)
+					if err != nil {
+						return fmt.Errorf("error running query adder: %w", err)
+					}
 				}
 			}
 			_, err = mc.FlexibleCall(true, opts)
@@ -207,7 +216,10 @@ func MulticallBatchQuery[ObjType any](rp *rocketpool.RocketPool, count uint64, b
 	for i := range objs {
 		obj := objs[i]
 		if postprocess != nil {
-			postprocess(obj)
+			err := postprocess(obj)
+			if err != nil {
+				return nil, fmt.Errorf("error executing postprocessor: %w", err)
+			}
 		}
 	}
 

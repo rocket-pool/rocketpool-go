@@ -10,9 +10,6 @@ import (
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 )
 
-// The number of blocks to look for events in at once when scanning
-const EventScanInterval = 10000
-
 // Minipool detail types
 type StatusDetails struct {
 	Status      rptypes.MinipoolStatus `json:"status"`

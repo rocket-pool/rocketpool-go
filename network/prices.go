@@ -5,8 +5,10 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -79,4 +81,52 @@ func (c *NetworkPrices) GetAllDetails(mc *multicall.MultiCaller) {
 // Get info for network price submission
 func (c *NetworkPrices) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*rocketpool.TransactionInfo, error) {
 	return rocketpool.NewTransactionInfo(c.contract, "submitPrices", opts, big.NewInt(int64(block)), rplPrice)
+}
+
+// =============
+// === Utils ===
+// =============
+
+// Returns an array of block numbers for prices submissions the given trusted node has submitted since fromBlock
+func (c *NetworkPrices) GetPricesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
+	// Construct a filter query for relevant logs
+	addressFilter := []common.Address{*c.contract.Address}
+	topicFilter := [][]common.Hash{{c.contract.ABI.Events["PricesSubmitted"].ID}, {nodeAddress.Hash()}}
+
+	// Get the event logs
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	timestamps := make([]uint64, len(logs))
+	for i, log := range logs {
+		values := make(map[string]interface{})
+		// Decode the event
+		if c.contract.ABI.Events["PricesSubmitted"].Inputs.UnpackIntoMap(values, log.Data) != nil {
+			return nil, err
+		}
+		timestamps[i] = values["block"].(*big.Int).Uint64()
+	}
+	return &timestamps, nil
+}
+
+// Returns an array of members who submitted prices since fromBlock
+func (c *NetworkPrices) GetLatestPricesSubmissions(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) ([]common.Address, error) {
+	// Construct a filter query for relevant logs
+	addressFilter := []common.Address{*c.contract.Address}
+	topicFilter := [][]common.Hash{{c.contract.ABI.Events["PricesSubmitted"].ID}}
+
+	// Get the event logs
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]common.Address, len(logs))
+	for i, log := range logs {
+		// Topic 0 is the event, topic 1 is the "from" address
+		address := common.BytesToAddress(log.Topics[1].Bytes())
+		results[i] = address
+	}
+	return results, nil
 }

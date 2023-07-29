@@ -80,10 +80,11 @@ func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallO
 		c.rp,
 		memberCount,
 		memberAddressBatchSize,
-		func(addresses []*common.Address, index uint64, mc *multicall.MultiCaller) {
+		func(addresses []*common.Address, index uint64, mc *multicall.MultiCaller) error {
 			addressPtr := &common.Address{}
 			addresses[index] = addressPtr
 			multicall.AddCall(mc, c.contract, addressPtr, "getMemberAt", big.NewInt(int64(index)))
+			return nil
 		},
 		nil,
 		opts,
@@ -133,10 +134,10 @@ func (c *DaoNodeTrusted) GetMemberAt(index uint64, address common.Address, opts 
 	// Create the member and get details via a multicall query
 	member, err := multicall.MulticallQuery[OracleDaoMember](
 		c.rp,
-		func(mc *multicall.MultiCaller) *OracleDaoMember {
+		func(mc *multicall.MultiCaller) (*OracleDaoMember, error) {
 			member := NewOracleDaoMember(c, index, address)
 			member.GetAllDetails(mc)
-			return member
+			return member, nil
 		},
 		nil,
 		opts,
@@ -150,16 +151,17 @@ func (c *DaoNodeTrusted) GetMemberAt(index uint64, address common.Address, opts 
 }
 
 // Get the details for all members
-func (c *DaoNodeTrusted) GetMemberDetails(addresses []*common.Address, opts *bind.CallOpts) ([]*OracleDaoMember, error) {
+func (c *DaoNodeTrusted) GetAllMembers(addresses []*common.Address, opts *bind.CallOpts) ([]*OracleDaoMember, error) {
 	// Run the multicall query for each lot
 	members, err := multicall.MulticallBatchQuery[OracleDaoMember](
 		c.rp,
 		uint64(len(addresses)),
 		memberDetailsBatchSize,
-		func(members []*OracleDaoMember, index uint64, mc *multicall.MultiCaller) {
+		func(members []*OracleDaoMember, index uint64, mc *multicall.MultiCaller) error {
 			member := NewOracleDaoMember(c, index, *addresses[index])
 			members[index] = member
 			member.GetAllDetails(mc)
+			return nil
 		},
 		nil,
 		opts,

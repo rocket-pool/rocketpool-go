@@ -114,13 +114,13 @@ func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *
 	// Create the lot and get details via a multicall query
 	lot, err := multicall.MulticallQuery[AuctionLot](
 		c.rp,
-		func(mc *multicall.MultiCaller) *AuctionLot {
+		func(mc *multicall.MultiCaller) (*AuctionLot, error) {
 			lot := NewAuctionLot(c, index)
 			lot.GetAllDetails(mc)
 			if bidder != nil {
 				lot.GetAllDetailsWithBidAmount(mc, *bidder)
 			}
-			return lot
+			return lot, nil
 		},
 		nil,
 		opts,
@@ -150,7 +150,7 @@ func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, op
 		c.rp,
 		lotCount,
 		lotDetailsBatchSize,
-		func(lots []*AuctionLot, index uint64, mc *multicall.MultiCaller) {
+		func(lots []*AuctionLot, index uint64, mc *multicall.MultiCaller) error {
 			lot := NewAuctionLot(c, index)
 			lots[index] = lot
 			if bidder != nil {
@@ -158,6 +158,7 @@ func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, op
 			} else {
 				lot.GetAllDetails(mc)
 			}
+			return nil
 		},
 		nil,
 		opts,
