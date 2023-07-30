@@ -2,132 +2,119 @@ package protocol
 
 import (
 	"fmt"
-	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
-	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Config
-const NodeSettingsContractName = "rocketDAOProtocolSettingsNode"
+const (
+	nodeSettingsContractName string = "rocketDAOProtocolSettingsNode"
+)
 
-// Node registrations currently enabled
-func GetNodeRegistrationEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAOProtocolSettingsNode
+type DaoProtocolSettingsNode struct {
+	Details             DaoProtocolSettingsNodeDetails
+	rp                  *rocketpool.RocketPool
+	contract            *core.Contract
+	daoProtocolContract *protocol.DaoProtocol
+}
+
+// Details for RocketDAOProtocolSettingsNode
+type DaoProtocolSettingsNodeDetails struct {
+	IsRegistrationEnabled     bool                    `json:"isRegistrationEnabled"`
+	IsDepositingEnabled       bool                    `json:"isDepositingEnabled"`
+	AreVacantMinipoolsEnabled bool                    `json:"areVacantMinipoolsEnabled"`
+	MinimumPerMinipoolStake   core.Parameter[float64] `json:"minimumPerMinipoolStake"`
+	MaximumPerMinipoolStake   core.Parameter[float64] `json:"maximumPerMinipoolStake"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoProtocolSettingsNode contract binding
+func NewDaoProtocolSettingsNode(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsNode, error) {
+	// Create the contract
+	contract, err := rp.GetContract(nodeSettingsContractName, opts)
 	if err != nil {
-		return false, err
+		return nil, fmt.Errorf("error getting DAO protocol settings node contract: %w", err)
 	}
-	value := new(bool)
-	if err := nodeSettingsContract.Call(opts, value, "getRegistrationEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get node registrations enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapNodeRegistrationEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, NodeSettingsContractName, "node.registration.enabled", value, opts)
+
+	return &DaoProtocolSettingsNode{
+		Details:             DaoProtocolSettingsNodeDetails{},
+		rp:                  rp,
+		contract:            contract,
+		daoProtocolContract: daoProtocolContract,
+	}, nil
 }
 
-// Node deposits currently enabled
-func GetNodeDepositEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
-	if err != nil {
-		return false, err
-	}
-	value := new(bool)
-	if err := nodeSettingsContract.Call(opts, value, "getDepositEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get node deposits enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapNodeDepositEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, NodeSettingsContractName, "node.deposit.enabled", value, opts)
+// =============
+// === Calls ===
+// =============
+
+// Check if node registration is currently enabled
+func (c *DaoProtocolSettingsNode) GetRegistrationEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IsRegistrationEnabled, "getRegistrationEnabled")
 }
 
-// Vacant minipools currently enabled
-func GetVacantMinipoolsEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
-	if err != nil {
-		return false, err
-	}
-	value := new(bool)
-	if err := nodeSettingsContract.Call(opts, value, "getVacantMinipoolsEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get vacant minipools enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapVacantMinipoolsEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, NodeSettingsContractName, "node.vacant.minipools.enabled", value, opts)
+// Check if node deposits are currently enabled
+func (c *DaoProtocolSettingsNode) GetDepositEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IsDepositingEnabled, "getDepositEnabled")
 }
 
-// The minimum RPL stake per minipool as a fraction of assigned user ETH
-func GetMinimumPerMinipoolStake(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := nodeSettingsContract.Call(opts, value, "getMinimumPerMinipoolStake"); err != nil {
-		return 0, fmt.Errorf("Could not get minimum RPL stake per minipool: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
+// Check if creating vacant minipools is currently enabled
+func (c *DaoProtocolSettingsNode) GetVacantMinipoolsEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.AreVacantMinipoolsEnabled, "getVacantMinipoolsEnabled")
 }
 
-// The minimum RPL stake per minipool as a fraction of assigned user ETH
-func GetMinimumPerMinipoolStakeRaw(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := nodeSettingsContract.Call(opts, value, "getMinimumPerMinipoolStake"); err != nil {
-		return nil, fmt.Errorf("Could not get minimum RPL stake per minipool: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapMinimumPerMinipoolStake(rp *rocketpool.RocketPool, value float64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, NodeSettingsContractName, "node.per.minipool.stake.minimum", eth.EthToWei(value), opts)
+// Get the minimum RPL stake per minipool as a fraction of assigned user ETH
+func (c *DaoProtocolSettingsNode) GetMinimumPerMinipoolStake(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.MinimumPerMinipoolStake.RawValue, "getMinimumPerMinipoolStake")
 }
 
-// The maximum RPL stake per minipool as a fraction of assigned user ETH
-func GetMaximumPerMinipoolStake(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := nodeSettingsContract.Call(opts, value, "getMaximumPerMinipoolStake"); err != nil {
-		return 0, fmt.Errorf("Could not get maximum RPL stake per minipool: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
+// Get the maximum RPL stake per minipool as a fraction of assigned user ETH
+func (c *DaoProtocolSettingsNode) GetMaximumPerMinipoolStake(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.MaximumPerMinipoolStake.RawValue, "getMaximumPerMinipoolStake")
 }
 
-// The maximum RPL stake per minipool as a fraction of assigned user ETH
-func GetMaximumPerMinipoolStakeRaw(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	nodeSettingsContract, err := getNodeSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := nodeSettingsContract.Call(opts, value, "getMaximumPerMinipoolStake"); err != nil {
-		return nil, fmt.Errorf("Could not get maximum RPL stake per minipool: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapMaximumPerMinipoolStake(rp *rocketpool.RocketPool, value float64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, NodeSettingsContractName, "node.per.minipool.stake.maximum", eth.EthToWei(value), opts)
+// Get all basic details
+func (c *DaoProtocolSettingsNode) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetRegistrationEnabled(mc)
+	c.GetDepositEnabled(mc)
+	c.GetVacantMinipoolsEnabled(mc)
+	c.GetMinimumPerMinipoolStake(mc)
+	c.GetMaximumPerMinipoolStake(mc)
 }
 
-// Get contracts
-var nodeSettingsContractLock sync.Mutex
+// ====================
+// === Transactions ===
+// ====================
 
-func getNodeSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	nodeSettingsContractLock.Lock()
-	defer nodeSettingsContractLock.Unlock()
-	return rp.GetContract(NodeSettingsContractName, opts)
+func (c *DaoProtocolSettingsNode) BootstrapNodeRegistrationEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(nodeSettingsContractName, "node.registration.enabled", value, opts)
+}
+
+func (c *DaoProtocolSettingsNode) BootstrapNodeDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(nodeSettingsContractName, "node.deposit.enabled", value, opts)
+}
+
+func (c *DaoProtocolSettingsNode) BootstrapVacantMinipoolsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(nodeSettingsContractName, "node.vacant.minipools.enabled", value, opts)
+}
+
+func (c *DaoProtocolSettingsNode) BootstrapMinimumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(nodeSettingsContractName, "node.per.minipool.stake.minimum", eth.EthToWei(value), opts)
+}
+
+func (c *DaoProtocolSettingsNode) BootstrapMaximumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(nodeSettingsContractName, "node.per.minipool.stake.maximum", eth.EthToWei(value), opts)
 }

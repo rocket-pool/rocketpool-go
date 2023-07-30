@@ -3,80 +3,92 @@ package protocol
 import (
 	"fmt"
 	"math/big"
-	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
-	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Config
-const RewardsSettingsContractName = "rocketDAOProtocolSettingsRewards"
+const (
+	rewardsSettingsContractName string = "rocketDAOProtocolSettingsRewards"
+)
 
-// The claim amount for a claimer as a fraction
-func GetRewardsClaimerPerc(rp *rocketpool.RocketPool, contractName string, opts *bind.CallOpts) (float64, error) {
-	rewardsSettingsContract, err := getRewardsSettingsContract(rp, opts)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAOProtocolSettingsRewards
+type DaoProtocolSettingsRewards struct {
+	Details             DaoProtocolSettingsRewardsDetails
+	rp                  *rocketpool.RocketPool
+	contract            *core.Contract
+	daoProtocolContract *protocol.DaoProtocol
+}
+
+// Details for RocketDAOProtocolSettingsRewards
+type DaoProtocolSettingsRewardsDetails struct {
+	ClaimerPercentageTotal core.Parameter[float64]       `json:"claimerPercentageTotal"`
+	ClaimIntervalTime      core.Parameter[time.Duration] `json:"claimIntervalTime"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoProtocolSettingsRewards contract binding
+func NewDaoProtocolSettingsRewards(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsRewards, error) {
+	// Create the contract
+	contract, err := rp.GetContract(rewardsSettingsContractName, opts)
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("error getting DAO protocol settings rewards contract: %w", err)
 	}
-	value := new(*big.Int)
-	if err := rewardsSettingsContract.Call(opts, value, "getRewardsClaimerPerc", contractName); err != nil {
-		return 0, fmt.Errorf("Could not get rewards claimer percent: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
+
+	return &DaoProtocolSettingsRewards{
+		Details:             DaoProtocolSettingsRewardsDetails{},
+		rp:                  rp,
+		contract:            contract,
+		daoProtocolContract: daoProtocolContract,
+	}, nil
 }
 
-// The time that a claimer's share was last updated
-func GetRewardsClaimerPercTimeUpdated(rp *rocketpool.RocketPool, contractName string, opts *bind.CallOpts) (uint64, error) {
-	rewardsSettingsContract, err := getRewardsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := rewardsSettingsContract.Call(opts, value, "getRewardsClaimerPercTimeUpdated", contractName); err != nil {
-		return 0, fmt.Errorf("Could not get rewards claimer updated time: %w", err)
-	}
-	return (*value).Uint64(), nil
+// =============
+// === Calls ===
+// =============
+
+// Get the total claim amount for all claimers as a fraction
+func (c *DaoProtocolSettingsRewards) GetClaimerPercentageTotal(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.ClaimerPercentageTotal.RawValue, "getRewardsClaimersPercTotal")
 }
 
-// The total claim amount for all claimers as a fraction
-func GetRewardsClaimersPercTotal(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	rewardsSettingsContract, err := getRewardsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := rewardsSettingsContract.Call(opts, value, "getRewardsClaimersPercTotal"); err != nil {
-		return 0, fmt.Errorf("Could not get rewards claimers total percent: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
+// Get the rewards claim interval time
+func (c *DaoProtocolSettingsRewards) GetClaimIntervalTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.ClaimIntervalTime.RawValue, "getRewardsClaimIntervalTime")
 }
 
-// Rewards claim interval time
-func GetRewardsClaimIntervalTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	rewardsSettingsContract, err := getRewardsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := rewardsSettingsContract.Call(opts, value, "getRewardsClaimIntervalTime"); err != nil {
-		return 0, fmt.Errorf("Could not get rewards claim interval: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapRewardsClaimIntervalTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, RewardsSettingsContractName, "rpl.rewards.claim.period.time", big.NewInt(int64(value)), opts)
+// Get all basic details
+func (c *DaoProtocolSettingsRewards) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetClaimerPercentageTotal(mc)
+	c.GetClaimIntervalTime(mc)
 }
 
-// Get contracts
-var rewardsSettingsContractLock sync.Mutex
+// Get the claim amount for a claimer as a fraction
+func (c *DaoProtocolSettingsRewards) GetClaimerPercentage(mc *multicall.MultiCaller, percentage_Out *core.Parameter[float64], contractName string) {
+	multicall.AddCall(mc, c.contract, &percentage_Out.RawValue, "getRewardsClaimerPerc", contractName)
+}
 
-func getRewardsSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	rewardsSettingsContractLock.Lock()
-	defer rewardsSettingsContractLock.Unlock()
-	return rp.GetContract(RewardsSettingsContractName, opts)
+// Get the time that a claimer's share was last updated
+func (c *DaoProtocolSettingsRewards) GetClaimerPercentageTimeUpdated(mc *multicall.MultiCaller, time_Out *core.Parameter[time.Time], contractName string) {
+	multicall.AddCall(mc, c.contract, &time_Out.RawValue, "getRewardsClaimerPercTimeUpdated", contractName)
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+func (c *DaoProtocolSettingsRewards) BootstrapClaimIntervalTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(rewardsSettingsContractName, "rpl.rewards.claim.period.time", big.NewInt(int64(value)), opts)
 }

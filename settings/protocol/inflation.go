@@ -3,57 +3,89 @@ package protocol
 import (
 	"fmt"
 	"math/big"
-	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
-	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Config
-const InflationSettingsContractName = "rocketDAOProtocolSettingsInflation"
+const (
+	inflationSettingsContractName string = "rocketDAOProtocolSettingsInflation"
+)
 
-// RPL inflation rate per interval
-func GetInflationIntervalRate(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	inflationSettingsContract, err := getInflationSettingsContract(rp, opts)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAOProtocolSettingsInflation
+type DaoProtocolSettingsInflation struct {
+	Details             DaoProtocolSettingsInflationDetails
+	rp                  *rocketpool.RocketPool
+	contract            *core.Contract
+	daoProtocolContract *protocol.DaoProtocol
+}
+
+// Details for RocketDAOProtocolSettingsInflation
+type DaoProtocolSettingsInflationDetails struct {
+	IntervalRate core.Parameter[float64]   `json:"intervalRate"`
+	StartTime    core.Parameter[time.Time] `json:"startTime"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoProtocolSettingsInflation contract binding
+func NewDaoProtocolSettingsInflation(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsInflation, error) {
+	// Create the contract
+	contract, err := rp.GetContract(inflationSettingsContractName, opts)
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("error getting DAO protocol settings inflation contract: %w", err)
 	}
-	value := new(*big.Int)
-	if err := inflationSettingsContract.Call(opts, value, "getInflationIntervalRate"); err != nil {
-		return 0, fmt.Errorf("Could not get inflation rate: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
-}
-func BootstrapInflationIntervalRate(rp *rocketpool.RocketPool, value float64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, InflationSettingsContractName, "rpl.inflation.interval.rate", eth.EthToWei(value), opts)
+
+	return &DaoProtocolSettingsInflation{
+		Details:             DaoProtocolSettingsInflationDetails{},
+		rp:                  rp,
+		contract:            contract,
+		daoProtocolContract: daoProtocolContract,
+	}, nil
 }
 
-// RPL inflation start time
-func GetInflationStartTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	inflationSettingsContract, err := getInflationSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := inflationSettingsContract.Call(opts, value, "getInflationIntervalStartTime"); err != nil {
-		return 0, fmt.Errorf("Could not get inflation start time: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapInflationStartTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, InflationSettingsContractName, "rpl.inflation.interval.start", big.NewInt(int64(value)), opts)
+// =============
+// === Calls ===
+// =============
+
+// Get the RPL inflation rate per interval
+func (c *DaoProtocolSettingsInflation) GetIntervalRate(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IntervalRate.RawValue, "getInflationIntervalRate")
 }
 
-// Get contracts
-var inflationSettingsContractLock sync.Mutex
+// Get the RPL inflation start time
+func (c *DaoProtocolSettingsInflation) GetStartTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.StartTime.RawValue, "getInflationIntervalStartTime")
+}
 
-func getInflationSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	inflationSettingsContractLock.Lock()
-	defer inflationSettingsContractLock.Unlock()
-	return rp.GetContract(InflationSettingsContractName, opts)
+// Get all basic details
+func (c *DaoProtocolSettingsInflation) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetIntervalRate(mc)
+	c.GetStartTime(mc)
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+// Set the RPL inflation rate per interval
+func (c *DaoProtocolSettingsInflation) BootstrapIntervalRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(inflationSettingsContractName, "rpl.inflation.interval.rate", eth.EthToWei(value), opts)
+}
+
+// Set the RPL inflation start time
+func (c *DaoProtocolSettingsInflation) BootstrapStartTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(inflationSettingsContractName, "rpl.inflation.interval.start", big.NewInt(int64(value)), opts)
 }

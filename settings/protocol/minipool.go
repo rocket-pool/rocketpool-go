@@ -3,170 +3,147 @@ package protocol
 import (
 	"fmt"
 	"math/big"
-	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
-	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Config
-const MinipoolSettingsContractName = "rocketDAOProtocolSettingsMinipool"
+const (
+	minipoolSettingsContractName string = "rocketDAOProtocolSettingsMinipool"
+)
+
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAOProtocolSettingsMinipool
+type DaoProtocolSettingsMinipool struct {
+	Details             DaoProtocolSettingsMinipoolDetails
+	rp                  *rocketpool.RocketPool
+	contract            *core.Contract
+	daoProtocolContract *protocol.DaoProtocol
+}
+
+// Details for RocketDAOProtocolSettingsMinipool
+type DaoProtocolSettingsMinipoolDetails struct {
+	LaunchBalance               *big.Int                      `json:"launchBalance"`
+	FullDepositNodeAmount       *big.Int                      `json:"fullDepositNodeAmount"`
+	HalfDepositNodeAmount       *big.Int                      `json:"halfDepositNodeAmount"`
+	EmptyDepositNodeAmount      *big.Int                      `json:"emptyDepositNodeAmount"`
+	FullDepositUserAmount       *big.Int                      `json:"fullDepositUserAmount"`
+	HalfDepositUserAmount       *big.Int                      `json:"halfDepositUserAmount"`
+	EmptyDepositUserAmount      *big.Int                      `json:"emptyDepositUserAmount"`
+	IsSubmitWithdrawableEnabled bool                          `json:"isSubmitWithdrawableEnabled"`
+	LaunchTimeout               core.Parameter[time.Duration] `json:"launchTimeout"`
+	IsBondReductionEnabled      bool                          `json:"isBondReductionEnabled"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoProtocolSettingsMinipool contract binding
+func NewDaoProtocolSettingsMinipool(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsMinipool, error) {
+	// Create the contract
+	contract, err := rp.GetContract(minipoolSettingsContractName, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO protocol settings minipool contract: %w", err)
+	}
+
+	return &DaoProtocolSettingsMinipool{
+		Details:             DaoProtocolSettingsMinipoolDetails{},
+		rp:                  rp,
+		contract:            contract,
+		daoProtocolContract: daoProtocolContract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
 
 // Get the minipool launch balance
-func GetMinipoolLaunchBalance(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getLaunchBalance"); err != nil {
-		return nil, fmt.Errorf("Could not get minipool launch balance: %w", err)
-	}
-	return *value, nil
+func (c *DaoProtocolSettingsMinipool) GetLaunchBalance(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LaunchBalance, "getLaunchBalance")
 }
 
-// Required node deposit amounts
-func GetMinipoolFullDepositNodeAmount(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getFullDepositNodeAmount"); err != nil {
-		return nil, fmt.Errorf("Could not get full minipool deposit node amount: %w", err)
-	}
-	return *value, nil
-}
-func GetMinipoolHalfDepositNodeAmount(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getHalfDepositNodeAmount"); err != nil {
-		return nil, fmt.Errorf("Could not get half minipool deposit node amount: %w", err)
-	}
-	return *value, nil
-}
-func GetMinipoolEmptyDepositNodeAmount(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getEmptyDepositNodeAmount"); err != nil {
-		return nil, fmt.Errorf("Could not get empty minipool deposit node amount: %w", err)
-	}
-	return *value, nil
+// Get the amount required from the node for a full deposit
+func (c *DaoProtocolSettingsMinipool) GetFullDepositNodeAmount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.FullDepositNodeAmount, "getFullDepositNodeAmount")
 }
 
-// Required user deposit amounts
-func GetMinipoolFullDepositUserAmount(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getFullDepositUserAmount"); err != nil {
-		return nil, fmt.Errorf("Could not get full minipool deposit user amount: %w", err)
-	}
-	return *value, nil
-}
-func GetMinipoolHalfDepositUserAmount(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getHalfDepositUserAmount"); err != nil {
-		return nil, fmt.Errorf("Could not get half minipool deposit user amount: %w", err)
-	}
-	return *value, nil
-}
-func GetMinipoolEmptyDepositUserAmount(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getEmptyDepositUserAmount"); err != nil {
-		return nil, fmt.Errorf("Could not get empty minipool deposit user amount: %w", err)
-	}
-	return *value, nil
+// Get the amount required from the node for a half deposit
+func (c *DaoProtocolSettingsMinipool) GetHalfDepositNodeAmount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.HalfDepositNodeAmount, "getHalfDepositNodeAmount")
 }
 
-// Minipool withdrawable event submissions currently enabled
-func GetMinipoolSubmitWithdrawableEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return false, err
-	}
-	value := new(bool)
-	if err := minipoolSettingsContract.Call(opts, value, "getSubmitWithdrawableEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get minipool withdrawable submissions enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapMinipoolSubmitWithdrawableEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, MinipoolSettingsContractName, "minipool.submit.withdrawable.enabled", value, opts)
+// Get the amount required from the node for an empty deposit
+func (c *DaoProtocolSettingsMinipool) GetEmptyDepositNodeAmount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.EmptyDepositNodeAmount, "getEmptyDepositNodeAmount")
 }
 
-// Timeout period in seconds for prelaunch minipools to launch
-func GetMinipoolLaunchTimeout(rp *rocketpool.RocketPool, opts *bind.CallOpts) (time.Duration, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getLaunchTimeout"); err != nil {
-		return 0, fmt.Errorf("Could not get minipool launch timeout: %w", err)
-	}
-	seconds := time.Duration((*value).Int64()) * time.Second
-	return seconds, nil
+// Get the amount required from the pool stakers for a full deposit
+func (c *DaoProtocolSettingsMinipool) GetFullDepositUserAmount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.FullDepositUserAmount, "getFullDepositUserAmount")
 }
 
-// Timeout period in seconds for prelaunch minipools to launch
-func GetMinipoolLaunchTimeoutRaw(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := minipoolSettingsContract.Call(opts, value, "getLaunchTimeout"); err != nil {
-		return nil, fmt.Errorf("Could not get minipool launch timeout: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapMinipoolLaunchTimeout(rp *rocketpool.RocketPool, value time.Duration, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, MinipoolSettingsContractName, "minipool.launch.timeout", big.NewInt(int64(value.Seconds())), opts)
+// Get the amount required from the pool stakers for a half deposit
+func (c *DaoProtocolSettingsMinipool) GetHalfDepositUserAmount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.HalfDepositUserAmount, "getHalfDepositUserAmount")
 }
 
-// Minipool bond reductions currently enabled
-func GetBondReductionEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	minipoolSettingsContract, err := getMinipoolSettingsContract(rp, opts)
-	if err != nil {
-		return false, err
-	}
-	value := new(bool)
-	if err := minipoolSettingsContract.Call(opts, value, "getBondReductionEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get bond reduction enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapBondReductionEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, MinipoolSettingsContractName, "minipool.bond.reduction.enabled", value, opts)
+// Get the amount required from the pool stakers for an empty deposit
+func (c *DaoProtocolSettingsMinipool) GetEmptyDepositUserAmount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.EmptyDepositUserAmount, "getEmptyDepositUserAmount")
 }
 
-// Get contracts
-var minipoolSettingsContractLock sync.Mutex
+// Check if minipool withdrawable event submissions are currently enabled
+func (c *DaoProtocolSettingsMinipool) GetSubmitWithdrawableEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IsSubmitWithdrawableEnabled, "getSubmitWithdrawableEnabled")
+}
 
-func getMinipoolSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	minipoolSettingsContractLock.Lock()
-	defer minipoolSettingsContractLock.Unlock()
-	return rp.GetContract(MinipoolSettingsContractName, opts)
+// Get the timeout period, in seconds, for prelaunch minipools to launch
+func (c *DaoProtocolSettingsMinipool) GetLaunchTimeout(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LaunchTimeout.RawValue, "getLaunchTimeout")
+}
+
+// Check if minipool bond reductions are currently enabled
+func (c *DaoProtocolSettingsMinipool) GetBondReductionEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IsBondReductionEnabled, "getBondReductionEnabled")
+}
+
+// Get all basic details
+func (c *DaoProtocolSettingsMinipool) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetLaunchBalance(mc)
+	c.GetFullDepositNodeAmount(mc)
+	c.GetHalfDepositNodeAmount(mc)
+	c.GetEmptyDepositNodeAmount(mc)
+	c.GetFullDepositUserAmount(mc)
+	c.GetHalfDepositUserAmount(mc)
+	c.GetEmptyDepositUserAmount(mc)
+	c.GetSubmitWithdrawableEnabled(mc)
+	c.GetLaunchTimeout(mc)
+	c.GetBondReductionEnabled(mc)
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+// Set the flag for enabling minipool withdrawable event submissions
+func (c *DaoProtocolSettingsMinipool) BootstrapSubmitWithdrawableEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(minipoolSettingsContractName, "minipool.submit.withdrawable.enabled", value, opts)
+}
+
+func (c *DaoProtocolSettingsMinipool) BootstrapLaunchTimeout(value time.Duration, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(minipoolSettingsContractName, "minipool.launch.timeout", big.NewInt(int64(value.Seconds())), opts)
+}
+
+func (c *DaoProtocolSettingsMinipool) BootstrapBondReductionEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(minipoolSettingsContractName, "minipool.bond.reduction.enabled", value, opts)
 }

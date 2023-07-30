@@ -3,137 +3,148 @@ package protocol
 import (
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
-	protocoldao "github.com/rocket-pool/rocketpool-go/dao/protocol"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Config
-const AuctionSettingsContractName = "rocketDAOProtocolSettingsAuction"
+const (
+	auctionSettingsContractName string = "rocketDAOProtocolSettingsAuction"
+)
 
-// Lot creation currently enabled
-func GetCreateLotEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAOProtocolSettingsAuction
+type DaoProtocolSettingsAuction struct {
+	Details             DaoProtocolSettingsAuctionDetails
+	rp                  *rocketpool.RocketPool
+	contract            *core.Contract
+	daoProtocolContract *protocol.DaoProtocol
+}
+
+// Details for RocketDAOProtocolSettingsAuction
+type DaoProtocolSettingsAuctionDetails struct {
+	IsCreateLotEnabled    bool                    `json:"isCreateLotEnabled"`
+	IsBidOnLotEnabled     bool                    `json:"isBidOnLotEnabled"`
+	LotMinimumEthValue    *big.Int                `json:"lotMinimumEthValue"`
+	LotMaximumEthValue    *big.Int                `json:"lotMaximumEthValue"`
+	LotDuration           core.Parameter[uint64]  `json:"lotDuration"`
+	LotStartingPriceRatio core.Parameter[float64] `json:"lotStartingPriceRatio"`
+	LotReservePriceRatio  core.Parameter[float64] `json:"lotReservePriceRatio"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoProtocolSettingsAuction contract binding
+func NewDaoProtocolSettingsAuction(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsAuction, error) {
+	// Create the contract
+	contract, err := rp.GetContract(auctionSettingsContractName, opts)
 	if err != nil {
-		return false, err
+		return nil, fmt.Errorf("error getting DAO protocol settings auction contract: %w", err)
 	}
-	value := new(bool)
-	if err := auctionSettingsContract.Call(opts, value, "getCreateLotEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get lot creation enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapCreateLotEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, AuctionSettingsContractName, "auction.lot.create.enabled", value, opts)
+
+	return &DaoProtocolSettingsAuction{
+		Details:             DaoProtocolSettingsAuctionDetails{},
+		rp:                  rp,
+		contract:            contract,
+		daoProtocolContract: daoProtocolContract,
+	}, nil
 }
 
-// Lot bidding currently enabled
-func GetBidOnLotEnabled(rp *rocketpool.RocketPool, opts *bind.CallOpts) (bool, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
-	if err != nil {
-		return false, err
-	}
-	value := new(bool)
-	if err := auctionSettingsContract.Call(opts, value, "getBidOnLotEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get lot bidding enabled status: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapBidOnLotEnabled(rp *rocketpool.RocketPool, value bool, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapBool(rp, AuctionSettingsContractName, "auction.lot.bidding.enabled", value, opts)
+// =============
+// === Calls ===
+// =============
+
+// Check if lot creation is currently enabled
+func (c *DaoProtocolSettingsAuction) GetCreateLotEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IsCreateLotEnabled, "getCreateLotEnabled")
 }
 
-// The minimum lot size in ETH value
-func GetLotMinimumEthValue(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := auctionSettingsContract.Call(opts, value, "getLotMinimumEthValue"); err != nil {
-		return nil, fmt.Errorf("Could not get lot minimum ETH value: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapLotMinimumEthValue(rp *rocketpool.RocketPool, value *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, AuctionSettingsContractName, "auction.lot.value.minimum", value, opts)
+// Check if lot bidding is currently enabled
+func (c *DaoProtocolSettingsAuction) GetBidOnLotEnabled(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.IsBidOnLotEnabled, "getBidOnLotEnabled")
 }
 
-// The maximum lot size in ETH value
-func GetLotMaximumEthValue(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	value := new(*big.Int)
-	if err := auctionSettingsContract.Call(opts, value, "getLotMaximumEthValue"); err != nil {
-		return nil, fmt.Errorf("Could not get lot maximum ETH value: %w", err)
-	}
-	return *value, nil
-}
-func BootstrapLotMaximumEthValue(rp *rocketpool.RocketPool, value *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, AuctionSettingsContractName, "auction.lot.value.maximum", value, opts)
+// Get the minimum lot size in ETH
+func (c *DaoProtocolSettingsAuction) GetLotMinimumEthValue(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LotMinimumEthValue, "getLotMinimumEthValue")
 }
 
-// The lot duration in blocks
-func GetLotDuration(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := auctionSettingsContract.Call(opts, value, "getLotDuration"); err != nil {
-		return 0, fmt.Errorf("Could not get lot duration: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapLotDuration(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, AuctionSettingsContractName, "auction.lot.duration", big.NewInt(int64(value)), opts)
+// Get the maximum lot size in ETH
+func (c *DaoProtocolSettingsAuction) GetLotMaximumEthValue(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LotMaximumEthValue, "getLotMaximumEthValue")
 }
 
-// The starting price relative to current ETH price, as a fraction
-func GetLotStartingPriceRatio(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := auctionSettingsContract.Call(opts, value, "getStartingPriceRatio"); err != nil {
-		return 0, fmt.Errorf("Could not get lot starting price ratio: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
-}
-func BootstrapLotStartingPriceRatio(rp *rocketpool.RocketPool, value float64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, AuctionSettingsContractName, "auction.price.start", eth.EthToWei(value), opts)
+// Get the lot duration, in blocks
+func (c *DaoProtocolSettingsAuction) GetLotDuration(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LotDuration.RawValue, "getLotDuration")
 }
 
-// The reserve price relative to current ETH price, as a fraction
-func GetLotReservePriceRatio(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	auctionSettingsContract, err := getAuctionSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := auctionSettingsContract.Call(opts, value, "getReservePriceRatio"); err != nil {
-		return 0, fmt.Errorf("Could not get lot reserve price ratio: %w", err)
-	}
-	return eth.WeiToEth(*value), nil
-}
-func BootstrapLotReservePriceRatio(rp *rocketpool.RocketPool, value float64, opts *bind.TransactOpts) (common.Hash, error) {
-	return protocoldao.BootstrapUint(rp, AuctionSettingsContractName, "auction.price.reserve", eth.EthToWei(value), opts)
+// Get the lot starting price relative to current ETH price, as a fraction
+func (c *DaoProtocolSettingsAuction) GetLotStartingPriceRatio(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LotStartingPriceRatio.RawValue, "getStartingPriceRatio")
 }
 
-// Get contracts
-var auctionSettingsContractLock sync.Mutex
+// Get the reserve price relative to current ETH price, as a fraction
+func (c *DaoProtocolSettingsAuction) GetLotReservePriceRatio(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.LotReservePriceRatio.RawValue, "getReservePriceRatio")
+}
 
-func getAuctionSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	auctionSettingsContractLock.Lock()
-	defer auctionSettingsContractLock.Unlock()
-	return rp.GetContract(AuctionSettingsContractName, opts)
+// Get all basic details
+func (c *DaoProtocolSettingsAuction) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetCreateLotEnabled(mc)
+	c.GetBidOnLotEnabled(mc)
+	c.GetLotMinimumEthValue(mc)
+	c.GetLotMaximumEthValue(mc)
+	c.GetLotDuration(mc)
+	c.GetLotStartingPriceRatio(mc)
+	c.GetLotReservePriceRatio(mc)
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+// Set the create lot enabled flag
+func (c *DaoProtocolSettingsAuction) BootstrapCreateLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(auctionSettingsContractName, "auction.lot.create.enabled", value, opts)
+}
+
+// Set the create lot enabled flag
+func (c *DaoProtocolSettingsAuction) BootstrapBidOnLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapBool(auctionSettingsContractName, "auction.lot.bidding.enabled", value, opts)
+}
+
+// Set the minimum ETH value for lots
+func (c *DaoProtocolSettingsAuction) BootstrapLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.lot.value.minimum", value, opts)
+}
+
+// Set the maximum ETH value for lots
+func (c *DaoProtocolSettingsAuction) BootstrapLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.lot.value.maximum", value, opts)
+}
+
+// Set the duration value for lots, in blocks
+func (c *DaoProtocolSettingsAuction) BootstrapLotDuration(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.lot.duration", big.NewInt(int64(value)), opts)
+}
+
+// Set the starting price ratio for lots
+func (c *DaoProtocolSettingsAuction) BootstrapLotStartingPriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.price.start", eth.EthToWei(value), opts)
+}
+
+// Set the reserve price ratio for lots
+func (c *DaoProtocolSettingsAuction) BootstrapLotReservePriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.price.reserve", eth.EthToWei(value), opts)
 }
