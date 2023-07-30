@@ -86,17 +86,17 @@ func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgrade
 }
 
 // Get info for cancelling a proposal
-func (c *DaoNodeTrustedActions) CancelProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) CancelProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "cancel", opts, big.NewInt(int64(proposalId)))
 }
 
 // Get info for voting on a proposal
-func (c *DaoNodeTrustedActions) VoteOnProposal(proposalId uint64, support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) VoteOnProposal(proposalId uint64, support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "vote", opts, big.NewInt(int64(proposalId)), support)
 }
 
 // Get info for executing a proposal
-func (c *DaoNodeTrustedActions) ExecuteProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ExecuteProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "execute", opts, big.NewInt(int64(proposalId)))
 }
 

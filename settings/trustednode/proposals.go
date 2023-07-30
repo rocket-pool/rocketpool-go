@@ -3,141 +3,156 @@ package trustednode
 import (
 	"fmt"
 	"math/big"
-	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
-	trustednodedao "github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-// Config
 const (
-	ProposalsSettingsContractName = "rocketDAONodeTrustedSettingsProposals"
-	CooldownTimeSettingPath       = "proposal.cooldown.time"
-	VoteTimeSettingPath           = "proposal.vote.time"
-	VoteDelayTimeSettingPath      = "proposal.vote.delay.time"
-	ExecuteTimeSettingPath        = "proposal.execute.time"
-	ActionTimeSettingPath         = "proposal.action.time"
+	proposalsSettingsContractName = "rocketDAONodeTrustedSettingsProposals"
+	cooldownTimeSettingPath       = "proposal.cooldown.time"
+	voteTimeSettingPath           = "proposal.vote.time"
+	voteDelayTimeSettingPath      = "proposal.vote.delay.time"
+	executeTimeSettingPath        = "proposal.execute.time"
+	actionTimeSettingPath         = "proposal.action.time"
 )
 
-// The cooldown period a member must wait after making a proposal before making another in seconds
-func GetProposalCooldownTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	proposalsSettingsContract, err := getProposalsSettingsContract(rp, opts)
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAONodeTrustedSettingsProposals
+type DaoNodeTrustedSettingsProposals struct {
+	Details                         DaoNodeTrustedSettingsProposalsDetails
+	rp                              *rocketpool.RocketPool
+	contract                        *core.Contract
+	daoNodeTrustedContract          *trustednode.DaoNodeTrusted
+	daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals
+}
+
+// Details for RocketDAONodeTrustedSettingsProposals
+type DaoNodeTrustedSettingsProposalsDetails struct {
+	CooldownTime  core.Parameter[time.Duration] `json:"cooldownTime"`
+	VoteTime      core.Parameter[time.Duration] `json:"voteTime"`
+	VoteDelayTime core.Parameter[time.Duration] `json:"voteDelayTime"`
+	ExecuteTime   core.Parameter[time.Duration] `json:"executeTime"`
+	ActionTime    core.Parameter[time.Duration] `json:"actionTime"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoNodeTrustedSettingsProposals contract binding
+func NewDaoNodeTrustedSettingsProposals(rp *rocketpool.RocketPool, daoNodeTrustedContract *trustednode.DaoNodeTrusted, daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals, opts *bind.CallOpts) (*DaoNodeTrustedSettingsProposals, error) {
+	// Create the contract
+	contract, err := rp.GetContract(proposalsSettingsContractName, opts)
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("error getting DAO node trusted settings proposals contract: %w", err)
 	}
-	value := new(*big.Int)
-	if err := proposalsSettingsContract.Call(opts, value, "getCooldownTime"); err != nil {
-		return 0, fmt.Errorf("Could not get proposal cooldown period: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapProposalCooldownTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return trustednodedao.BootstrapUint(rp, ProposalsSettingsContractName, CooldownTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func ProposeProposalCooldownTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	return trustednodedao.ProposeSetUint(rp, fmt.Sprintf("set %s", CooldownTimeSettingPath), ProposalsSettingsContractName, CooldownTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func EstimateProposeProposalCooldownTimeGas(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return trustednodedao.EstimateProposeSetUintGas(rp, fmt.Sprintf("set %s", CooldownTimeSettingPath), ProposalsSettingsContractName, CooldownTimeSettingPath, big.NewInt(int64(value)), opts)
+
+	return &DaoNodeTrustedSettingsProposals{
+		Details:                         DaoNodeTrustedSettingsProposalsDetails{},
+		rp:                              rp,
+		contract:                        contract,
+		daoNodeTrustedContract:          daoNodeTrustedContract,
+		daoNodeTrustedProposalsContract: daoNodeTrustedProposalsContract,
+	}, nil
 }
 
-// The period a proposal can be voted on for in seconds
-func GetProposalVoteTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	proposalsSettingsContract, err := getProposalsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := proposalsSettingsContract.Call(opts, value, "getVoteTime"); err != nil {
-		return 0, fmt.Errorf("Could not get proposal voting period: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapProposalVoteTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return trustednodedao.BootstrapUint(rp, ProposalsSettingsContractName, VoteTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func ProposeProposalVoteTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	return trustednodedao.ProposeSetUint(rp, fmt.Sprintf("set %s", VoteTimeSettingPath), ProposalsSettingsContractName, VoteTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func EstimateProposeProposalVoteTimeGas(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return trustednodedao.EstimateProposeSetUintGas(rp, fmt.Sprintf("set %s", VoteTimeSettingPath), ProposalsSettingsContractName, VoteTimeSettingPath, big.NewInt(int64(value)), opts)
+// =============
+// === Calls ===
+// =============
+
+// Get the cooldown period a member must wait, in seconds, after making a proposal before making another
+func (c *DaoNodeTrustedSettingsProposals) GetCooldownTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.CooldownTime.RawValue, "getCooldownTime")
 }
 
-// The delay after creation before a proposal can be voted on in seconds
-func GetProposalVoteDelayTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	proposalsSettingsContract, err := getProposalsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := proposalsSettingsContract.Call(opts, value, "getVoteDelayTime"); err != nil {
-		return 0, fmt.Errorf("Could not get proposal voting delay: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapProposalVoteDelayTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return trustednodedao.BootstrapUint(rp, ProposalsSettingsContractName, VoteDelayTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func ProposeProposalVoteDelayTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	return trustednodedao.ProposeSetUint(rp, fmt.Sprintf("set %s", VoteDelayTimeSettingPath), ProposalsSettingsContractName, VoteDelayTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func EstimateProposeProposalVoteDelayTimeGas(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return trustednodedao.EstimateProposeSetUintGas(rp, fmt.Sprintf("set %s", VoteDelayTimeSettingPath), ProposalsSettingsContractName, VoteDelayTimeSettingPath, big.NewInt(int64(value)), opts)
+// Get the period, in seconds, a proposal can be voted on
+func (c *DaoNodeTrustedSettingsProposals) GetVoteTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.VoteTime.RawValue, "getVoteTime")
 }
 
-// The period during which a passed proposal can be executed in time
-func GetProposalExecuteTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	proposalsSettingsContract, err := getProposalsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := proposalsSettingsContract.Call(opts, value, "getExecuteTime"); err != nil {
-		return 0, fmt.Errorf("Could not get proposal execution period: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapProposalExecuteTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return trustednodedao.BootstrapUint(rp, ProposalsSettingsContractName, ExecuteTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func ProposeProposalExecuteTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	return trustednodedao.ProposeSetUint(rp, fmt.Sprintf("set %s", ExecuteTimeSettingPath), ProposalsSettingsContractName, ExecuteTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func EstimateProposeProposalExecuteTimeGas(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return trustednodedao.EstimateProposeSetUintGas(rp, fmt.Sprintf("set %s", ExecuteTimeSettingPath), ProposalsSettingsContractName, ExecuteTimeSettingPath, big.NewInt(int64(value)), opts)
+// Get the delay, in seconds, after creation before a proposal can be voted on
+func (c *DaoNodeTrustedSettingsProposals) GetVoteDelayTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.VoteDelayTime.RawValue, "getVoteDelayTime")
 }
 
-// The period during which an action can be performed on an executed proposal in seconds
-func GetProposalActionTime(rp *rocketpool.RocketPool, opts *bind.CallOpts) (uint64, error) {
-	proposalsSettingsContract, err := getProposalsSettingsContract(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	value := new(*big.Int)
-	if err := proposalsSettingsContract.Call(opts, value, "getActionTime"); err != nil {
-		return 0, fmt.Errorf("Could not get proposal action period: %w", err)
-	}
-	return (*value).Uint64(), nil
-}
-func BootstrapProposalActionTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (common.Hash, error) {
-	return trustednodedao.BootstrapUint(rp, ProposalsSettingsContractName, ActionTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func ProposeProposalActionTime(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (uint64, common.Hash, error) {
-	return trustednodedao.ProposeSetUint(rp, fmt.Sprintf("set %s", ActionTimeSettingPath), ProposalsSettingsContractName, ActionTimeSettingPath, big.NewInt(int64(value)), opts)
-}
-func EstimateProposeProposalActionTimeGas(rp *rocketpool.RocketPool, value uint64, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return trustednodedao.EstimateProposeSetUintGas(rp, fmt.Sprintf("set %s", ActionTimeSettingPath), ProposalsSettingsContractName, ActionTimeSettingPath, big.NewInt(int64(value)), opts)
+// Get the period, in seconds, during which a passed proposal can be executed
+func (c *DaoNodeTrustedSettingsProposals) GetExecuteTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.ExecuteTime.RawValue, "getExecuteTime")
 }
 
-// Get contracts
-var proposalsSettingsContractLock sync.Mutex
+// Get the period, in seconds, during which an action can be performed on an executed proposal
+func (c *DaoNodeTrustedSettingsProposals) GetActionTime(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.ActionTime.RawValue, "getActionTime")
+}
 
-func getProposalsSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	proposalsSettingsContractLock.Lock()
-	defer proposalsSettingsContractLock.Unlock()
-	return rp.GetContract(ProposalsSettingsContractName, opts)
+// Get all basic details
+func (c *DaoNodeTrustedSettingsProposals) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetCooldownTime(mc)
+	c.GetVoteTime(mc)
+	c.GetVoteDelayTime(mc)
+	c.GetExecuteTime(mc)
+	c.GetActionTime(mc)
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for setting the cooldown period a member must wait, in seconds, after making a proposal before making another
+func (c *DaoNodeTrustedSettingsProposals) BootstrapProposalCooldownTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(proposalsSettingsContractName, cooldownTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the period, in seconds, a proposal can be voted on
+func (c *DaoNodeTrustedSettingsProposals) BootstrapProposalVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(proposalsSettingsContractName, voteTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the delay, in seconds, after creation before a proposal can be voted on
+func (c *DaoNodeTrustedSettingsProposals) BootstrapProposalVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(proposalsSettingsContractName, voteDelayTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the period, in seconds, during which a passed proposal can be executed
+func (c *DaoNodeTrustedSettingsProposals) BootstrapProposalExecuteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(proposalsSettingsContractName, executeTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the period, in seconds, during which an action can be performed on an executed proposal
+func (c *DaoNodeTrustedSettingsProposals) BootstrapProposalActionTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(proposalsSettingsContractName, actionTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the cooldown period a member must wait, in seconds, after making a proposal before making another
+func (c *DaoNodeTrustedSettingsProposals) ProposeProposalCooldownTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", cooldownTimeSettingPath), proposalsSettingsContractName, cooldownTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the period, in seconds, a proposal can be voted on
+func (c *DaoNodeTrustedSettingsProposals) ProposeProposalVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", voteTimeSettingPath), proposalsSettingsContractName, voteTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the delay, in seconds, after creation before a proposal can be voted on
+func (c *DaoNodeTrustedSettingsProposals) ProposeProposalVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", voteDelayTimeSettingPath), proposalsSettingsContractName, voteDelayTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the period, in seconds, during which a passed proposal can be executed
+func (c *DaoNodeTrustedSettingsProposals) ProposeProposalExecuteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", executeTimeSettingPath), proposalsSettingsContractName, executeTimeSettingPath, big.NewInt(int64(value)), opts)
+}
+
+// Get info for setting the period, in seconds, during which an action can be performed on an executed proposal
+func (c *DaoNodeTrustedSettingsProposals) ProposeProposalActionTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", actionTimeSettingPath), proposalsSettingsContractName, actionTimeSettingPath, big.NewInt(int64(value)), opts)
 }
