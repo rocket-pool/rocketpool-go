@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -50,6 +51,11 @@ func NewStorage(client core.ExecutionClient, rocketStorageAddress common.Address
 // Get a boolean value
 func (c *Storage) GetBool(mc *multicall.MultiCaller, result_Out *bool, key common.Hash) {
 	multicall.AddCall(mc, c.contract, result_Out, "getBool", key)
+}
+
+// Get a uint value
+func (c *Storage) GetUint(mc *multicall.MultiCaller, result_Out **big.Int, key common.Hash) {
+	multicall.AddCall(mc, c.contract, result_Out, "getUint", key)
 }
 
 // Get an address

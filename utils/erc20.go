@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -100,15 +100,30 @@ const (
 // Global container for the parsed ABI above
 var erc20Abi *abi.ABI
 
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for ERC20 contracts
 type Erc20Contract struct {
-	Name     string
-	Symbol   string
-	Decimals uint8
+	Details  Erc20ContractDetails
+	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
 
+// Details for ERC20 contracts
+type Erc20ContractDetails struct {
+	Name     string `json:"name"`
+	Symbol   string `json:"symbol"`
+	Decimals uint8  `json:"decimals"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
 // Creates a contract wrapper for the ERC20 at the given address
-func NewErc20Contract(address common.Address, client core.ExecutionClient, opts *bind.CallOpts) (*Erc20Contract, error) {
+func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client core.ExecutionClient, opts *bind.CallOpts) (*Erc20Contract, error) {
 	// Parse the ABI
 	if erc20Abi == nil {
 		abiParsed, err := abi.JSON(strings.NewReader(Erc20AbiString))
@@ -128,79 +143,37 @@ func NewErc20Contract(address common.Address, client core.ExecutionClient, opts 
 
 	// Create the wrapper
 	wrapper := &Erc20Contract{
+		Details:  Erc20ContractDetails{},
 		contract: contract,
 	}
 
 	// Get the details
-	name, err := wrapper.GetName(opts)
+	err := rp.Query(func(mc *multicall.MultiCaller) {
+		multicall.AddCall[string](mc, contract, &wrapper.Details.Name, "name")
+		multicall.AddCall[string](mc, contract, &wrapper.Details.Symbol, "symbol")
+		multicall.AddCall[uint8](mc, contract, &wrapper.Details.Decimals, "decimals")
+	}, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting ERC-20 details of token %s: %w", address.Hex(), err)
 	}
-	wrapper.Name = name
-	symbol, err := wrapper.GetSymbol(opts)
-	if err != nil {
-		return nil, err
-	}
-	wrapper.Symbol = symbol
-	decimals, err := wrapper.GetDecimals(opts)
-	if err != nil {
-		return nil, err
-	}
-	wrapper.Decimals = decimals
 
 	return wrapper, nil
 }
 
-// Get the token name
-func (c *Erc20Contract) GetName(opts *bind.CallOpts) (string, error) {
-	name := new(string)
-	err := c.contract.Call(opts, name, "name")
-	if err != nil {
-		return "", fmt.Errorf("could not get ERC20 name: %w", err)
-	}
-	return *name, nil
-}
-
-// Get the token symbol
-func (c *Erc20Contract) GetSymbol(opts *bind.CallOpts) (string, error) {
-	symbol := new(string)
-	err := c.contract.Call(opts, symbol, "symbol")
-	if err != nil {
-		return "", fmt.Errorf("could not get ERC20 symbol: %w", err)
-	}
-	return *symbol, nil
-}
-
-// Get the token decimals
-func (c *Erc20Contract) GetDecimals(opts *bind.CallOpts) (uint8, error) {
-	decimals := new(uint8)
-	err := c.contract.Call(opts, decimals, "decimals")
-	if err != nil {
-		return 0, fmt.Errorf("could not get ERC20 decimals: %w", err)
-	}
-	return *decimals, nil
-}
+// =============
+// === Calls ===
+// =============
 
 // Get the token balance for an address
-func (c *Erc20Contract) BalanceOf(address common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	balance := new(*big.Int)
-	err := c.contract.Call(opts, balance, "balanceOf", address)
-	if err != nil {
-		return nil, fmt.Errorf("could not get ERC20 balance for address %s: %w", address.Hex(), err)
-	}
-	return *balance, nil
+func (c *Erc20Contract) BalanceOf(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
+	multicall.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
 }
 
-// Estimate the gas for transferring an ERC20 to another address
-func (c *Erc20Contract) EstimateTransferGas(to common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	return c.contract.GetTransactionGasInfo(opts, "transfer", to, amount)
-}
+// ====================
+// === Transactions ===
+// ====================
 
-// Transfer an ERC20 to another address
-func (c *Erc20Contract) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*types.Transaction, error) {
-	tx, err := c.contract.Transact(opts, "transfer", to, amount)
-	if err != nil {
-		return nil, fmt.Errorf("could not transfer ERC20 to %s: %w", to.Hex(), err)
-	}
-	return tx, nil
+// Get info for transferring the ERC20 to another address
+func (c *Erc20Contract) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "transfer", opts, to, amount)
 }

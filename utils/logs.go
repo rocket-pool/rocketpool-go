@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 type FilterQuery struct {
@@ -42,7 +43,7 @@ func FilterContractLogs(rp *rocketpool.RocketPool, contractName string, q Filter
 	if err != nil {
 		return nil, err
 	}
-	addresses = append(addresses, *currentAddress)
+	addresses = append(addresses, currentAddress)
 	// Perform the desired getLogs call and return results
 	return GetLogs(rp, addresses, q.Topics, intervalSize, q.FromBlock, q.ToBlock, q.BlockHash)
 }
@@ -55,7 +56,10 @@ func GetLogs(rp *rocketpool.RocketPool, addressFilter []common.Address, topicFil
 	if fromBlock == nil {
 		var err error
 		deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
-		fromBlock, err = rp.RocketStorage.GetUint(nil, deployBlockHash)
+		var fromBlock *big.Int
+		err = rp.Query(func(mc *multicall.MultiCaller) {
+			rp.Storage.GetUint(mc, &fromBlock, deployBlockHash)
+		}, nil)
 		if err != nil {
 			return nil, err
 		}
