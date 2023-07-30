@@ -113,20 +113,14 @@ func (c *AuctionManager) GetLotWithBids(index uint64, bidder common.Address, opt
 // Get lot implementation
 func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
 	// Create the lot and get details via a multicall query
-	lot, err := multicall.MulticallQuery[AuctionLot](
-		c.rp.Client,
-		*c.rp.MulticallAddress,
-		func(mc *multicall.MultiCaller) (*AuctionLot, error) {
-			lot := NewAuctionLot(c, index)
+	lot := NewAuctionLot(c, index)
+	err := c.rp.Query(func(mc *multicall.MultiCaller) {
+		if bidder != nil {
+			lot.GetAllDetailsWithBidAmount(mc, *bidder)
+		} else {
 			lot.GetAllDetails(mc)
-			if bidder != nil {
-				lot.GetAllDetailsWithBidAmount(mc, *bidder)
-			}
-			return lot, nil
-		},
-		nil,
-		opts,
-	)
+		}
+	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting lot: %w", err)
 	}
@@ -148,22 +142,18 @@ func (c *AuctionManager) GetLotsWithBids(lotCount uint64, bidder common.Address,
 // Get lots implementation
 func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
 	// Run the multicall query for each lot
-	lots, err := multicall.MulticallBatchQuery[AuctionLot](
-		c.rp.Client,
-		*c.rp.MulticallAddress,
+	lots, err := rocketpool.BatchQuery[AuctionLot](c.rp,
 		lotCount,
 		lotDetailsBatchSize,
-		func(lots []*AuctionLot, index uint64, mc *multicall.MultiCaller) error {
+		func(mc *multicall.MultiCaller, index uint64) (*AuctionLot, error) {
 			lot := NewAuctionLot(c, index)
-			lots[index] = lot
 			if bidder != nil {
 				lot.GetAllDetailsWithBidAmount(mc, *bidder)
 			} else {
 				lot.GetAllDetails(mc)
 			}
-			return nil
+			return lot, nil
 		},
-		nil,
 		opts,
 	)
 	if err != nil {

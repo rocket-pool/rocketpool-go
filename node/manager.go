@@ -85,18 +85,14 @@ func (c *NodeManager) GetAllDetails(mc *multicall.MultiCaller) {
 // Get the list of node addresses
 func (c *NodeManager) GetNodeAddresses(nodeCount uint64, opts *bind.CallOpts) ([]*common.Address, error) {
 	// Run the multicall query for each address
-	addresses, err := multicall.MulticallBatchQuery[common.Address](
-		c.rp.Client,
-		*c.rp.MulticallAddress,
+	addresses, err := rocketpool.BatchQuery[common.Address](c.rp,
 		nodeCount,
 		nodeAddressBatchSize,
-		func(addresses []*common.Address, index uint64, mc *multicall.MultiCaller) error {
-			addressPtr := &common.Address{}
-			addresses[index] = addressPtr
-			multicall.AddCall(mc, c.contract, addressPtr, "getNodeAt", big.NewInt(int64(index)))
-			return nil
+		func(mc *multicall.MultiCaller, index uint64) (*common.Address, error) {
+			address := new(common.Address)
+			multicall.AddCall(mc, c.contract, address, "getNodeAt", big.NewInt(int64(index)))
+			return address, nil
 		},
-		nil,
 		opts,
 	)
 	if err != nil {
@@ -114,17 +110,10 @@ func (c *NodeManager) GetNodeAddresses(nodeCount uint64, opts *bind.CallOpts) ([
 // Get a node's details by its index and corresponding address
 func (c *NodeManager) GetNodeAt(index uint64, address common.Address, staking *NodeStaking, opts *bind.CallOpts) (*Node, error) {
 	// Create the node and get details via a multicall query
-	node, err := multicall.MulticallQuery[Node](
-		c.rp.Client,
-		*c.rp.MulticallAddress,
-		func(mc *multicall.MultiCaller) (*Node, error) {
-			node := NewNode(c, staking, index, address)
-			node.GetAllDetails(mc)
-			return node, nil
-		},
-		nil,
-		opts,
-	)
+	node := NewNode(c, staking, index, address)
+	err := c.rp.Query(func(mc *multicall.MultiCaller) {
+		node.GetAllDetails(mc)
+	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node %d (%s): %w", index, address.Hex(), err)
 	}
@@ -136,18 +125,14 @@ func (c *NodeManager) GetNodeAt(index uint64, address common.Address, staking *N
 // Get the details for all nodes
 func (c *NodeManager) GetAllNodes(addresses []*common.Address, staking *NodeStaking, opts *bind.CallOpts) ([]*Node, error) {
 	// Run the multicall query for each lot
-	nodes, err := multicall.MulticallBatchQuery[Node](
-		c.rp.Client,
-		*c.rp.MulticallAddress,
+	nodes, err := rocketpool.BatchQuery[Node](c.rp,
 		uint64(len(addresses)),
 		nodeDetailsBatchSize,
-		func(nodes []*Node, index uint64, mc *multicall.MultiCaller) error {
+		func(mc *multicall.MultiCaller, index uint64) (*Node, error) {
 			node := NewNode(c, staking, index, *addresses[index])
-			nodes[index] = node
 			node.GetAllDetails(mc)
-			return nil
+			return node, nil
 		},
-		nil,
 		opts,
 	)
 	if err != nil {

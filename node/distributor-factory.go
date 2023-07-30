@@ -53,21 +53,16 @@ func (c *NodeDistributorFactory) GetDistributorAddress(mc *multicall.MultiCaller
 
 // Get a node's distributor with details
 func (c *NodeDistributorFactory) GetNodeDistributor(nodeAddress common.Address, distributorAddress common.Address, opts *bind.CallOpts) (*NodeDistributor, error) {
-	// Create the distributor and get details via a multicall query
-	distributor, err := multicall.MulticallQuery[NodeDistributor](
-		c.rp.Client,
-		*c.rp.MulticallAddress,
-		func(mc *multicall.MultiCaller) (*NodeDistributor, error) {
-			distributor, err := NewNodeDistributor(c.rp, nodeAddress, distributorAddress, opts)
-			if err != nil {
-				return nil, fmt.Errorf("error creating node distributor: %w", err)
-			}
-			distributor.GetAllDetails(mc)
-			return distributor, nil
-		},
-		nil,
-		opts,
-	)
+	// Create the distributor
+	distributor, err := NewNodeDistributor(c.rp, nodeAddress, distributorAddress, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error creating node distributor binding for node %s at %s: %w", nodeAddress.Hex(), distributorAddress.Hex(), err)
+	}
+
+	// Get details via a multicall query
+	err = c.rp.Query(func(mc *multicall.MultiCaller) {
+		distributor.GetAllDetails(mc)
+	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node distributor for node %s at %s: %w", nodeAddress.Hex(), distributorAddress.Hex(), err)
 	}

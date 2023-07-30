@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/storage"
@@ -43,73 +44,22 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 
 }
 
-func SingleCall[outType core.CallReturnType](rp *RocketPool, query func(*multicall.MultiCaller, *outType), opts *bind.CallOpts) (outType, error) {
-	// Run the query
-	outPtr, err := multicall.MulticallQuery[outType](
-		rp.Client,
-		*rp.MulticallAddress,
-		func(mc *multicall.MultiCaller) (*outType, error) {
-			result := new(outType)
-			query(mc, result)
-			return result, nil
-		},
-		nil,
-		opts,
-	)
-	// Handle errors
-	if err != nil {
-		var result outType
-		return result, err
-	}
-
-	// Return the result
-	return *outPtr, nil
-}
-
-func SingleCallWithError[outType core.CallReturnType](rp *RocketPool, query func(*multicall.MultiCaller, *outType, ...any) error, opts *bind.CallOpts, args ...any) (outType, error) {
-	// Run the query
-	outPtr, err := multicall.MulticallQuery[outType](
-		rp.Client,
-		*rp.MulticallAddress,
-		func(mc *multicall.MultiCaller) (*outType, error) {
-			result := new(outType)
-			err := query(mc, result, args)
-			return result, err
-		},
-		nil,
-		opts,
-	)
-	// Handle errors
-	if err != nil {
-		var result outType
-		return result, err
-	}
-
-	// Return the result
-	return *outPtr, nil
-}
-
 // Load Rocket Pool contract addresses
 func (rp *RocketPool) GetAddress(contractName string, opts *bind.CallOpts) (common.Address, error) {
-	return SingleCall[common.Address](
-		rp,
-		func(mc *multicall.MultiCaller, out *common.Address) {
-			rp.Storage.GetAddress(mc, out, contractName)
-		},
-		opts,
-	)
+	var address common.Address
+	err := rp.Query(func(mc *multicall.MultiCaller) {
+		rp.Storage.GetAddress(mc, &address, contractName)
+	}, opts)
+	return address, err
 }
 
 // Load Rocket Pool contract ABIs
 func (rp *RocketPool) GetABI(contractName string, opts *bind.CallOpts) (*abi.ABI, error) {
 	// Get the encoded ABI
-	abiEncoded, err := SingleCall[string](
-		rp,
-		func(mc *multicall.MultiCaller, out *string) {
-			rp.Storage.GetAbi(mc, out, contractName)
-		},
-		opts,
-	)
+	var abiEncoded string
+	err := rp.Query(func(mc *multicall.MultiCaller) {
+		rp.Storage.GetAbi(mc, &abiEncoded, contractName)
+	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting encoded ABI: %w", err)
 	}
@@ -130,7 +80,7 @@ func (rp *RocketPool) GetContract(contractName string, opts *bind.CallOpts) (*co
 	var address common.Address
 	var abiEncoded string
 
-	err := multicall.MulticallQuery2(rp.Client, *rp.MulticallAddress, func(mc *multicall.MultiCaller) {
+	err := rp.Query(func(mc *multicall.MultiCaller) {
 		rp.Storage.GetAddress(mc, &address, contractName)
 		rp.Storage.GetAbi(mc, &abiEncoded, contractName)
 	}, opts)
@@ -174,4 +124,98 @@ func (rp *RocketPool) MakeContract(contractName string, address common.Address, 
 		Client:   rp.Client,
 	}, nil
 
+}
+
+// =========================
+// === Multicall Helpers ===
+// =========================
+
+// Run a multicall query that doesn't perform any return type allocation
+func (rp *RocketPool) Query(query func(*multicall.MultiCaller), opts *bind.CallOpts) error {
+	// Create the multicaller
+	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+	if err != nil {
+		return fmt.Errorf("error creating multicaller: %w", err)
+	}
+
+	// Run the query
+	query(mc)
+
+	// Execute the multicall
+	_, err = mc.FlexibleCall(true, opts)
+	if err != nil {
+		return fmt.Errorf("error executing multicall: %w", err)
+	}
+
+	return nil
+}
+
+// Run a multicall query that doesn't perform any return type allocation - used when the query itself can return an error
+func (rp *RocketPool) QueryWithError(query func(*multicall.MultiCaller) error, opts *bind.CallOpts) error {
+	// Create the multicaller
+	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+	if err != nil {
+		return fmt.Errorf("error creating multicaller: %w", err)
+	}
+
+	// Run the query
+	err = query(mc)
+	if err != nil {
+		return fmt.Errorf("error running multicall query: %w", err)
+	}
+
+	// Execute the multicall
+	_, err = mc.FlexibleCall(true, opts)
+	if err != nil {
+		return fmt.Errorf("error executing multicall: %w", err)
+	}
+
+	return nil
+}
+
+// Create and execute a multicall query that is too big for one call and must be run in batches
+func BatchQuery[ObjType any](rp *RocketPool, count uint64, batchSize uint64, createAndQuery func(*multicall.MultiCaller, uint64) (*ObjType, error), opts *bind.CallOpts) ([]*ObjType, error) {
+	// Create the array of query objects
+	objs := make([]*ObjType, count)
+
+	// Sync
+	var wg errgroup.Group
+	wg.SetLimit(int(batchSize))
+
+	// Run getters in batches
+	for i := uint64(0); i < count; i += batchSize {
+		i := i
+		max := i + batchSize
+		if max > count {
+			max = count
+		}
+
+		// Load details
+		wg.Go(func() error {
+			mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+			if err != nil {
+				return err
+			}
+			for j := i; j < max; j++ {
+				obj, err := createAndQuery(mc, j)
+				if err != nil {
+					return fmt.Errorf("error running query adder: %w", err)
+				}
+				objs[j] = obj
+			}
+			_, err = mc.FlexibleCall(true, opts)
+			if err != nil {
+				return fmt.Errorf("error executing multicall: %w", err)
+			}
+			return nil
+		})
+	}
+
+	// Wait for them all to complete
+	if err := wg.Wait(); err != nil {
+		return nil, fmt.Errorf("error during multicall query: %w", err)
+	}
+
+	// Return
+	return objs, nil
 }
