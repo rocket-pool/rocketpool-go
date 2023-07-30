@@ -1,212 +1,137 @@
 package tokens
 
 import (
+	"context"
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-//
-// Core ERC-20 functions
-//
+// ===============
+// === Structs ===
+// ===============
 
-// Get rETH total supply
-func GetRETHTotalSupply(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	return totalSupply(rocketTokenRETH, "rETH", opts)
+// Binding for RocketTokenRETH
+type TokenReth struct {
+	Details  TokenRethDetails
+	rp       *rocketpool.RocketPool
+	contract *core.Contract
 }
 
-// Get rETH balance
-func GetRETHBalance(rp *rocketpool.RocketPool, address common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	return balanceOf(rocketTokenRETH, "rETH", address, opts)
+// Details for RocketTokenRETH
+type TokenRethDetails struct {
+	TotalSupply     *big.Int                `json:"totalSupply"`
+	ExchangeRate    core.Parameter[float64] `json:"exchangeRate"`
+	TotalCollateral *big.Int                `json:"totalCollateral"`
+	CollateralRate  core.Parameter[float64] `json:"collateralRate"`
 }
 
-// Get rETH allowance
-func GetRETHAllowance(rp *rocketpool.RocketPool, owner, spender common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new TokenReth contract binding
+func NewTokenReth(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*TokenReth, error) {
+	// Create the contract
+	contract, err := rp.GetContract("rocketTokenRETH", opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting rETH contract: %w", err)
 	}
-	return allowance(rocketTokenRETH, "rETH", owner, spender, opts)
+
+	return &TokenReth{
+		Details:  TokenRethDetails{},
+		rp:       rp,
+		contract: contract,
+	}, nil
 }
 
-// Estimate the gas of TransferRETH
-func EstimateTransferRETHGas(rp *rocketpool.RocketPool, to common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return estimateTransferGas(rocketTokenRETH, "rETH", to, amount, opts)
+// =============
+// === Calls ===
+// =============
+
+// === Core ERC-20 functions ===
+
+// Get the rETH total supply
+func (c *TokenReth) GetTotalSupply(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
 }
 
-// Transfer rETH
-func TransferRETH(rp *rocketpool.RocketPool, to common.Address, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	return transfer(rocketTokenRETH, "rETH", to, amount, opts)
+// Get the rETH balance of an address
+func (c *TokenReth) GetBalance(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
+	multicall.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
 }
 
-// Estimate the gas of ApproveRETH
-func EstimateApproveRETHGas(rp *rocketpool.RocketPool, spender common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return estimateApproveGas(rocketTokenRETH, "rETH", spender, amount, opts)
+// Get the rETH spending allowance of an address and spender
+func (c *TokenReth) GetAllowance(mc *multicall.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
+	multicall.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
 }
 
-// Approve a rETH spender
-func ApproveRETH(rp *rocketpool.RocketPool, spender common.Address, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	return approve(rocketTokenRETH, "rETH", spender, amount, opts)
-}
+// === rETH functions ===
 
-// Estimate the gas of TransferFromRETH
-func EstimateTransferFromRETHGas(rp *rocketpool.RocketPool, from, to common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
+// Get the ETH balance of the rETH contract
+func (c *TokenReth) GetContractEthBalance(opts *bind.CallOpts) (*big.Int, error) {
+	var blockNumber *big.Int
+	if opts != nil {
+		blockNumber = opts.BlockNumber
 	}
-	return estimateTransferFromGas(rocketTokenRETH, "rETH", from, to, amount, opts)
-}
-
-// Transfer rETH from a sender
-func TransferFromRETH(rp *rocketpool.RocketPool, from, to common.Address, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	return transferFrom(rocketTokenRETH, "rETH", from, to, amount, opts)
-}
-
-//
-// rETH functions
-//
-
-// Get the rETH contract ETH balance
-func GetRETHContractETHBalance(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	return contractETHBalance(rp, rocketTokenRETH, opts)
+	return c.rp.Client.BalanceAt(context.Background(), *c.contract.Address, blockNumber)
 }
 
 // Get the ETH value of an amount of rETH
-func GetETHValueOfRETH(rp *rocketpool.RocketPool, rethAmount *big.Int, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	ethValue := new(*big.Int)
-	if err := rocketTokenRETH.Call(opts, ethValue, "getEthValue", rethAmount); err != nil {
-		return nil, fmt.Errorf("Could not get ETH value of rETH amount: %w", err)
-	}
-	return *ethValue, nil
+func (c *TokenReth) GetEthValueOfReth(mc *multicall.MultiCaller, value_Out **big.Int, rethAmount *big.Int) {
+	multicall.AddCall(mc, c.contract, value_Out, "getEthValue", rethAmount)
 }
 
 // Get the rETH value of an amount of ETH
-func GetRETHValueOfETH(rp *rocketpool.RocketPool, ethAmount *big.Int, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	rethValue := new(*big.Int)
-	if err := rocketTokenRETH.Call(opts, rethValue, "getRethValue", ethAmount); err != nil {
-		return nil, fmt.Errorf("Could not get rETH value of ETH amount: %w", err)
-	}
-	return *rethValue, nil
+func (c *TokenReth) GetRethValueOfEth(mc *multicall.MultiCaller, value_Out **big.Int, ethAmount *big.Int) {
+	multicall.AddCall(mc, c.contract, value_Out, "getRethValue", ethAmount)
 }
 
 // Get the current ETH : rETH exchange rate
-func GetRETHExchangeRate(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	exchangeRate := new(*big.Int)
-	if err := rocketTokenRETH.Call(opts, exchangeRate, "getExchangeRate"); err != nil {
-		return 0, fmt.Errorf("Could not get rETH exchange rate: %w", err)
-	}
-	return eth.WeiToEth(*exchangeRate), nil
+func (c *TokenReth) GetExchangeRate(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.ExchangeRate.RawValue, "getExchangeRate")
 }
 
 // Get the total amount of ETH collateral available for rETH trades
-func GetRETHTotalCollateral(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	totalCollateral := new(*big.Int)
-	if err := rocketTokenRETH.Call(opts, totalCollateral, "getTotalCollateral"); err != nil {
-		return nil, fmt.Errorf("Could not get rETH total collateral: %w", err)
-	}
-	return *totalCollateral, nil
+func (c *TokenReth) GetTotalCollateral(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.TotalCollateral, "getTotalCollateral")
 }
 
 // Get the rETH collateralization rate
-func GetRETHCollateralRate(rp *rocketpool.RocketPool, opts *bind.CallOpts) (float64, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, opts)
-	if err != nil {
-		return 0, err
-	}
-	collateralRate := new(*big.Int)
-	if err := rocketTokenRETH.Call(opts, collateralRate, "getCollateralRate"); err != nil {
-		return 0, fmt.Errorf("Could not get rETH collateral rate: %w", err)
-	}
-	return eth.WeiToEth(*collateralRate), nil
+func (c *TokenReth) GetCollateralRate(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.CollateralRate.RawValue, "getCollateralRate")
 }
 
-// Estimate the gas of BurnRETH
-func EstimateBurnRETHGas(rp *rocketpool.RocketPool, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketTokenRETH.GetTransactionGasInfo(opts, "burn", amount)
+// ====================
+// === Transactions ===
+// ====================
+
+// === Core ERC-20 functions ===
+
+// Get info for approving rETH's usage by a spender
+func (c *TokenReth) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "approve", opts, spender, amount)
 }
 
-// Burn rETH for ETH
-func BurnRETH(rp *rocketpool.RocketPool, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRETH, err := getRocketTokenRETH(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketTokenRETH.Transact(opts, "burn", amount)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not burn rETH: %w", err)
-	}
-	return tx.Hash(), nil
+// Get info for transferring rETH
+func (c *TokenReth) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "transfer", opts, to, amount)
 }
 
-//
-// Contracts
-//
+// Get info for transferring rETH from a sender
+func (c *TokenReth) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "transferFrom", opts, from, to, amount)
+}
 
-// Get contracts
-var rocketTokenRETHLock sync.Mutex
+// === rETH functions ===
 
-func getRocketTokenRETH(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	rocketTokenRETHLock.Lock()
-	defer rocketTokenRETHLock.Unlock()
-	return rp.GetContract("rocketTokenRETH", opts)
+// Get info for burning rETH for ETH
+func (c *TokenReth) Burn(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "burn", opts, amount)
 }

@@ -3,170 +3,108 @@ package tokens
 import (
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-//
-// Core ERC-20 functions
-//
+// ===============
+// === Structs ===
+// ===============
 
-// Get RPL total supply
-func GetRPLTotalSupply(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	return totalSupply(rocketTokenRPL, "RPL", opts)
+// Binding for RocketTokenRPL
+type TokenRpl struct {
+	Details  TokenRplDetails
+	rp       *rocketpool.RocketPool
+	contract *core.Contract
 }
 
-// Get RPL balance
-func GetRPLBalance(rp *rocketpool.RocketPool, address common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	return balanceOf(rocketTokenRPL, "RPL", address, opts)
+// Details for RocketTokenRPL
+type TokenRplDetails struct {
+	TotalSupply           *big.Int `json:"totalSupply"`
+	InflationIntervalRate *big.Int `json:"inflationIntervalRate"`
 }
 
-// Get RPL allowance
-func GetRPLAllowance(rp *rocketpool.RocketPool, owner, spender common.Address, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, opts)
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new TokenRpl contract binding
+func NewTokenRpl(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*TokenRpl, error) {
+	// Create the contract
+	contract, err := rp.GetContract("rocketTokenRPL", opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting RPL contract: %w", err)
 	}
-	return allowance(rocketTokenRPL, "RPL", owner, spender, opts)
+
+	return &TokenRpl{
+		Details:  TokenRplDetails{},
+		rp:       rp,
+		contract: contract,
+	}, nil
 }
 
-// Estimate the gas of TransferRPL
-func EstimateTransferRPLGas(rp *rocketpool.RocketPool, to common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return estimateTransferGas(rocketTokenRPL, "RPL", to, amount, opts)
+// =============
+// === Calls ===
+// =============
+
+// === Core ERC-20 functions ===
+
+// Get the RPL total supply
+func (c *TokenRpl) GetTotalSupply(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
 }
 
-// Transfer RPL
-func TransferRPL(rp *rocketpool.RocketPool, to common.Address, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	return transfer(rocketTokenRPL, "RPL", to, amount, opts)
+// Get the RPL balance of an address
+func (c *TokenRpl) GetBalance(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
+	multicall.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
 }
 
-// Estimate the gas of ApproveRPL
-func EstimateApproveRPLGas(rp *rocketpool.RocketPool, spender common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return estimateApproveGas(rocketTokenRPL, "RPL", spender, amount, opts)
+// Get the RPL spending allowance of an address and spender
+func (c *TokenRpl) GetAllowance(mc *multicall.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
+	multicall.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
 }
 
-// Approve an RPL spender
-func ApproveRPL(rp *rocketpool.RocketPool, spender common.Address, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	return approve(rocketTokenRPL, "RPL", spender, amount, opts)
-}
-
-// Estimate the gas of TransferFromRPL
-func EstimateTransferFromRPLGas(rp *rocketpool.RocketPool, from, to common.Address, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return estimateTransferFromGas(rocketTokenRPL, "RPL", from, to, amount, opts)
-}
-
-// Transfer RPL from a sender
-func TransferFromRPL(rp *rocketpool.RocketPool, from, to common.Address, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	return transferFrom(rocketTokenRPL, "RPL", from, to, amount, opts)
-}
-
-//
-// RPL functions
-//
-
-// Estimate the gas of MintInflationRPL
-func EstimateMintInflationRPLGas(rp *rocketpool.RocketPool, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketTokenRPL.GetTransactionGasInfo(opts, "inflationMintTokens")
-}
-
-// Mint new RPL tokens from inflation
-func MintInflationRPL(rp *rocketpool.RocketPool, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketTokenRPL.Transact(opts, "inflationMintTokens")
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not mint RPL tokens from inflation: %w", err)
-	}
-	return tx.Hash(), nil
-}
-
-// Estimate the gas of SwapFixedSupplyRPLForRPL
-func EstimateSwapFixedSupplyRPLForRPLGas(rp *rocketpool.RocketPool, amount *big.Int, opts *bind.TransactOpts) (rocketpool.GasInfo, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return rocketpool.GasInfo{}, err
-	}
-	return rocketTokenRPL.GetTransactionGasInfo(opts, "swapTokens", amount)
-}
-
-// Swap fixed-supply RPL for new RPL tokens
-func SwapFixedSupplyRPLForRPL(rp *rocketpool.RocketPool, amount *big.Int, opts *bind.TransactOpts) (common.Hash, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	tx, err := rocketTokenRPL.Transact(opts, "swapTokens", amount)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not swap fixed-supply RPL for new RPL: %w", err)
-	}
-	return tx.Hash(), nil
-}
+// === RPL functions ===
 
 // Get the RPL inflation interval rate
-func GetRPLInflationIntervalRate(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*big.Int, error) {
-	rocketTokenRPL, err := getRocketTokenRPL(rp, opts)
-	if err != nil {
-		return nil, err
-	}
-	rate := new(*big.Int)
-	if err := rocketTokenRPL.Call(opts, rate, "getInflationIntervalRate"); err != nil {
-		return nil, fmt.Errorf("Could not get RPL inflation interval rate: %w", err)
-	}
-	return *rate, nil
+func (c *TokenRpl) GetInflationIntervalRate(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.contract, &c.Details.InflationIntervalRate, "getInflationIntervalRate")
 }
 
-//
-// Contracts
-//
+// ====================
+// === Transactions ===
+// ====================
 
-// Get contracts
-var rocketTokenRPLLock sync.Mutex
+// === Core ERC-20 functions ===
 
-func getRocketTokenRPL(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	rocketTokenRPLLock.Lock()
-	defer rocketTokenRPLLock.Unlock()
-	return rp.GetContract("rocketTokenRPL", opts)
+// Get info for approving RPL's usage by a spender
+func (c *TokenRpl) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "approve", opts, spender, amount)
+}
+
+// Get info for transferring RPL
+func (c *TokenRpl) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "transfer", opts, to, amount)
+}
+
+// Get info for transferring RPL from a sender
+func (c *TokenRpl) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "transferFrom", opts, from, to, amount)
+}
+
+// === RPL functions ===
+
+// Get info for minting new RPL tokens from inflation
+func (c *TokenRpl) MintInflationRPL(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "inflationMintTokens", opts)
+}
+
+// Get info for swapping fixed-supply RPL for new RPL tokens
+func (c *TokenRpl) SwapFixedSupplyRplForRpl(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.contract, "swapTokens", opts, amount)
 }
