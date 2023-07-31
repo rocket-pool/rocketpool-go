@@ -12,10 +12,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-const (
-	depositSettingsContractName string = "rocketDAOProtocolSettingsDeposit"
-)
-
 // ===============
 // === Structs ===
 // ===============
@@ -42,9 +38,9 @@ type DaoProtocolSettingsDepositDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsDeposit contract binding
-func NewDaoProtocolSettingsDeposit(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsDeposit, error) {
+func NewDaoProtocolSettingsDeposit(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol) (*DaoProtocolSettingsDeposit, error) {
 	// Create the contract
-	contract, err := rp.GetContract(depositSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings deposit contract: %w", err)
 	}
@@ -101,25 +97,25 @@ func (c *DaoProtocolSettingsDeposit) GetAllDetails(mc *multicall.MultiCaller) {
 
 // Set the deposit enabled flag
 func (c *DaoProtocolSettingsDeposit) BootstrapDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(depositSettingsContractName, "deposit.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(string(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit), "deposit.enabled", value, opts)
 }
 
 // Set the deposit assignments enabled flag
 func (c *DaoProtocolSettingsDeposit) BootstrapAssignDepositsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(depositSettingsContractName, "deposit.assign.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(string(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit), "deposit.assign.enabled", value, opts)
 }
 
 // Set the minimum deposit amount
 func (c *DaoProtocolSettingsDeposit) BootstrapMinimumDeposit(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(depositSettingsContractName, "deposit.minimum", value, opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit), "deposit.minimum", value, opts)
 }
 
 // Set the maximum deposit pool size
 func (c *DaoProtocolSettingsDeposit) BootstrapMaximumDepositPoolSize(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(depositSettingsContractName, "deposit.pool.maximum", value, opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit), "deposit.pool.maximum", value, opts)
 }
 
 // Set the max assignments per deposit
 func (c *DaoProtocolSettingsDeposit) BootstrapMaximumDepositAssignments(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(depositSettingsContractName, "deposit.assign.maximum", big.NewInt(int64(value)), opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit), "deposit.assign.maximum", big.NewInt(int64(value)), opts)
 }

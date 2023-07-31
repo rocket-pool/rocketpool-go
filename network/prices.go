@@ -36,9 +36,9 @@ type NetworkPricesDetails struct {
 // ====================
 
 // Creates a new NetworkPrices contract binding
-func NewNetworkPrices(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NetworkPrices, error) {
+func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNetworkPrices", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkPrices)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network prices contract: %w", err)
 	}

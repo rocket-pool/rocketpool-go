@@ -3,38 +3,58 @@ package trustednode
 import (
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
 	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // Config
 const (
-	RewardsSettingsContractName string = "rocketDAONodeTrustedSettingsRewards"
-	NetworkEnabledPath          string = "rewards.network.enabled"
+	NetworkEnabledPath string = "rewards.network.enabled"
 )
 
-// Get whether or not the provided rewards network is enabled
-func GetNetworkEnabled(rp *rocketpool.RocketPool, network *big.Int, opts *bind.CallOpts) (bool, error) {
-	rewardsSettingsContract, err := getRewardsSettingsContract(rp, opts)
-	if err != nil {
-		return false, err
-	}
-	value := new(bool)
-	if err := rewardsSettingsContract.Call(opts, value, "getNetworkEnabled", network); err != nil {
-		return false, fmt.Errorf("Could not check if network %s is enabled: %w", network.String(), err)
-	}
-	return (*value), nil
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAONodeTrustedSettingsRewards
+type DaoNodeTrustedSettingsRewards struct {
+	Details                         DaoNodeTrustedSettingsProposalsDetails
+	rp                              *rocketpool.RocketPool
+	contract                        *core.Contract
+	daoNodeTrustedContract          *trustednode.DaoNodeTrusted
+	daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals
 }
 
-// Get contracts
-var rewardsSettingsContractLock sync.Mutex
+// ====================
+// === Constructors ===
+// ====================
 
-func getRewardsSettingsContract(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
-	rewardsSettingsContractLock.Lock()
-	defer rewardsSettingsContractLock.Unlock()
-	return rp.GetContract(RewardsSettingsContractName, opts)
+// Creates a new DaoNodeTrustedSettingsRewards contract binding
+func NewDaoNodeTrustedSettingsRewards(rp *rocketpool.RocketPool, daoNodeTrustedContract *trustednode.DaoNodeTrusted, daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals, opts *bind.CallOpts) (*DaoNodeTrustedSettingsRewards, error) {
+	// Create the contract
+	contract, err := rp.GetContract("", opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO node trusted settings rewards contract: %w", err)
+	}
+
+	return &DaoNodeTrustedSettingsRewards{
+		rp:                              rp,
+		contract:                        contract,
+		daoNodeTrustedContract:          daoNodeTrustedContract,
+		daoNodeTrustedProposalsContract: daoNodeTrustedProposalsContract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get whether or not the provided rewards network is enabled
+func (c *DaoNodeTrustedSettingsProposals) GetNetworkEnabled(mc *multicall.MultiCaller, enabled_Out *bool, network *big.Int) {
+	multicall.AddCall(mc, c.contract, enabled_Out, "getNetworkEnabled", network)
 }

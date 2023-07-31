@@ -39,7 +39,7 @@ type TokenRethDetails struct {
 // Creates a new TokenReth contract binding
 func NewTokenReth(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*TokenReth, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketTokenRETH", opts)
+	contract, err := rp.GetContract(, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting rETH contract: %w", err)
 	}

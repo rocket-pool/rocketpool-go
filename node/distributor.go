@@ -36,9 +36,9 @@ type NodeDistributorDetails struct {
 // ====================
 
 // Creates a new NodeDistributor contract binding
-func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, distributorAddress common.Address, opts *bind.CallOpts) (*NodeDistributor, error) {
+func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, distributorAddress common.Address) (*NodeDistributor, error) {
 	// Create the contract
-	contract, err := rp.MakeContract("rocketNodeDistributorDelegate", distributorAddress, opts)
+	contract, err := rp.MakeContract(rocketpool.ContractName_RocketNodeDistributorDelegate, distributorAddress)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node distributor delegate contract for node %s at %s: %w", nodeAddress.Hex(), distributorAddress.Hex(), err)
 	}

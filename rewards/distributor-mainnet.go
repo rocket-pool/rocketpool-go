@@ -26,9 +26,9 @@ type MerkleDistributorMainnet struct {
 // ====================
 
 // Creates a new MerkleDistributorMainnet contract binding
-func NewMerkleDistributorMainnet(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*MerkleDistributorMainnet, error) {
+func NewMerkleDistributorMainnet(rp *rocketpool.RocketPool) (*MerkleDistributorMainnet, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketMerkleDistributorMainnet", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketMerkleDistributorMainnet)
 	if err != nil {
 		return nil, fmt.Errorf("error getting merkle distributor mainnet contract: %w", err)
 	}

@@ -25,6 +25,7 @@ type Contract struct {
 	Contract *bind.BoundContract
 	Address  *common.Address
 	ABI      *abi.ABI
+	Version  uint8
 	Client   ExecutionClient
 }
 

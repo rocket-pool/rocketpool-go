@@ -34,9 +34,9 @@ type DepositPoolDetails struct {
 // ====================
 
 // Creates a new DepositPool contract binding
-func NewDepositPool(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DepositPool, error) {
+func NewDepositPool(rp *rocketpool.RocketPool) (*DepositPool, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketDepositPool", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDepositPool)
 	if err != nil {
 		return nil, fmt.Errorf("error getting deposit pool contract: %w", err)
 	}

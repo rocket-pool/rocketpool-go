@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	minipoolSettingsContractName  = "rocketDAONodeTrustedSettingsMinipool"
 	scrubPeriodPath               = "minipool.scrub.period"
 	promotionScrubPeriodPath      = "minipool.promotion.scrub.period"
 	scrubPenaltyEnabledPath       = "minipool.scrub.penalty.enabled"

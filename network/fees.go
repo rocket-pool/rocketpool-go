@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
@@ -34,9 +32,9 @@ type NetworkFeesDetails struct {
 // ====================
 
 // Creates a new NetworkBalances contract binding
-func NewNetworkFees(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NetworkFees, error) {
+func NewNetworkFees(rp *rocketpool.RocketPool) (*NetworkFees, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNetworkFees", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkFees)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network fees contract: %w", err)
 	}

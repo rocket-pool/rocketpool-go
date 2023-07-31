@@ -27,9 +27,9 @@ type DaoProtocol struct {
 // ====================
 
 // Creates a new DaoProtocol contract binding
-func NewDaoProtocol(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DaoProtocol, error) {
+func NewDaoProtocol(rp *rocketpool.RocketPool) (*DaoProtocol, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketDAOProtocol", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocol)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol contract: %w", err)
 	}

@@ -27,9 +27,9 @@ type DaoNodeTrustedProposals struct {
 // ====================
 
 // Creates a new DaoNodeTrustedProposals contract binding
-func NewDaoNodeTrustedProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*DaoNodeTrustedProposals, error) {
+func NewDaoNodeTrustedProposals(rp *rocketpool.RocketPool) (*DaoNodeTrustedProposals, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketDAONodeTrustedProposals", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedProposals)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO node trusted proposals contract: %w", err)
 	}

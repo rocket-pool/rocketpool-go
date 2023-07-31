@@ -12,10 +12,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-const (
-	nodeSettingsContractName string = "rocketDAOProtocolSettingsNode"
-)
-
 // ===============
 // === Structs ===
 // ===============

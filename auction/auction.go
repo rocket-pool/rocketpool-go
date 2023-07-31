@@ -41,9 +41,9 @@ type AuctionManagerDetails struct {
 // ====================
 
 // Creates a new AuctionManager contract binding
-func NewAuctionManager(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*AuctionManager, error) {
+func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketAuctionManager", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketAuctionManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auction manager contract: %w", err)
 	}

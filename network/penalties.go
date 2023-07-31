@@ -26,9 +26,9 @@ type NetworkPenalties struct {
 // ====================
 
 // Creates a new NetworkPenalties contract binding
-func NewNetworkPenalties(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NetworkPenalties, error) {
+func NewNetworkPenalties(rp *rocketpool.RocketPool) (*NetworkPenalties, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNetworkPenalties", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkPenalties)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network penalties contract: %w", err)
 	}

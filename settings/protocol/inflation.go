@@ -14,10 +14,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-const (
-	inflationSettingsContractName string = "rocketDAOProtocolSettingsInflation"
-)
-
 // ===============
 // === Structs ===
 // ===============

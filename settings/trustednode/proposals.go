@@ -14,12 +14,11 @@ import (
 )
 
 const (
-	proposalsSettingsContractName = "rocketDAONodeTrustedSettingsProposals"
-	cooldownTimeSettingPath       = "proposal.cooldown.time"
-	voteTimeSettingPath           = "proposal.vote.time"
-	voteDelayTimeSettingPath      = "proposal.vote.delay.time"
-	executeTimeSettingPath        = "proposal.execute.time"
-	actionTimeSettingPath         = "proposal.action.time"
+	cooldownTimeSettingPath  = "proposal.cooldown.time"
+	voteTimeSettingPath      = "proposal.vote.time"
+	voteDelayTimeSettingPath = "proposal.vote.delay.time"
+	executeTimeSettingPath   = "proposal.execute.time"
+	actionTimeSettingPath    = "proposal.action.time"
 )
 
 // ===============

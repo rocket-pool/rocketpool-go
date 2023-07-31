@@ -13,10 +13,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-const (
-	rewardsSettingsContractName string = "rocketDAOProtocolSettingsRewards"
-)
-
 // ===============
 // === Structs ===
 // ===============

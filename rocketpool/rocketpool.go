@@ -20,11 +20,14 @@ type RocketPool struct {
 	MulticallAddress      *common.Address
 	BalanceBatcherAddress *common.Address
 	VersionManager        *VersionManager
+
+	// Internal fields
+	contracts    map[ContractName]*core.Contract
+	instanceAbis map[ContractName]*abi.ABI // Used for instanced contracts like minipools or fee distributors
 }
 
 // Create new contract manager
 func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Address, multicallAddress common.Address, balanceBatcherAddress common.Address) (*RocketPool, error) {
-
 	// Create the RocketStorage binding
 	storage, err := storage.NewStorage(client, rocketStorageAddress)
 	if err != nil {
@@ -41,79 +44,103 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 	rp.VersionManager = NewVersionManager(rp)
 
 	return rp, nil
-
 }
 
-// Load Rocket Pool contract addresses
-func (rp *RocketPool) GetAddress(contractName string, opts *bind.CallOpts) (common.Address, error) {
-	var address common.Address
+// Load the provided contracts by their name
+func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...ContractName) error {
+	addresses := make([]common.Address, len(contractNames))
+	abiStrings := make([]string, len(contractNames))
+
+	// Load the details via multicall
 	err := rp.Query(func(mc *multicall.MultiCaller) {
-		rp.Storage.GetAddress(mc, &address, contractName)
+		for i, contractName := range contractNames {
+			rp.Storage.GetAddress(mc, &addresses[i], string(contractName))
+			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
+		}
 	}, opts)
-	return address, err
+	if err != nil {
+		return fmt.Errorf("error getting addresses and ABIs: %w", err)
+	}
+
+	// Create the contract objects
+	for i, contractName := range contractNames {
+		// Decode the ABI
+		abi, err := core.DecodeAbi(abiStrings[i])
+		if err != nil {
+			return fmt.Errorf("error decoding contract %s ABI: %w", string(contractNames[i]), err)
+		}
+
+		// Make the contract binding
+		contract := &core.Contract{
+			Contract: bind.NewBoundContract(addresses[i], *abi, rp.Client, rp.Client, rp.Client),
+		}
+		rp.contracts[contractName] = contract
+	}
+
+	// Get the versions of each contract
+	emptyAddress := common.Address{}
+	versions := make([]uint8, len(contractNames))
+	err = rp.Query(func(mc *multicall.MultiCaller) {
+		for i, contractName := range contractNames {
+			address := addresses[i]
+			if address != emptyAddress {
+				multicall.AddCall[uint8](mc, rp.contracts[contractName], &versions[i], "version") // TODO: use the contract version getter once it's ready
+			}
+		}
+	}, opts)
+	if err != nil {
+		return fmt.Errorf("error getting contract versions: %w", err)
+	}
+
+	// Assign the contract versions
+	for i, contractName := range contractNames {
+		rp.contracts[contractName].Version = versions[i]
+	}
+
+	return nil
 }
 
-// Load Rocket Pool contract ABIs
-func (rp *RocketPool) GetABI(contractName string, opts *bind.CallOpts) (*abi.ABI, error) {
-	// Get the encoded ABI
-	var abiEncoded string
+// Load the ABIs for instances contracts (like minipools or fee distributors)
+func (rp *RocketPool) LoadInstanceABIs(opts *bind.CallOpts, contractNames ...ContractName) error {
+	abiStrings := make([]string, len(contractNames))
+
+	// Load the details via multicall
 	err := rp.Query(func(mc *multicall.MultiCaller) {
-		rp.Storage.GetAbi(mc, &abiEncoded, contractName)
+		for i, contractName := range contractNames {
+			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
+		}
 	}, opts)
 	if err != nil {
-		return nil, fmt.Errorf("error getting encoded ABI: %w", err)
+		return fmt.Errorf("error getting instanced ABIs: %w", err)
 	}
 
-	// Decode ABI
-	abi, err := core.DecodeAbi(abiEncoded)
-	if err != nil {
-		return nil, fmt.Errorf("Could not decode contract %s ABI: %w", contractName, err)
+	// Create the contract objects
+	for i, contractName := range contractNames {
+		// Decode the ABI
+		abi, err := core.DecodeAbi(abiStrings[i])
+		if err != nil {
+			return fmt.Errorf("error decoding contract %s ABI: %w", string(contractNames[i]), err)
+		}
+		rp.instanceAbis[contractName] = abi
 	}
 
-	// Return
-	return abi, nil
+	return nil
 }
 
-// Load Rocket Pool contracts
-func (rp *RocketPool) GetContract(contractName string, opts *bind.CallOpts) (*core.Contract, error) {
-
-	var address common.Address
-	var abiEncoded string
-
-	err := rp.Query(func(mc *multicall.MultiCaller) {
-		rp.Storage.GetAddress(mc, &address, contractName)
-		rp.Storage.GetAbi(mc, &abiEncoded, contractName)
-	}, opts)
-	if err != nil {
-		return nil, err
+// Get a network contract
+func (rp *RocketPool) GetContract(contractName ContractName) (*core.Contract, error) {
+	contract, exists := rp.contracts[contractName]
+	if !exists {
+		return nil, fmt.Errorf("contract %s has not been loaded yet", string(contractName))
 	}
-
-	// Decode ABI
-	abi, err := core.DecodeAbi(abiEncoded)
-	if err != nil {
-		return nil, fmt.Errorf("Could not decode contract %s ABI: %w", contractName, err)
-	}
-
-	// Create contract
-	contract := &core.Contract{
-		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
-		Address:  &address,
-		ABI:      abi,
-		Client:   rp.Client,
-	}
-
-	// Return
 	return contract, nil
-
 }
 
-// Create a Rocket Pool contract instance
-func (rp *RocketPool) MakeContract(contractName string, address common.Address, opts *bind.CallOpts) (*core.Contract, error) {
-
-	// Load ABI
-	abi, err := rp.GetABI(contractName, opts)
-	if err != nil {
-		return nil, err
+// Create a binding for a network contract instance
+func (rp *RocketPool) MakeContract(contractName ContractName, address common.Address) (*core.Contract, error) {
+	abi, exists := rp.instanceAbis[contractName]
+	if !exists {
+		return nil, fmt.Errorf("ABI for contract %s has not been loaded yet", string(contractName))
 	}
 
 	// Create and return
@@ -123,7 +150,6 @@ func (rp *RocketPool) MakeContract(contractName string, address common.Address, 
 		ABI:      abi,
 		Client:   rp.Client,
 	}, nil
-
 }
 
 // =========================

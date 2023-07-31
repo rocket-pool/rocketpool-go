@@ -39,9 +39,9 @@ type NetworkBalancesDetails struct {
 // ====================
 
 // Creates a new NetworkBalances contract binding
-func NewNetworkBalances(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NetworkBalances, error) {
+func NewNetworkBalances(rp *rocketpool.RocketPool) (*NetworkBalances, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNetworkBalances", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkBalances)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network balances contract: %w", err)
 	}

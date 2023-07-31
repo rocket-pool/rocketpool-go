@@ -25,9 +25,9 @@ type NodeDistributorFactory struct {
 // ====================
 
 // Creates a new NodeDistributorFactory contract binding
-func NewNodeDistributorFactory(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NodeDistributorFactory, error) {
+func NewNodeDistributorFactory(rp *rocketpool.RocketPool) (*NodeDistributorFactory, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNodeDistributorFactory", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNodeDistributorFactory)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node distributor factory contract: %w", err)
 	}
@@ -54,7 +54,7 @@ func (c *NodeDistributorFactory) GetDistributorAddress(mc *multicall.MultiCaller
 // Get a node's distributor with details
 func (c *NodeDistributorFactory) GetNodeDistributor(nodeAddress common.Address, distributorAddress common.Address, opts *bind.CallOpts) (*NodeDistributor, error) {
 	// Create the distributor
-	distributor, err := NewNodeDistributor(c.rp, nodeAddress, distributorAddress, opts)
+	distributor, err := NewNodeDistributor(c.rp, nodeAddress, distributorAddress)
 	if err != nil {
 		return nil, fmt.Errorf("error creating node distributor binding for node %s at %s: %w", nodeAddress.Hex(), distributorAddress.Hex(), err)
 	}

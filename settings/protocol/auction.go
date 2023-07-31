@@ -13,10 +13,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-const (
-	auctionSettingsContractName string = "rocketDAOProtocolSettingsAuction"
-)
-
 // ===============
 // === Structs ===
 // ===============
@@ -45,9 +41,9 @@ type DaoProtocolSettingsAuctionDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsAuction contract binding
-func NewDaoProtocolSettingsAuction(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsAuction, error) {
+func NewDaoProtocolSettingsAuction(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol) (*DaoProtocolSettingsAuction, error) {
 	// Create the contract
-	contract, err := rp.GetContract(auctionSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsAuction)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings auction contract: %w", err)
 	}
@@ -116,35 +112,35 @@ func (c *DaoProtocolSettingsAuction) GetAllDetails(mc *multicall.MultiCaller) {
 
 // Set the create lot enabled flag
 func (c *DaoProtocolSettingsAuction) BootstrapCreateLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(auctionSettingsContractName, "auction.lot.create.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.lot.create.enabled", value, opts)
 }
 
 // Set the create lot enabled flag
 func (c *DaoProtocolSettingsAuction) BootstrapBidOnLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(auctionSettingsContractName, "auction.lot.bidding.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.lot.bidding.enabled", value, opts)
 }
 
 // Set the minimum ETH value for lots
 func (c *DaoProtocolSettingsAuction) BootstrapLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.lot.value.minimum", value, opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.lot.value.minimum", value, opts)
 }
 
 // Set the maximum ETH value for lots
 func (c *DaoProtocolSettingsAuction) BootstrapLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.lot.value.maximum", value, opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.lot.value.maximum", value, opts)
 }
 
 // Set the duration value for lots, in blocks
 func (c *DaoProtocolSettingsAuction) BootstrapLotDuration(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.lot.duration", big.NewInt(int64(value)), opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.lot.duration", big.NewInt(int64(value)), opts)
 }
 
 // Set the starting price ratio for lots
 func (c *DaoProtocolSettingsAuction) BootstrapLotStartingPriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.price.start", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.price.start", eth.EthToWei(value), opts)
 }
 
 // Set the reserve price ratio for lots
 func (c *DaoProtocolSettingsAuction) BootstrapLotReservePriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(auctionSettingsContractName, "auction.price.reserve", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(string(rocketpool.ContractName_RocketDAOProtocolSettingsAuction), "auction.price.reserve", eth.EthToWei(value), opts)
 }

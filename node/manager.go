@@ -48,9 +48,9 @@ type TimezoneCount struct {
 // ====================
 
 // Creates a new NodeManager contract binding
-func NewNodeManager(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NodeManager, error) {
+func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNodeManager", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNodeManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node manager contract: %w", err)
 	}

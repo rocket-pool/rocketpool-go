@@ -82,9 +82,9 @@ type RewardSubmission struct {
 // ====================
 
 // Creates a new RewardsPool contract binding
-func NewRewardsPool(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*RewardsPool, error) {
+func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketRewardsPool", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketRewardsPool)
 	if err != nil {
 		return nil, fmt.Errorf("error getting rewards pool contract: %w", err)
 	}

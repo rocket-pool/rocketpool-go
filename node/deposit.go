@@ -29,9 +29,9 @@ type NodeDeposit struct {
 // ====================
 
 // Creates a new NodeDeposit contract binding
-func NewNodeDeposit(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NodeDeposit, error) {
+func NewNodeDeposit(rp *rocketpool.RocketPool) (*NodeDeposit, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNodeDeposit", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNodeDeposit)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node deposit contract: %w", err)
 	}

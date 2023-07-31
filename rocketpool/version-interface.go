@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/core"
 )
 
 const (
@@ -41,7 +42,7 @@ func GetContractVersion(rp *RocketPool, contractAddress common.Address, opts *bi
 	}
 
 	// Create contract
-	contract := &Contract{
+	contract := &core.Contract{
 		Contract: bind.NewBoundContract(contractAddress, *versionAbi, rp.Client, rp.Client, rp.Client),
 		Address:  &contractAddress,
 		ABI:      versionAbi,
@@ -58,7 +59,7 @@ func GetContractVersion(rp *RocketPool, contractAddress common.Address, opts *bi
 }
 
 // Get the rocketVersion contract binding at the given address
-func GetRocketVersionContractForAddress(rp *RocketPool, address common.Address) (*Contract, error) {
+func GetRocketVersionContractForAddress(rp *RocketPool, address common.Address) (*core.Contract, error) {
 	if versionAbi == nil {
 		// Parse ABI using the hardcoded string until the contract is deployed
 		abiParsed, err := abi.JSON(strings.NewReader(rocketVersionInterfaceAbiString))
@@ -68,7 +69,7 @@ func GetRocketVersionContractForAddress(rp *RocketPool, address common.Address) 
 		versionAbi = &abiParsed
 	}
 
-	return &Contract{
+	return &core.Contract{
 		Contract: bind.NewBoundContract(address, *versionAbi, rp.Client, rp.Client, rp.Client),
 		Address:  &address,
 		ABI:      versionAbi,

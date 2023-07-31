@@ -33,9 +33,9 @@ type NodeStakingDetails struct {
 // ====================
 
 // Creates a new NodeStaking contract binding
-func NewNodeStaking(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*NodeStaking, error) {
+func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketNodeStaking", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketNodeStaking)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node staking contract: %w", err)
 	}
