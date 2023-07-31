@@ -18,7 +18,7 @@ const (
 	ContractName_RocketDAONodeTrustedSettingsMembers   ContractName = "rocketDAONodeTrustedSettingsMembers"
 	ContractName_RocketDAONodeTrustedSettingsMinipool  ContractName = "rocketDAONodeTrustedSettingsMinipool"
 	ContractName_RocketDAONodeTrustedSettingsProposals ContractName = "rocketDAONodeTrustedSettingsProposals"
-	ContractName_rocketDAONodeTrustedSettingsRewards   ContractName = "rocketDAONodeTrustedSettingsRewards"
+	ContractName_RocketDAONodeTrustedSettingsRewards   ContractName = "rocketDAONodeTrustedSettingsRewards"
 	ContractName_RocketDepositPool                     ContractName = "rocketDepositPool"
 	ContractName_RocketNetworkBalances                 ContractName = "rocketNetworkBalances"
 	ContractName_RocketNetworkFees                     ContractName = "rocketNetworkFees"
@@ -54,7 +54,7 @@ var ContractNames = []ContractName{
 	ContractName_RocketDAONodeTrustedSettingsMembers,
 	ContractName_RocketDAONodeTrustedSettingsMinipool,
 	ContractName_RocketDAONodeTrustedSettingsProposals,
-	ContractName_rocketDAONodeTrustedSettingsRewards,
+	ContractName_RocketDAONodeTrustedSettingsRewards,
 	ContractName_RocketDepositPool,
 	ContractName_RocketNetworkBalances,
 	ContractName_RocketNetworkFees,

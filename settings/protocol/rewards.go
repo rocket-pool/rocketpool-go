@@ -36,11 +36,15 @@ type DaoProtocolSettingsRewardsDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsRewards contract binding
-func NewDaoProtocolSettingsRewards(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsRewards, error) {
+func NewDaoProtocolSettingsRewards(rp *rocketpool.RocketPool) (*DaoProtocolSettingsRewards, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rewardsSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsRewards)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings rewards contract: %w", err)
+	}
+	daoProtocolContract, err := protocol.NewDaoProtocol(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO protocol contract: %w", err)
 	}
 
 	return &DaoProtocolSettingsRewards{
@@ -86,5 +90,5 @@ func (c *DaoProtocolSettingsRewards) GetClaimerPercentageTimeUpdated(mc *multica
 // ====================
 
 func (c *DaoProtocolSettingsRewards) BootstrapClaimIntervalTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(rewardsSettingsContractName, "rpl.rewards.claim.period.time", big.NewInt(int64(value)), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsRewards, "rpl.rewards.claim.period.time", big.NewInt(int64(value)), opts)
 }

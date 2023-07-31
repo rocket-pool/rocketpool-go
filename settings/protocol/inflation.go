@@ -37,11 +37,15 @@ type DaoProtocolSettingsInflationDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsInflation contract binding
-func NewDaoProtocolSettingsInflation(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsInflation, error) {
+func NewDaoProtocolSettingsInflation(rp *rocketpool.RocketPool) (*DaoProtocolSettingsInflation, error) {
 	// Create the contract
-	contract, err := rp.GetContract(inflationSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsInflation)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings inflation contract: %w", err)
+	}
+	daoProtocolContract, err := protocol.NewDaoProtocol(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO protocol contract: %w", err)
 	}
 
 	return &DaoProtocolSettingsInflation{
@@ -78,10 +82,10 @@ func (c *DaoProtocolSettingsInflation) GetAllDetails(mc *multicall.MultiCaller) 
 
 // Set the RPL inflation rate per interval
 func (c *DaoProtocolSettingsInflation) BootstrapIntervalRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(inflationSettingsContractName, "rpl.inflation.interval.rate", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.rate", eth.EthToWei(value), opts)
 }
 
 // Set the RPL inflation start time
 func (c *DaoProtocolSettingsInflation) BootstrapStartTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(inflationSettingsContractName, "rpl.inflation.interval.start", big.NewInt(int64(value)), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.start", big.NewInt(int64(value)), opts)
 }

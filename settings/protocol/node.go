@@ -38,11 +38,15 @@ type DaoProtocolSettingsNodeDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsNode contract binding
-func NewDaoProtocolSettingsNode(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsNode, error) {
+func NewDaoProtocolSettingsNode(rp *rocketpool.RocketPool) (*DaoProtocolSettingsNode, error) {
 	// Create the contract
-	contract, err := rp.GetContract(nodeSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsNode)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings node contract: %w", err)
+	}
+	daoProtocolContract, err := protocol.NewDaoProtocol(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO protocol contract: %w", err)
 	}
 
 	return &DaoProtocolSettingsNode{
@@ -96,21 +100,21 @@ func (c *DaoProtocolSettingsNode) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 func (c *DaoProtocolSettingsNode) BootstrapNodeRegistrationEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(nodeSettingsContractName, "node.registration.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.registration.enabled", value, opts)
 }
 
 func (c *DaoProtocolSettingsNode) BootstrapNodeDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(nodeSettingsContractName, "node.deposit.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.deposit.enabled", value, opts)
 }
 
 func (c *DaoProtocolSettingsNode) BootstrapVacantMinipoolsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(nodeSettingsContractName, "node.vacant.minipools.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.vacant.minipools.enabled", value, opts)
 }
 
 func (c *DaoProtocolSettingsNode) BootstrapMinimumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(nodeSettingsContractName, "node.per.minipool.stake.minimum", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.minimum", eth.EthToWei(value), opts)
 }
 
 func (c *DaoProtocolSettingsNode) BootstrapMaximumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(nodeSettingsContractName, "node.per.minipool.stake.maximum", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.maximum", eth.EthToWei(value), opts)
 }

@@ -100,12 +100,12 @@ func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallO
 // ====================
 
 // Bootstrap a bool setting
-func (c *DaoNodeTrusted) BootstrapBool(contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrusted) BootstrapBool(contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
 }
 
 // Bootstrap a uint setting
-func (c *DaoNodeTrusted) BootstrapUint(contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrusted) BootstrapUint(contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
 }
 
@@ -115,7 +115,7 @@ func (c *DaoNodeTrusted) BootstrapMember(id string, url string, nodeAddress comm
 }
 
 // Bootstrap a contract upgrade
-func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)

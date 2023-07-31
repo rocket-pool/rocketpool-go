@@ -52,11 +52,19 @@ type DaoNodeTrustedSettingsMembersDetails struct {
 // ====================
 
 // Creates a new DaoNodeTrustedSettingsMembers contract binding
-func NewDaoNodeTrustedSettingsMembers(rp *rocketpool.RocketPool, daoNodeTrustedContract *trustednode.DaoNodeTrusted, daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals, opts *bind.CallOpts) (*DaoNodeTrustedSettingsMembers, error) {
+func NewDaoNodeTrustedSettingsMembers(rp *rocketpool.RocketPool) (*DaoNodeTrustedSettingsMembers, error) {
 	// Create the contract
-	contract, err := rp.GetContract(membersSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO node trusted settings members contract: %w", err)
+	}
+	daoNodeTrustedContract, err := trustednode.NewDaoNodeTrusted(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO node trusted contract: %w", err)
+	}
+	daoNodeTrustedProposalsContract, err := trustednode.NewDaoNodeTrustedProposals(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO node trusted proposals contract: %w", err)
 	}
 
 	return &DaoNodeTrustedSettingsMembers{
@@ -124,70 +132,70 @@ func (c *DaoNodeTrustedSettingsMembers) GetAllDetails(mc *multicall.MultiCaller)
 
 // Get info for setting the member proposal quorum threshold
 func (c *DaoNodeTrustedSettingsMembers) BootstrapQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, quorumSettingPath, eth.EthToWei(value), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, quorumSettingPath, eth.EthToWei(value), opts)
 }
 
 // Get info for setting the RPL bond required for a member
 func (c *DaoNodeTrustedSettingsMembers) BootstrapRplBond(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, rplBondSettingPath, value, opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, rplBondSettingPath, value, opts)
 }
 
 // Get info for setting the maximum number of unbonded minipools a member can run
 func (c *DaoNodeTrustedSettingsMembers) BootstrapUnbondedMinipoolMax(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, minipoolUnbondedMaxSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMaxSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the minimum commission rate before unbonded minipools are allowed
 func (c *DaoNodeTrustedSettingsMembers) BootstrapUnbondedMinipoolMinFee(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, minipoolUnbondedMinFeeSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the period a member must wait for before submitting another challenge, in blocks
 func (c *DaoNodeTrustedSettingsMembers) BootstrapChallengeCooldown(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, challengeCooldownSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the period during which a member can respond to a challenge, in blocks
 func (c *DaoNodeTrustedSettingsMembers) BootstrapChallengeWindow(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, challengeWindowSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the fee for a non-member to challenge a member, in wei
 func (c *DaoNodeTrustedSettingsMembers) BootstrapChallengeCost(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(membersSettingsContractName, challengeCostSettingPath, value, opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCostSettingPath, value, opts)
 }
 
 // Get info for setting the member proposal quorum threshold
 func (c *DaoNodeTrustedSettingsMembers) ProposeQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", quorumSettingPath), membersSettingsContractName, quorumSettingPath, eth.EthToWei(value), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", quorumSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, quorumSettingPath, eth.EthToWei(value), opts)
 }
 
 // Get info for setting the RPL bond required for a member
 func (c *DaoNodeTrustedSettingsMembers) ProposeRplBond(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", rplBondSettingPath), membersSettingsContractName, rplBondSettingPath, value, opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", rplBondSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, rplBondSettingPath, value, opts)
 }
 
 // Get info for setting the maximum number of unbonded minipools a member can run
 func (c *DaoNodeTrustedSettingsMembers) ProposeUnbondedMinipoolMax(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", minipoolUnbondedMaxSettingPath), membersSettingsContractName, minipoolUnbondedMaxSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", minipoolUnbondedMaxSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMaxSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the minimum commission rate before unbonded minipools are allowed
 func (c *DaoNodeTrustedSettingsMembers) ProposeUnbondedMinipoolMinFee(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", minipoolUnbondedMinFeeSettingPath), membersSettingsContractName, minipoolUnbondedMinFeeSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", minipoolUnbondedMinFeeSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the period a member must wait for before submitting another challenge, in blocks
 func (c *DaoNodeTrustedSettingsMembers) ProposeChallengeCooldown(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", challengeCooldownSettingPath), membersSettingsContractName, challengeCooldownSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", challengeCooldownSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the period during which a member can respond to a challenge, in blocks
 func (c *DaoNodeTrustedSettingsMembers) ProposeChallengeWindow(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", challengeWindowSettingPath), membersSettingsContractName, challengeWindowSettingPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", challengeWindowSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the fee for a non-member to challenge a member, in wei
 func (c *DaoNodeTrustedSettingsMembers) ProposeChallengeCost(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", challengeCostSettingPath), membersSettingsContractName, challengeCostSettingPath, value, opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", challengeCostSettingPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCostSettingPath, value, opts)
 }

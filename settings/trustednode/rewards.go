@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -23,11 +20,9 @@ const (
 
 // Binding for RocketDAONodeTrustedSettingsRewards
 type DaoNodeTrustedSettingsRewards struct {
-	Details                         DaoNodeTrustedSettingsProposalsDetails
-	rp                              *rocketpool.RocketPool
-	contract                        *core.Contract
-	daoNodeTrustedContract          *trustednode.DaoNodeTrusted
-	daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals
+	Details  DaoNodeTrustedSettingsProposalsDetails
+	rp       *rocketpool.RocketPool
+	contract *core.Contract
 }
 
 // ====================
@@ -35,18 +30,16 @@ type DaoNodeTrustedSettingsRewards struct {
 // ====================
 
 // Creates a new DaoNodeTrustedSettingsRewards contract binding
-func NewDaoNodeTrustedSettingsRewards(rp *rocketpool.RocketPool, daoNodeTrustedContract *trustednode.DaoNodeTrusted, daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals, opts *bind.CallOpts) (*DaoNodeTrustedSettingsRewards, error) {
+func NewDaoNodeTrustedSettingsRewards(rp *rocketpool.RocketPool) (*DaoNodeTrustedSettingsRewards, error) {
 	// Create the contract
-	contract, err := rp.GetContract("", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedSettingsRewards)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO node trusted settings rewards contract: %w", err)
 	}
 
 	return &DaoNodeTrustedSettingsRewards{
-		rp:                              rp,
-		contract:                        contract,
-		daoNodeTrustedContract:          daoNodeTrustedContract,
-		daoNodeTrustedProposalsContract: daoNodeTrustedProposalsContract,
+		rp:       rp,
+		contract: contract,
 	}, nil
 }
 

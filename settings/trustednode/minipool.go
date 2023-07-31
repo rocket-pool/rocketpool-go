@@ -48,11 +48,19 @@ type DaoNodeTrustedSettingsMinipoolDetails struct {
 // ====================
 
 // Creates a new DaoNodeTrustedSettingsMinipool contract binding
-func NewDaoNodeTrustedSettingsMinipool(rp *rocketpool.RocketPool, daoNodeTrustedContract *trustednode.DaoNodeTrusted, daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals, opts *bind.CallOpts) (*DaoNodeTrustedSettingsMinipool, error) {
+func NewDaoNodeTrustedSettingsMinipool(rp *rocketpool.RocketPool) (*DaoNodeTrustedSettingsMinipool, error) {
 	// Create the contract
-	contract, err := rp.GetContract(minipoolSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO node trusted settings minipool contract: %w", err)
+	}
+	daoNodeTrustedContract, err := trustednode.NewDaoNodeTrusted(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO node trusted contract: %w", err)
+	}
+	daoNodeTrustedProposalsContract, err := trustednode.NewDaoNodeTrustedProposals(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO node trusted proposals contract: %w", err)
 	}
 
 	return &DaoNodeTrustedSettingsMinipool{
@@ -108,50 +116,50 @@ func (c *DaoNodeTrustedSettingsMinipool) GetAllDetails(mc *multicall.MultiCaller
 
 // Get info for setting the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
 func (c *DaoNodeTrustedSettingsMinipool) BootstrapScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(minipoolSettingsContractName, scrubPeriodPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
 func (c *DaoNodeTrustedSettingsMinipool) BootstrapPromotionScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(minipoolSettingsContractName, promotionScrubPeriodPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the flag for the RPL slashing penalty on scrubbed minipools
 func (c *DaoNodeTrustedSettingsMinipool) BootstrapScrubPenaltyEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapBool(minipoolSettingsContractName, scrubPenaltyEnabledPath, value, opts)
+	return c.daoNodeTrustedContract.BootstrapBool(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPenaltyEnabledPath, value, opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool must wait after beginning a bond reduction before it can apply the bond reduction (how long the Oracle DAO has to cancel the reduction if required)
 func (c *DaoNodeTrustedSettingsMinipool) BootstrapBondReductionWindowStart(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(minipoolSettingsContractName, bondReductionWindowStartPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowStartPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
 func (c *DaoNodeTrustedSettingsMinipool) BootstrapBondReductionWindowLength(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedContract.BootstrapUint(minipoolSettingsContractName, bondReductionWindowLengthPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
 func (c *DaoNodeTrustedSettingsMinipool) ProposeScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", scrubPeriodPath), minipoolSettingsContractName, scrubPeriodPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", scrubPeriodPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
 func (c *DaoNodeTrustedSettingsMinipool) ProposePromotionScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", promotionScrubPeriodPath), minipoolSettingsContractName, promotionScrubPeriodPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", promotionScrubPeriodPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the flag for the RPL slashing penalty on scrubbed minipools
 func (c *DaoNodeTrustedSettingsMinipool) ProposeScrubPenaltyEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetBool(fmt.Sprintf("set %s", scrubPenaltyEnabledPath), minipoolSettingsContractName, scrubPenaltyEnabledPath, value, opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetBool(fmt.Sprintf("set %s", scrubPenaltyEnabledPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPenaltyEnabledPath, value, opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool must wait after beginning a bond reduction before it can apply the bond reduction (how long the Oracle DAO has to cancel the reduction if required)
 func (c *DaoNodeTrustedSettingsMinipool) ProposeBondReductionWindowStart(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", bondReductionWindowStartPath), minipoolSettingsContractName, bondReductionWindowStartPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", bondReductionWindowStartPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowStartPath, big.NewInt(int64(value)), opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
 func (c *DaoNodeTrustedSettingsMinipool) ProposeBondReductionWindowLength(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", bondReductionWindowLengthPath), minipoolSettingsContractName, bondReductionWindowLengthPath, big.NewInt(int64(value)), opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint(fmt.Sprintf("set %s", bondReductionWindowLengthPath), rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, big.NewInt(int64(value)), opts)
 }

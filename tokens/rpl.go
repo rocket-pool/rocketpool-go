@@ -34,9 +34,9 @@ type TokenRplDetails struct {
 // ====================
 
 // Creates a new TokenRpl contract binding
-func NewTokenRpl(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*TokenRpl, error) {
+func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketTokenRPL", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketTokenRPL)
 	if err != nil {
 		return nil, fmt.Errorf("error getting RPL contract: %w", err)
 	}

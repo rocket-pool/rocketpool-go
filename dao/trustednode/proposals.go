@@ -67,17 +67,17 @@ func (c *DaoNodeTrustedProposals) ProposeKickMember(message string, memberAddres
 }
 
 // Get info for proposing a bool setting
-func (c *DaoNodeTrustedProposals) ProposeSetBool(message string, contractName string, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeSetBool(message string, contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalSettingBool", contractName, settingPath, value)
 }
 
 // Get info for proposing a uint setting
-func (c *DaoNodeTrustedProposals) ProposeSetUint(message string, contractName string, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeSetUint(message string, contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalSettingUint", contractName, settingPath, value)
 }
 
 // Get info for proposing a contract upgrade
-func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgradeType string, contractName string, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *DaoNodeTrustedProposals) ProposeUpgradeContract(message string, upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)

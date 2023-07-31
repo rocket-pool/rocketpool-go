@@ -44,11 +44,15 @@ type DaoProtocolSettingsMinipoolDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsMinipool contract binding
-func NewDaoProtocolSettingsMinipool(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsMinipool, error) {
+func NewDaoProtocolSettingsMinipool(rp *rocketpool.RocketPool) (*DaoProtocolSettingsMinipool, error) {
 	// Create the contract
-	contract, err := rp.GetContract(minipoolSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings minipool contract: %w", err)
+	}
+	daoProtocolContract, err := protocol.NewDaoProtocol(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO protocol contract: %w", err)
 	}
 
 	return &DaoProtocolSettingsMinipool{
@@ -133,13 +137,13 @@ func (c *DaoProtocolSettingsMinipool) GetAllDetails(mc *multicall.MultiCaller) {
 
 // Set the flag for enabling minipool withdrawable event submissions
 func (c *DaoProtocolSettingsMinipool) BootstrapSubmitWithdrawableEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(minipoolSettingsContractName, "minipool.submit.withdrawable.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.submit.withdrawable.enabled", value, opts)
 }
 
 func (c *DaoProtocolSettingsMinipool) BootstrapLaunchTimeout(value time.Duration, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(minipoolSettingsContractName, "minipool.launch.timeout", big.NewInt(int64(value.Seconds())), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.launch.timeout", big.NewInt(int64(value.Seconds())), opts)
 }
 
 func (c *DaoProtocolSettingsMinipool) BootstrapBondReductionEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(minipoolSettingsContractName, "minipool.bond.reduction.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.bond.reduction.enabled", value, opts)
 }

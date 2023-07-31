@@ -44,11 +44,15 @@ type DaoProtocolSettingsNetworkDetails struct {
 // ====================
 
 // Creates a new DaoProtocolSettingsNetwork contract binding
-func NewDaoProtocolSettingsNetwork(rp *rocketpool.RocketPool, daoProtocolContract *protocol.DaoProtocol, opts *bind.CallOpts) (*DaoProtocolSettingsNetwork, error) {
+func NewDaoProtocolSettingsNetwork(rp *rocketpool.RocketPool) (*DaoProtocolSettingsNetwork, error) {
 	// Create the contract
-	contract, err := rp.GetContract(networkSettingsContractName, opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol settings network contract: %w", err)
+	}
+	daoProtocolContract, err := protocol.NewDaoProtocol(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO protocol contract: %w", err)
 	}
 
 	return &DaoProtocolSettingsNetwork{
@@ -132,41 +136,41 @@ func (c *DaoProtocolSettingsNetwork) GetAllDetails(mc *multicall.MultiCaller) {
 // ====================
 
 func (c *DaoProtocolSettingsAuction) BootstrapNodeConsensusThreshold(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.consensus.threshold", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.consensus.threshold", eth.EthToWei(value), opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapSubmitBalancesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(networkSettingsContractName, "network.submit.balances.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.enabled", value, opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapSubmitBalancesFrequency(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.submit.balances.frequency", big.NewInt(int64(value)), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.frequency", big.NewInt(int64(value)), opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapSubmitPricesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapBool(networkSettingsContractName, "network.submit.prices.enabled", value, opts)
+	return c.daoProtocolContract.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.enabled", value, opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapSubmitPricesFrequency(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.submit.prices.frequency", big.NewInt(int64(value)), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.frequency", big.NewInt(int64(value)), opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapMinimumNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.node.fee.minimum", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.minimum", eth.EthToWei(value), opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapTargetNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.node.fee.target", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.target", eth.EthToWei(value), opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapMaximumNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.node.fee.maximum", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.maximum", eth.EthToWei(value), opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapNodeFeeDemandRange(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.node.fee.demand.range", value, opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.demand.range", value, opts)
 }
 
 func (c *DaoProtocolSettingsAuction) BootstrapTargetRethCollateralRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocolContract.BootstrapUint(networkSettingsContractName, "network.reth.collateral.target", eth.EthToWei(value), opts)
+	return c.daoProtocolContract.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.collateral.target", eth.EthToWei(value), opts)
 }
