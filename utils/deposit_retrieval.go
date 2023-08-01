@@ -119,5 +119,5 @@ var casperDepositLock sync.Mutex
 func getCasperDeposit(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*core.Contract, error) {
 	casperDepositLock.Lock()
 	defer casperDepositLock.Unlock()
-	return rp.GetContract("casperDeposit", opts)
+	return rp.GetContract("casperDeposit") // NOTE: NOT A CORE CONTRACT, DO SOMETHING SPECIAL WITH THIS
 }

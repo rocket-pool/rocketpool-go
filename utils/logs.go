@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -18,34 +17,6 @@ type FilterQuery struct {
 	FromBlock *big.Int
 	ToBlock   *big.Int
 	Topics    [][]common.Hash
-}
-
-func FilterContractLogs(rp *rocketpool.RocketPool, contractName string, q FilterQuery, intervalSize *big.Int, opts *bind.CallOpts) ([]types.Log, error) {
-	rocketDaoNodeTrustedUpgrade, err := rp.GetContract("rocketDAONodeTrustedUpgrade", opts)
-	if err != nil {
-		return nil, err
-	}
-	// Get all the addresses this contract has ever been deployed at
-	addresses := make([]common.Address, 0)
-	// Construct a filter to query ContractUpgraded event
-	addressFilter := []common.Address{*rocketDaoNodeTrustedUpgrade.Address}
-	topicFilter := [][]common.Hash{{rocketDaoNodeTrustedUpgrade.ABI.Events["ContractUpgraded"].ID}, {crypto.Keccak256Hash([]byte(contractName))}}
-	logs, err := GetLogs(rp, addressFilter, topicFilter, intervalSize, nil, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	// Iterate the logs and store every past contract address
-	for _, log := range logs {
-		addresses = append(addresses, common.HexToAddress(log.Topics[2].Hex()))
-	}
-	// Append current address
-	currentAddress, err := rp.GetAddress(contractName, opts)
-	if err != nil {
-		return nil, err
-	}
-	addresses = append(addresses, currentAddress)
-	// Perform the desired getLogs call and return results
-	return GetLogs(rp, addresses, q.Topics, intervalSize, q.FromBlock, q.ToBlock, q.BlockHash)
 }
 
 // Gets the logs for a particular log request, breaking the calls into batches if necessary

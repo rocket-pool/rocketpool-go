@@ -7,17 +7,22 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/types"
 )
 
 // Transaction settings
 const ()
 
 type CallReturnType interface {
-	*big.Int | uint8 | bool | string | common.Address | common.Hash
+	*big.Int | uint8 | bool | string | common.Address | common.Hash | types.ValidatorPubkey
 }
 
 type FormattedType interface {
 	time.Time | uint64 | float64 | time.Duration
+}
+
+type FormattedUint8Type interface {
+	types.MinipoolStatus | types.MinipoolDeposit
 }
 
 // Contract type wraps go-ethereum bound contract

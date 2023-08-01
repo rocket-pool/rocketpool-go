@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/minipool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -17,9 +18,10 @@ import (
 
 // Binding for a Rocket Pool Node
 type Node struct {
-	Details NodeDetails
-	mgr     *NodeManager
-	staking *NodeStaking
+	Details         NodeDetails
+	mgr             *NodeManager
+	staking         *NodeStaking
+	minipoolManager *minipool.MinipoolManager
 }
 
 // Details for a Rocket Pool Node
@@ -46,6 +48,11 @@ type NodeDetails struct {
 	RplStakedTime     core.Parameter[time.Time] `json:"rplStakedTime"`
 	EthMatched        *big.Int                  `json:"ethMatched"`
 	EthMatchedLimit   *big.Int                  `json:"ethMatchedLimit"`
+
+	// MinipoolManager
+	MinipoolCount          core.Parameter[uint64] `json:"minipoolCount"`
+	ActiveMinipoolCount    core.Parameter[uint64] `json:"activeMinipoolCount"`
+	FinalisedMinipoolCount core.Parameter[uint64] `json:"finalisedMinipoolCount"`
 }
 
 // ====================
@@ -53,20 +60,32 @@ type NodeDetails struct {
 // ====================
 
 // Creates a new Node instance
-func NewNode(mgr *NodeManager, staking *NodeStaking, index uint64, address common.Address) *Node {
+func NewNode(mgr *NodeManager, index uint64, address common.Address) (*Node, error) {
+	staking, err := NewNodeStaking(mgr.rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node staking binding: %w", err)
+	}
+	minipoolManager, err := minipool.NewMinipoolManager(mgr.rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting minipool manager binding: %w", err)
+	}
+
 	return &Node{
 		Details: NodeDetails{
 			Index:   index,
 			Address: address,
 		},
-		mgr:     mgr,
-		staking: staking,
-	}
+		mgr:             mgr,
+		staking:         staking,
+		minipoolManager: minipoolManager,
+	}, nil
 }
 
 // =============
 // === Calls ===
 // =============
+
+// === NodeManager ===
 
 // Check whether or not the node exists
 func (c *Node) GetExists(mc *multicall.MultiCaller) {
@@ -108,6 +127,8 @@ func (c *Node) GetSmoothingPoolRegistrationChanged(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.mgr.contract, &c.Details.SmoothingPoolRegistrationChanged.RawValue, "getSmoothingPoolRegistrationChanged", c.Details.Address)
 }
 
+// === NodeStaking ===
+
 // Get the node's RPL stake
 func (c *Node) GetRplStake(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.staking.contract, &c.Details.RplStake, "getNodeRPLStake", c.Details.Address)
@@ -144,7 +165,7 @@ func (c *Node) GetEthMatchedLimit(mc *multicall.MultiCaller) {
 }
 
 // Get all basic details
-func (c *Node) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *Node) GetBasicDetails(mc *multicall.MultiCaller) {
 	c.GetExists(mc)
 	c.GetRegistrationTime(mc)
 	c.GetTimezoneLocation(mc)
@@ -160,6 +181,23 @@ func (c *Node) GetAllDetails(mc *multicall.MultiCaller) {
 	c.GetRplStakedTime(mc)
 	c.GetEthMatched(mc)
 	c.GetEthMatchedLimit(mc)
+}
+
+// === MinipoolManager ===
+
+// Get the node's minipool count
+func (c *Node) GetMinipoolCount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.minipoolManager.Contract, &c.Details.MinipoolCount.RawValue, "getNodeMinipoolCount", c.Details.Address)
+}
+
+// Get the number of minipools owned by a node that are not finalised
+func (c *Node) GetActiveMinipoolCount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.minipoolManager.Contract, &c.Details.ActiveMinipoolCount.RawValue, "getNodeActiveMinipoolCount", c.Details.Address)
+}
+
+// Get the number of minipools owned by a node that are finalised
+func (c *Node) GetFinalisedMinipoolCount(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.minipoolManager.Contract, &c.Details.FinalisedMinipoolCount.RawValue, "getNodeFinalisedMinipoolCount", c.Details.Address)
 }
 
 // ====================
@@ -207,4 +245,29 @@ func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *
 // Get info for withdrawing staked RPL
 func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.mgr.contract, "withdrawRPL", opts, rplAmount)
+}
+
+// ===================
+// === Sub-Getters ===
+// ===================
+
+// === MinipoolManager ===
+
+// Get one of the node's minipools, by index
+func (c *Node) GetMinipoolAt(index uint64, opts *bind.CallOpts) (*Minipool, error) {
+	// Create the lot and get details via a multicall query
+	lot := NewAuctionLot(c, index)
+	err := c.rp.Query(func(mc *multicall.MultiCaller) {
+		if bidder != nil {
+			lot.GetAllDetailsWithBidAmount(mc, *bidder)
+		} else {
+			lot.GetAllDetails(mc)
+		}
+	}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting lot: %w", err)
+	}
+
+	// Return
+	return lot, nil
 }

@@ -3,15 +3,20 @@ package rocketpool
 type ContractName string
 
 const (
-	ContractName_RocketAuctionManager                  ContractName = "rocketAuctionManager"
-	ContractName_RocketDAOProtocol                     ContractName = "rocketDAOProtocol"
-	ContractName_RocketDAOProtocolSettingsAuction      ContractName = "rocketDAOProtocolSettingsAuction"
-	ContractName_RocketDAOProtocolSettingsDeposit      ContractName = "rocketDAOProtocolSettingsDeposit"
-	ContractName_RocketDAOProtocolSettingsInflation    ContractName = "rocketDAOProtocolSettingsInflation"
-	ContractName_RocketDAOProtocolSettingsMinipool     ContractName = "rocketDAOProtocolSettingsMinipool"
-	ContractName_RocketDAOProtocolSettingsNetwork      ContractName = "rocketDAOProtocolSettingsNetwork"
-	ContractName_RocketDAOProtocolSettingsNode         ContractName = "rocketDAOProtocolSettingsNode"
-	ContractName_RocketDAOProtocolSettingsRewards      ContractName = "rocketDAOProtocolSettingsRewards"
+	// Auctions
+	ContractName_RocketAuctionManager ContractName = "rocketAuctionManager"
+
+	// Protocol DAO
+	ContractName_RocketDAOProtocol                  ContractName = "rocketDAOProtocol"
+	ContractName_RocketDAOProtocolSettingsAuction   ContractName = "rocketDAOProtocolSettingsAuction"
+	ContractName_RocketDAOProtocolSettingsDeposit   ContractName = "rocketDAOProtocolSettingsDeposit"
+	ContractName_RocketDAOProtocolSettingsInflation ContractName = "rocketDAOProtocolSettingsInflation"
+	ContractName_RocketDAOProtocolSettingsMinipool  ContractName = "rocketDAOProtocolSettingsMinipool"
+	ContractName_RocketDAOProtocolSettingsNetwork   ContractName = "rocketDAOProtocolSettingsNetwork"
+	ContractName_RocketDAOProtocolSettingsNode      ContractName = "rocketDAOProtocolSettingsNode"
+	ContractName_RocketDAOProtocolSettingsRewards   ContractName = "rocketDAOProtocolSettingsRewards"
+
+	// Oracle DAO
 	ContractName_RocketDAONodeTrustedActions           ContractName = "rocketDAONodeTrustedActions"
 	ContractName_RocketDAONodeTrusted                  ContractName = "rocketDAONodeTrusted"
 	ContractName_RocketDAONodeTrustedProposals         ContractName = "rocketDAONodeTrustedProposals"
@@ -19,22 +24,39 @@ const (
 	ContractName_RocketDAONodeTrustedSettingsMinipool  ContractName = "rocketDAONodeTrustedSettingsMinipool"
 	ContractName_RocketDAONodeTrustedSettingsProposals ContractName = "rocketDAONodeTrustedSettingsProposals"
 	ContractName_RocketDAONodeTrustedSettingsRewards   ContractName = "rocketDAONodeTrustedSettingsRewards"
-	ContractName_RocketDepositPool                     ContractName = "rocketDepositPool"
-	ContractName_RocketNetworkBalances                 ContractName = "rocketNetworkBalances"
-	ContractName_RocketNetworkFees                     ContractName = "rocketNetworkFees"
-	ContractName_RocketNetworkPenalties                ContractName = "rocketNetworkPenalties"
-	ContractName_RocketNetworkPrices                   ContractName = "rocketNetworkPrices"
-	ContractName_RocketNodeDeposit                     ContractName = "rocketNodeDeposit"
-	ContractName_RocketNodeDistributorFactory          ContractName = "rocketNodeDistributorFactory"
-	ContractName_RocketNodeDistributorDelegate         ContractName = "rocketNodeDistributorDelegate"
-	ContractName_RocketNodeManager                     ContractName = "rocketNodeManager"
-	ContractName_RocketNodeStaking                     ContractName = "rocketNodeStaking"
-	ContractName_RocketMerkleDistributorMainnet        ContractName = "rocketMerkleDistributorMainnet"
-	ContractName_RocketRewardsPool                     ContractName = "rocketRewardsPool"
-	ContractName_RocketStorage                         ContractName = "rocketStorage"
-	ContractName_RocketTokenRETH                       ContractName = "rocketTokenRETH"
-	ContractName_RocketTokenRPLFixedSupply             ContractName = "rocketTokenRPLFixedSupply"
-	ContractName_RocketTokenRPL                        ContractName = "rocketTokenRPL"
+
+	// Deposit Pool
+	ContractName_RocketDepositPool ContractName = "rocketDepositPool"
+
+	// Minipools
+	ContractName_RocketMinipoolBondReducer ContractName = "rocketMinipoolBondReducer"
+	ContractName_RocketMinipoolManager     ContractName = "rocketMinipoolManager"
+	ContractName_RocketMinipoolFactory     ContractName = "rocketMinipoolFactory"
+
+	// Network
+	ContractName_RocketNetworkBalances  ContractName = "rocketNetworkBalances"
+	ContractName_RocketNetworkFees      ContractName = "rocketNetworkFees"
+	ContractName_RocketNetworkPenalties ContractName = "rocketNetworkPenalties"
+	ContractName_RocketNetworkPrices    ContractName = "rocketNetworkPrices"
+
+	// Nodes
+	ContractName_RocketNodeDeposit             ContractName = "rocketNodeDeposit"
+	ContractName_RocketNodeDistributorFactory  ContractName = "rocketNodeDistributorFactory"
+	ContractName_RocketNodeDistributorDelegate ContractName = "rocketNodeDistributorDelegate"
+	ContractName_RocketNodeManager             ContractName = "rocketNodeManager"
+	ContractName_RocketNodeStaking             ContractName = "rocketNodeStaking"
+
+	// Rewards
+	ContractName_RocketMerkleDistributorMainnet ContractName = "rocketMerkleDistributorMainnet"
+	ContractName_RocketRewardsPool              ContractName = "rocketRewardsPool"
+
+	// Storage
+	ContractName_RocketStorage ContractName = "rocketStorage"
+
+	// Tokens
+	ContractName_RocketTokenRETH           ContractName = "rocketTokenRETH"
+	ContractName_RocketTokenRPLFixedSupply ContractName = "rocketTokenRPLFixedSupply"
+	ContractName_RocketTokenRPL            ContractName = "rocketTokenRPL"
 )
 
 // List of all singleton contract names

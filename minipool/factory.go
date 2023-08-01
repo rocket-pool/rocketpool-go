@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -27,9 +26,9 @@ type MinipoolFactory struct {
 // ====================
 
 // Creates a new MinipoolFactory contract binding
-func NewMinipoolFactory(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*MinipoolFactory, error) {
+func NewMinipoolFactory(rp *rocketpool.RocketPool) (*MinipoolFactory, error) {
 	// Create the contract
-	contract, err := rp.GetContract("rocketMinipoolFactory", opts)
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolFactory)
 	if err != nil {
 		return nil, fmt.Errorf("error getting minipool factory contract: %w", err)
 	}
@@ -48,3 +47,4 @@ func NewMinipoolFactory(rp *rocketpool.RocketPool, opts *bind.CallOpts) (*Minipo
 func (c *MinipoolFactory) GetExpectedAddress(mc *multicall.MultiCaller, nodeAddress common.Address, salt *big.Int, address_Out *common.Address) {
 	multicall.AddCall(mc, c.contract, address_Out, "getExpectedAddress", nodeAddress, salt)
 }
+TODO: put this in Node
