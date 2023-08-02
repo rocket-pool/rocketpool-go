@@ -26,7 +26,7 @@ var minipoolV3Abi *abi.ABI
 // ===============
 
 type MinipoolV3 struct {
-	MinipoolBase
+	MinipoolCommon
 	Details MinipoolV3Details
 	br      *core.Contract
 }
@@ -53,9 +53,9 @@ func newMinipool_v3(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 	var err error
 	if minipoolV3Abi == nil {
 		// Get contract
-		contract, err = createMinipoolContractFromEncodedAbi(rp, address, minipoolV3EncodedAbi)
+		contract, err = rp.CreateMinipoolContractFromEncodedAbi(address, minipoolV3EncodedAbi)
 	} else {
-		contract, err = createMinipoolContractFromAbi(rp, address, minipoolV3Abi)
+		contract, err = rp.CreateMinipoolContractFromAbi(address, minipoolV3Abi)
 	}
 	if err != nil {
 		return nil, err
@@ -70,16 +70,16 @@ func newMinipool_v3(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 	}
 
 	// Create the base binding
-	base, err := NewMinipoolBaseFromVersion(rp, contract, 3)
+	base, err := NewMinipoolCommonFromVersion(rp, contract, 3)
 	if err != nil {
 		return nil, fmt.Errorf("error creating minipool base: %w", err)
 	}
 
 	// Create and return
 	return &MinipoolV3{
-		MinipoolBase: *base,
-		Details:      MinipoolV3Details{},
-		br:           br,
+		MinipoolCommon: *base,
+		Details:        MinipoolV3Details{},
+		br:             br,
 	}, nil
 }
 
@@ -95,6 +95,24 @@ func GetMinipoolAsV3(mp Minipool) (*MinipoolV3, bool) {
 // =============
 // === Calls ===
 // =============
+
+func (c *MinipoolV3) GetMinipoolCommon() *MinipoolCommon {
+	return &c.MinipoolCommon
+}
+
+// Get the basic details
+func (c *MinipoolV3) QueryAllDetails(mc *multicall.MultiCaller) {
+	c.MinipoolCommon.QueryAllDetails(mc)
+	c.GetVacant(mc)
+	c.GetPreMigrationBalance(mc)
+	c.GetUserDistributed(mc)
+	c.GetReduceBondCancelled(mc)
+	c.GetReduceBondTime(mc)
+	c.GetReduceBondValue(mc)
+	c.GetLastBondReductionTime(mc)
+	c.GetLastBondReductionPrevValue(mc)
+	c.GetLastBondReductionPrevNodeFee(mc)
+}
 
 // === Minipool ===
 
@@ -118,37 +136,37 @@ func (c *MinipoolV3) GetUserDistributed(mc *multicall.MultiCaller) {
 // Gets whether or not the bond reduction process for the minipool has already been cancelled
 // The output will be stored in details - note that the Address must already be set!
 func (c *MinipoolV3) GetReduceBondCancelled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.IsBondReduceCancelled, "getReduceBondCancelled", c.MinipoolBase.Details.Address)
+	multicall.AddCall(mc, c.br, &c.Details.IsBondReduceCancelled, "getReduceBondCancelled", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the time at which the MP owner started the bond reduction process
 // The output will be stored in details - note that the Address must already be set!
 func (c *MinipoolV3) GetReduceBondTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.ReduceBondTime.RawValue, "getReduceBondTime", c.MinipoolBase.Details.Address)
+	multicall.AddCall(mc, c.br, &c.Details.ReduceBondTime.RawValue, "getReduceBondTime", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the amount of ETH a minipool is reducing its bond to
 // The output will be stored in details - note that the Address must already be set!
 func (c *MinipoolV3) GetReduceBondValue(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.ReduceBondValue, "getReduceBondValue", c.MinipoolBase.Details.Address)
+	multicall.AddCall(mc, c.br, &c.Details.ReduceBondValue, "getReduceBondValue", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the timestamp at which the bond was last reduced
 // The output will be stored in details - note that the Address must already be set!
 func (c *MinipoolV3) GetLastBondReductionTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionTime.RawValue, "getLastBondReductionTime", c.MinipoolBase.Details.Address)
+	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionTime.RawValue, "getLastBondReductionTime", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the previous bond amount of the minipool prior to its last reduction
 // The output will be stored in details - note that the Address must already be set!
 func (c *MinipoolV3) GetLastBondReductionPrevValue(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionPrevValue, "getLastBondReductionPrevValue", c.MinipoolBase.Details.Address)
+	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionPrevValue, "getLastBondReductionPrevValue", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the previous node fee (commission) of the minipool prior to its last reduction
 // The output will be stored in details - note that the Address must already be set!
 func (c *MinipoolV3) GetLastBondReductionPrevNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionPrevNodeFee.RawValue, "getLastBondReductionPrevNodeFee", c.MinipoolBase.Details.Address)
+	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionPrevNodeFee.RawValue, "getLastBondReductionPrevNodeFee", c.MinipoolCommon.Details.Address)
 }
 
 // ====================
@@ -176,10 +194,10 @@ func (c *MinipoolV3) Promote(opts *bind.TransactOpts) (*core.TransactionInfo, er
 
 // Get info for beginning a minipool bond reduction
 func (c *MinipoolV3) BeginReduceBondAmount(newBondAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.br, "beginReduceBondAmount", opts, c.MinipoolBase.Details.Address, newBondAmount)
+	return core.NewTransactionInfo(c.br, "beginReduceBondAmount", opts, c.MinipoolCommon.Details.Address, newBondAmount)
 }
 
 // Get info for voting to cancel a minipool's bond reduction
 func (c *MinipoolV3) VoteCancelReduction(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.br, "voteCancelReduction", opts, c.MinipoolBase.Details.Address)
+	return core.NewTransactionInfo(c.br, "voteCancelReduction", opts, c.MinipoolCommon.Details.Address)
 }

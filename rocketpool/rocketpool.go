@@ -13,6 +13,10 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
+const (
+	defaultConcurrentCallLimit int = 6
+)
+
 // Rocket Pool contract manager
 type RocketPool struct {
 	Client                core.ExecutionClient
@@ -20,6 +24,7 @@ type RocketPool struct {
 	MulticallAddress      *common.Address
 	BalanceBatcherAddress *common.Address
 	VersionManager        *VersionManager
+	ConcurrentCallLimit   int
 
 	// Internal fields
 	contracts    map[ContractName]*core.Contract
@@ -40,6 +45,7 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		Storage:               storage,
 		MulticallAddress:      &multicallAddress,
 		BalanceBatcherAddress: &balanceBatcherAddress,
+		ConcurrentCallLimit:   defaultConcurrentCallLimit,
 	}
 	rp.VersionManager = NewVersionManager(rp)
 
@@ -52,11 +58,12 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	abiStrings := make([]string, len(contractNames))
 
 	// Load the details via multicall
-	err := rp.Query(func(mc *multicall.MultiCaller) {
+	err := rp.Query(func(mc *multicall.MultiCaller) error {
 		for i, contractName := range contractNames {
 			rp.Storage.GetAddress(mc, &addresses[i], string(contractName))
 			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
 		}
+		return nil
 	}, opts)
 	if err != nil {
 		return fmt.Errorf("error getting addresses and ABIs: %w", err)
@@ -80,13 +87,14 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	// Get the versions of each contract
 	emptyAddress := common.Address{}
 	versions := make([]uint8, len(contractNames))
-	err = rp.Query(func(mc *multicall.MultiCaller) {
+	err = rp.Query(func(mc *multicall.MultiCaller) error {
 		for i, contractName := range contractNames {
 			address := addresses[i]
 			if address != emptyAddress {
 				multicall.AddCall[uint8](mc, rp.contracts[contractName], &versions[i], "version") // TODO: use the contract version getter once it's ready
 			}
 		}
+		return nil
 	}, opts)
 	if err != nil {
 		return fmt.Errorf("error getting contract versions: %w", err)
@@ -105,10 +113,11 @@ func (rp *RocketPool) LoadInstanceABIs(opts *bind.CallOpts, contractNames ...Con
 	abiStrings := make([]string, len(contractNames))
 
 	// Load the details via multicall
-	err := rp.Query(func(mc *multicall.MultiCaller) {
+	err := rp.Query(func(mc *multicall.MultiCaller) error {
 		for i, contractName := range contractNames {
 			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
 		}
+		return nil
 	}, opts)
 	if err != nil {
 		return fmt.Errorf("error getting instanced ABIs: %w", err)
@@ -152,32 +161,44 @@ func (rp *RocketPool) MakeContract(contractName ContractName, address common.Add
 	}, nil
 }
 
+// =============
+// === Utils ===
+// =============
+
+// Create a contract directly from its ABI, encoded in string form
+func (rp *RocketPool) CreateMinipoolContractFromEncodedAbi(address common.Address, encodedAbi string) (*core.Contract, error) {
+	// Decode ABI
+	abi, err := core.DecodeAbi(encodedAbi)
+	if err != nil {
+		return nil, fmt.Errorf("Could not decode minipool %s ABI: %w", address, err)
+	}
+
+	// Create and return
+	return &core.Contract{
+		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
+		Address:  &address,
+		ABI:      abi,
+		Client:   rp.Client,
+	}, nil
+}
+
+// Create a contract directly from its ABI
+func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi *abi.ABI) (*core.Contract, error) {
+	// Create and return
+	return &core.Contract{
+		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
+		Address:  &address,
+		ABI:      abi,
+		Client:   rp.Client,
+	}, nil
+}
+
 // =========================
 // === Multicall Helpers ===
 // =========================
 
 // Run a multicall query that doesn't perform any return type allocation
-func (rp *RocketPool) Query(query func(*multicall.MultiCaller), opts *bind.CallOpts) error {
-	// Create the multicaller
-	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
-	if err != nil {
-		return fmt.Errorf("error creating multicaller: %w", err)
-	}
-
-	// Run the query
-	query(mc)
-
-	// Execute the multicall
-	_, err = mc.FlexibleCall(true, opts)
-	if err != nil {
-		return fmt.Errorf("error executing multicall: %w", err)
-	}
-
-	return nil
-}
-
-// Run a multicall query that doesn't perform any return type allocation - used when the query itself can return an error
-func (rp *RocketPool) QueryWithError(query func(*multicall.MultiCaller) error, opts *bind.CallOpts) error {
+func (rp *RocketPool) Query(query func(*multicall.MultiCaller) error, opts *bind.CallOpts) error {
 	// Create the multicaller
 	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 	if err != nil {
@@ -199,17 +220,33 @@ func (rp *RocketPool) QueryWithError(query func(*multicall.MultiCaller) error, o
 	return nil
 }
 
-// Create and execute a multicall query that is too big for one call and must be run in batches
-func BatchQuery[ObjType any](rp *RocketPool, count uint64, batchSize uint64, createAndQuery func(*multicall.MultiCaller, uint64) (*ObjType, error), opts *bind.CallOpts) ([]*ObjType, error) {
-	// Create the array of query objects
-	objs := make([]*ObjType, count)
+// Run a multicall query that doesn't perform any return type allocation
+// Use this if one of the calls is allowed to fail without interrupting the others; the returned result array provides information about the success of each call.
+func (rp *RocketPool) FlexQuery(query func(*multicall.MultiCaller) error, opts *bind.CallOpts) ([]multicall.Result, error) {
+	// Create the multicaller
+	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+	if err != nil {
+		return nil, fmt.Errorf("error creating multicaller: %w", err)
+	}
 
+	// Run the query
+	err = query(mc)
+	if err != nil {
+		return nil, fmt.Errorf("error running multicall query: %w", err)
+	}
+
+	// Execute the multicall
+	return mc.FlexibleCall(false, opts)
+}
+
+// Create and execute a multicall query that is too big for one call and must be run in batches
+func (rp *RocketPool) BatchQuery(count int, batchSize int, query func(*multicall.MultiCaller, int) error, opts *bind.CallOpts) error {
 	// Sync
 	var wg errgroup.Group
-	wg.SetLimit(int(batchSize))
+	wg.SetLimit(rp.ConcurrentCallLimit)
 
 	// Run getters in batches
-	for i := uint64(0); i < count; i += batchSize {
+	for i := 0; i < count; i += batchSize {
 		i := i
 		max := i + batchSize
 		if max > count {
@@ -223,11 +260,10 @@ func BatchQuery[ObjType any](rp *RocketPool, count uint64, batchSize uint64, cre
 				return err
 			}
 			for j := i; j < max; j++ {
-				obj, err := createAndQuery(mc, j)
+				err := query(mc, j)
 				if err != nil {
 					return fmt.Errorf("error running query adder: %w", err)
 				}
-				objs[j] = obj
 			}
 			_, err = mc.FlexibleCall(true, opts)
 			if err != nil {
@@ -239,9 +275,59 @@ func BatchQuery[ObjType any](rp *RocketPool, count uint64, batchSize uint64, cre
 
 	// Wait for them all to complete
 	if err := wg.Wait(); err != nil {
-		return nil, fmt.Errorf("error during multicall query: %w", err)
+		return fmt.Errorf("error during multicall query: %w", err)
+	}
+
+	return nil
+}
+
+// Create and execute a multicall query that is too big for one call and must be run in batches.
+// Use this if one of the calls is allowed to fail without interrupting the others; the returned result array provides information about the success of each call.
+func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*multicall.MultiCaller, int) error, handleResult func(multicall.Result, int) error, opts *bind.CallOpts) error {
+	// Sync
+	var wg errgroup.Group
+	wg.SetLimit(rp.ConcurrentCallLimit)
+
+	// Run getters in batches
+	for i := 0; i < count; i += batchSize {
+		i := i
+		max := i + batchSize
+		if max > count {
+			max = count
+		}
+
+		// Load details
+		wg.Go(func() error {
+			mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+			if err != nil {
+				return err
+			}
+			for j := i; j < max; j++ {
+				err := query(mc, j)
+				if err != nil {
+					return fmt.Errorf("error running query adder: %w", err)
+				}
+			}
+			results, err := mc.FlexibleCall(false, opts)
+			if err != nil {
+				return fmt.Errorf("error executing multicall: %w", err)
+			}
+			for j, result := range results {
+				err = handleResult(result, j+i)
+				if err != nil {
+					return fmt.Errorf("error running query result handler: %w", err)
+				}
+			}
+
+			return nil
+		})
+	}
+
+	// Wait for them all to complete
+	if err := wg.Wait(); err != nil {
+		return fmt.Errorf("error during multicall query: %w", err)
 	}
 
 	// Return
-	return objs, nil
+	return nil
 }

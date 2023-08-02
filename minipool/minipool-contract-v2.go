@@ -9,6 +9,7 @@ import (
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -23,7 +24,7 @@ var minipoolV2Abi *abi.ABI
 // ===============
 
 type MinipoolV2 struct {
-	MinipoolBase
+	MinipoolCommon
 }
 
 // ====================
@@ -36,9 +37,9 @@ func newMinipool_v2(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 	var err error
 	if minipoolV2Abi == nil {
 		// Get contract
-		contract, err = createMinipoolContractFromEncodedAbi(rp, address, minipoolV2EncodedAbi)
+		contract, err = rp.CreateMinipoolContractFromEncodedAbi(address, minipoolV2EncodedAbi)
 	} else {
-		contract, err = createMinipoolContractFromAbi(rp, address, minipoolV2Abi)
+		contract, err = rp.CreateMinipoolContractFromAbi(address, minipoolV2Abi)
 	}
 	if err != nil {
 		return nil, err
@@ -47,14 +48,14 @@ func newMinipool_v2(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 	}
 
 	// Create the base binding
-	base, err := NewMinipoolBaseFromVersion(rp, contract, 2)
+	base, err := NewMinipoolCommonFromVersion(rp, contract, 2)
 	if err != nil {
 		return nil, fmt.Errorf("error creating minipool base: %w", err)
 	}
 
 	// Create and return
 	return &MinipoolV2{
-		MinipoolBase: *base,
+		MinipoolCommon: *base,
 	}, nil
 }
 
@@ -65,6 +66,20 @@ func GetMinipoolAsV2(mp Minipool) (*MinipoolV2, bool) {
 		return castedMp, true
 	}
 	return nil, false
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get the minipool
+func (c *MinipoolV2) GetMinipoolCommon() *MinipoolCommon {
+	return &c.MinipoolCommon
+}
+
+// Query all of the minipool details
+func (c *MinipoolV2) QueryAllDetails(mc *multicall.MultiCaller) {
+	c.MinipoolCommon.QueryAllDetails(mc)
 }
 
 // ====================

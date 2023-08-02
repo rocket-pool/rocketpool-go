@@ -5,17 +5,19 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // Settings
 const (
-	MinipoolPrelaunchBatchSize     = 250
-	MinipoolAddressBatchSize       = 50
-	MinipoolDetailsBatchSize       = 20
-	NativeMinipoolDetailsBatchSize = 1000
+	minipoolBatchSize          int = 100
+	minipoolAddressBatchSize   int = 1000
+	minipoolVersionBatchSize   int = 500
+	minipoolPrelaunchBatchSize int = 250
 )
 
 // ===============
@@ -103,38 +105,212 @@ func (c *MinipoolManager) GetAllDetails(mc *multicall.MultiCaller) {
 	c.GetActiveMinipoolCount(mc)
 }
 
-// ====================
-// === Transactions ===
-// ====================
+// =================
+// === Addresses ===
+// =================
 
-// Get info for creating a new lot
-func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "createLot", opts)
+// Get a minipool address by index
+func (c *MinipoolManager) GetMinipoolAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
+	multicall.AddCall(mc, c.Contract, address_Out, "getMinipoolAt", big.NewInt(int64(index)))
 }
 
-// ===================
-// === Sub-Getters ===
-// ===================
+// Get a minipool address by pubkey
+func (c *MinipoolManager) GetMinipoolAddressByPubkey(mc *multicall.MultiCaller, address_Out *common.Address, pubkey types.ValidatorPubkey) {
+	multicall.AddCall(mc, c.Contract, address_Out, "getMinipoolByPubkey", pubkey[:])
+}
 
-// Get a minipool with details
-func (c *MinipoolManager) GetMinipool(index uint64, opts *bind.CallOpts) (Minipool, error) {
+// Get a vacant minipool address by index
+func (c *MinipoolManager) GetVacantMinipoolAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
+	multicall.AddCall(mc, c.Contract, address_Out, "getVacantMinipoolAt", big.NewInt(int64(index)))
+}
 
-	// Decide how to do this - just get the empty binding, the address and version, or what?
-	// Or do the original thing - add a raw getter for the address and then convenience methods to wrap it all up so people can do what they want
+// Get all minipool addresses in a standalone call.
+// This will use an internal batched multicall invocation to retrieve all of them.
+// Provide the value returned from GetMinipoolCount() in minipoolCount.
+func (c *MinipoolManager) GetMinipoolAddresses(mc *multicall.MultiCaller, minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+	addresses := make([]common.Address, minipoolCount)
 
-	// Create the lot and get details via a multicall query
-	lot := NewAuctionLot(c, index)
-	err := c.rp.Query(func(mc *multicall.MultiCaller) {
-		if bidder != nil {
-			lot.GetAllDetailsWithBidAmount(mc, *bidder)
-		} else {
-			lot.GetAllDetails(mc)
-		}
-	}, opts)
+	// Run the multicall query for each address
+	err := c.rp.BatchQuery(int(minipoolCount), minipoolAddressBatchSize,
+		func(mc *multicall.MultiCaller, index int) error {
+			c.GetMinipoolAddress(mc, &addresses[index], uint64(index))
+			return nil
+		}, opts)
 	if err != nil {
-		return nil, fmt.Errorf("error getting lot: %w", err)
+		return nil, fmt.Errorf("error getting minipool addresses: %w", err)
 	}
 
 	// Return
-	return lot, nil
+	return addresses, nil
+}
+
+// Get all prelaunch minipool addresses in a standalone call.
+// This will use an internal batched multicall invocation to retrieve all of them.
+// Provide the value returned from GetMinipoolCount() in minipoolCount.
+func (c *MinipoolManager) GetPrelaunchMinipoolAddresses(minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+	addresses := make([]common.Address, 0, minipoolCount)
+
+	totalMinipools := int(minipoolCount)
+	limit := big.NewInt(int64(minipoolPrelaunchBatchSize))
+	for i := 0; i < totalMinipools; i += minipoolPrelaunchBatchSize {
+		// Get a batch of addresses
+		offset := big.NewInt(int64(i))
+		newAddresses := new([]common.Address)
+		if err := c.Contract.Call(opts, newAddresses, "getPrelaunchMinipools", offset, limit); err != nil {
+			return []common.Address{}, fmt.Errorf("error getting prelaunch minipool addresses (offset %d, limit %d): %w", offset.Uint64(), limit.Uint64(), err)
+		}
+		addresses = append(addresses, *newAddresses...)
+	}
+
+	return addresses, nil
+}
+
+// Get all minipool addresses in a standalone call.
+// This will use an internal batched multicall invocation to retrieve all of them.
+// Provide the value returned from GetVacantMinipoolCount() in minipoolCount.
+func (c *MinipoolManager) GetVacantMinipoolAddresses(mc *multicall.MultiCaller, minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+	addresses := make([]common.Address, minipoolCount)
+
+	// Run the multicall query for each address
+	err := c.rp.BatchQuery(int(minipoolCount), minipoolAddressBatchSize,
+		func(mc *multicall.MultiCaller, index int) error {
+			c.GetVacantMinipoolAddress(mc, &addresses[index], uint64(index))
+			return nil
+		}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting vacant minipool addresses: %w", err)
+	}
+
+	// Return
+	return addresses, nil
+}
+
+// =================
+// === Minipools ===
+// =================
+
+// Get a minipool version by address
+func (c *MinipoolManager) GetMinipool(address common.Address, includeDetails bool, opts *bind.CallOpts) (Minipool, error) {
+	// Get the minipool version
+	var version uint8
+	results, err := c.rp.FlexQuery(func(mc *multicall.MultiCaller) error {
+		return rocketpool.GetContractVersion(mc, &version, address)
+	}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error querying minipool version: %w", err)
+	}
+	if !results[0].Success {
+		// If it failed, this is a contract on Prater from before version() existed so it's v1
+		version = 1
+	}
+
+	// Get the minipool
+	minipool, err := NewMinipoolFromVersion(c.rp, address, version)
+	if err != nil {
+		return nil, fmt.Errorf("error creating minipool: %w", err)
+	}
+
+	// Include the details if requested
+	if includeDetails {
+		err := c.rp.Query(func(mc *multicall.MultiCaller) error {
+			minipool.QueryAllDetails(mc)
+			return nil
+		}, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error getting minipool %s details: %w", address.Hex(), err)
+		}
+	}
+
+	return minipool, nil
+}
+
+// Get all minipool bindings in a standalone call for the provided set of addresses
+// This will use an internal batched multicall invocation to retrieve all of them
+// Provide the value returned from GetMinipoolCount() in minipoolCount
+func (c *MinipoolManager) GetMinipools(addresses []common.Address, includeDetails bool, opts *bind.CallOpts) ([]Minipool, error) {
+	minipoolCount := len(addresses)
+
+	// Get the minipool versions
+	versions := make([]uint8, minipoolCount)
+	err := c.rp.FlexBatchQuery(int(minipoolCount), minipoolVersionBatchSize,
+		func(mc *multicall.MultiCaller, index int) error {
+			return rocketpool.GetContractVersion(mc, &versions[index], addresses[index])
+		},
+		func(result multicall.Result, index int) error {
+			if !result.Success {
+				// If it failed, this is a contract on Prater from before version() existed so it's v1
+				versions[index] = 1
+			}
+			return nil
+		}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting minipool versions: %w", err)
+	}
+
+	// Create the minipools
+	minipools := make([]Minipool, minipoolCount)
+	for i := 0; i < int(minipoolCount); i++ {
+		minipool, err := NewMinipoolFromVersion(c.rp, addresses[i], versions[i])
+		if err != nil {
+			return nil, fmt.Errorf("error creating minipool %d (%s): %w", i, addresses[i].Hex(), err)
+		}
+		minipools[i] = minipool
+	}
+
+	// Include the details if requested
+	if includeDetails {
+		err := c.rp.BatchQuery(int(minipoolCount), minipoolBatchSize,
+			func(mc *multicall.MultiCaller, index int) error {
+				minipools[index].QueryAllDetails(mc)
+				return nil
+			}, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error getting minipool details: %w", err)
+		}
+	}
+
+	return minipools, nil
+}
+
+// =============
+// === Utils ===
+// =============
+
+// Get the minipool count by status
+func (c *MinipoolManager) GetMinipoolCountPerStatus(minipoolCount uint64, opts *bind.CallOpts) (MinipoolCountsPerStatus, error) {
+	minipoolCounts := MinipoolCountsPerStatus{
+		Initialized:  big.NewInt(0),
+		Prelaunch:    big.NewInt(0),
+		Staking:      big.NewInt(0),
+		Dissolved:    big.NewInt(0),
+		Withdrawable: big.NewInt(0),
+	}
+
+	limit := big.NewInt(int64(minipoolPrelaunchBatchSize))
+	for i := 0; i < int(minipoolCount); i += minipoolPrelaunchBatchSize {
+		// Get a batch of counts
+		offset := big.NewInt(int64(i))
+		newMinipoolCounts := new(MinipoolCountsPerStatus)
+		if err := c.Contract.Call(opts, newMinipoolCounts, "getMinipoolCountPerStatus", offset, limit); err != nil {
+			return MinipoolCountsPerStatus{}, fmt.Errorf("Could not get minipool counts: %w", err)
+		}
+		if newMinipoolCounts != nil {
+			if newMinipoolCounts.Initialized != nil {
+				minipoolCounts.Initialized.Add(minipoolCounts.Initialized, newMinipoolCounts.Initialized)
+			}
+			if newMinipoolCounts.Prelaunch != nil {
+				minipoolCounts.Prelaunch.Add(minipoolCounts.Prelaunch, newMinipoolCounts.Prelaunch)
+			}
+			if newMinipoolCounts.Staking != nil {
+				minipoolCounts.Staking.Add(minipoolCounts.Staking, newMinipoolCounts.Staking)
+			}
+			if newMinipoolCounts.Dissolved != nil {
+				minipoolCounts.Dissolved.Add(minipoolCounts.Dissolved, newMinipoolCounts.Dissolved)
+			}
+			if newMinipoolCounts.Withdrawable != nil {
+				minipoolCounts.Withdrawable.Add(minipoolCounts.Withdrawable, newMinipoolCounts.Withdrawable)
+			}
+		}
+	}
+	return minipoolCounts, nil
 }
