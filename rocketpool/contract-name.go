@@ -33,6 +33,7 @@ const (
 
 	// Minipools
 	ContractName_RocketMinipoolBondReducer ContractName = "rocketMinipoolBondReducer"
+	ContractName_RocketMinipoolDelegate    ContractName = "rocketMinipoolDelegate"
 	ContractName_RocketMinipoolManager     ContractName = "rocketMinipoolManager"
 	ContractName_RocketMinipoolFactory     ContractName = "rocketMinipoolFactory"
 	ContractName_RocketMinipoolQueue       ContractName = "rocketMinipoolQueue"

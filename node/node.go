@@ -282,7 +282,7 @@ func (c *Node) GetValidatingMinipoolAddress(mc *multicall.MultiCaller, address_O
 // Get all of the node's minipool addresses in a standalone call.
 // This will use an internal batched multicall invocation to retrieve all of them.
 // Provide the value returned from GetMinipoolCount() in minipoolCount.
-func (c *Node) GetMinipoolAddresses(mc *multicall.MultiCaller, minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+func (c *Node) GetMinipoolAddresses(minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
 	addresses := make([]common.Address, minipoolCount)
 
 	// Run the multicall query for each address
@@ -302,7 +302,7 @@ func (c *Node) GetMinipoolAddresses(mc *multicall.MultiCaller, minipoolCount uin
 // Get all of the node's validating minipool addresses in a standalone call.
 // This will use an internal batched multicall invocation to retrieve all of them.
 // Provide the value returned from GetValidatingMinipoolCount() in minipoolCount.
-func (c *Node) GetValidatingMinipoolAddresses(mc *multicall.MultiCaller, minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+func (c *Node) GetValidatingMinipoolAddresses(minipoolCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
 	addresses := make([]common.Address, minipoolCount)
 
 	// Run the multicall query for each address
