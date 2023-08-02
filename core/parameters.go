@@ -32,6 +32,8 @@ func (p *Parameter[fType]) Formatted() fType {
 		*f = time.Unix(p.RawValue.Int64(), 0)
 	case *uint64:
 		*f = p.RawValue.Uint64()
+	case *int64:
+		*f = p.RawValue.Int64()
 	case *float64:
 		*f = eth.WeiToEth(p.RawValue)
 	case *time.Duration:

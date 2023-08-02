@@ -60,8 +60,9 @@ func (c *NodeDistributorFactory) GetNodeDistributor(nodeAddress common.Address, 
 	}
 
 	// Get details via a multicall query
-	err = c.rp.Query(func(mc *multicall.MultiCaller) {
+	err = c.rp.Query(func(mc *multicall.MultiCaller) error {
 		distributor.GetAllDetails(mc)
+		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node distributor for node %s at %s: %w", nodeAddress.Hex(), distributorAddress.Hex(), err)

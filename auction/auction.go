@@ -114,12 +114,13 @@ func (c *AuctionManager) GetLotWithBids(index uint64, bidder common.Address, opt
 func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
 	// Create the lot and get details via a multicall query
 	lot := NewAuctionLot(c, index)
-	err := c.rp.Query(func(mc *multicall.MultiCaller) {
+	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
 		if bidder != nil {
 			lot.GetAllDetailsWithBidAmount(mc, *bidder)
 		} else {
 			lot.GetAllDetails(mc)
 		}
+		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting lot: %w", err)
@@ -141,18 +142,19 @@ func (c *AuctionManager) GetLotsWithBids(lotCount uint64, bidder common.Address,
 
 // Get lots implementation
 func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
+	lots := make([]*AuctionLot, lotCount)
+
 	// Run the multicall query for each lot
-	lots, err := rocketpool.BatchQuery[AuctionLot](c.rp,
-		lotCount,
-		lotDetailsBatchSize,
-		func(mc *multicall.MultiCaller, index uint64) (*AuctionLot, error) {
-			lot := NewAuctionLot(c, index)
+	err := c.rp.BatchQuery(int(lotCount), int(lotDetailsBatchSize),
+		func(mc *multicall.MultiCaller, index int) error {
+			lot := NewAuctionLot(c, uint64(index))
+			lots[index] = lot
 			if bidder != nil {
 				lot.GetAllDetailsWithBidAmount(mc, *bidder)
 			} else {
 				lot.GetAllDetails(mc)
 			}
-			return lot, nil
+			return nil
 		},
 		opts,
 	)

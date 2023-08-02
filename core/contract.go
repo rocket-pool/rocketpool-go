@@ -18,7 +18,7 @@ type CallReturnType interface {
 }
 
 type FormattedType interface {
-	time.Time | uint64 | float64 | time.Duration
+	time.Time | uint64 | int64 | float64 | time.Duration
 }
 
 type FormattedUint8Type interface {

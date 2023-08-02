@@ -70,7 +70,7 @@ func newMinipool_v3(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 	}
 
 	// Create the base binding
-	base, err := NewMinipoolCommonFromVersion(rp, contract, 3)
+	base, err := newMinipoolCommonFromVersion(rp, contract, 3)
 	if err != nil {
 		return nil, fmt.Errorf("error creating minipool base: %w", err)
 	}

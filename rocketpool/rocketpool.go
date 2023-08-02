@@ -14,17 +14,21 @@ import (
 )
 
 const (
-	defaultConcurrentCallLimit int = 6
+	defaultConcurrentCallLimit      int = 6
+	defaultAddressBatchSize         int = 1000
+	defaultContractVersionBatchSize int = 500
 )
 
 // Rocket Pool contract manager
 type RocketPool struct {
-	Client                core.ExecutionClient
-	Storage               *storage.Storage
-	MulticallAddress      *common.Address
-	BalanceBatcherAddress *common.Address
-	VersionManager        *VersionManager
-	ConcurrentCallLimit   int
+	Client                   core.ExecutionClient
+	Storage                  *storage.Storage
+	MulticallAddress         *common.Address
+	BalanceBatcherAddress    *common.Address
+	VersionManager           *VersionManager
+	ConcurrentCallLimit      int
+	AddressBatchSize         int
+	ContractVersionBatchSize int
 
 	// Internal fields
 	contracts    map[ContractName]*core.Contract
@@ -41,11 +45,13 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 
 	// Create and return
 	rp := &RocketPool{
-		Client:                client,
-		Storage:               storage,
-		MulticallAddress:      &multicallAddress,
-		BalanceBatcherAddress: &balanceBatcherAddress,
-		ConcurrentCallLimit:   defaultConcurrentCallLimit,
+		Client:                   client,
+		Storage:                  storage,
+		MulticallAddress:         &multicallAddress,
+		BalanceBatcherAddress:    &balanceBatcherAddress,
+		ConcurrentCallLimit:      defaultConcurrentCallLimit,
+		AddressBatchSize:         defaultAddressBatchSize,
+		ContractVersionBatchSize: defaultContractVersionBatchSize,
 	}
 	rp.VersionManager = NewVersionManager(rp)
 

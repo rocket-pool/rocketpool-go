@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	EventScanInterval uint64 = 10000
+	eventScanInterval uint64 = 10000
 )
 
 // ===============
@@ -31,7 +31,8 @@ type MinipoolCommon struct {
 	Details  MinipoolCommonDetails
 	Contract *core.Contract
 	rp       *rocketpool.RocketPool
-	mgr      *MinipoolManager
+	mpMgr    *MinipoolManager
+	mpStatus *core.Contract
 }
 
 // Basic details about a minipool, version-agnostic
@@ -98,10 +99,15 @@ type PrestakeData struct {
 // ====================
 
 // Create a minipool common binding from an explicit version number
-func NewMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Contract, version uint8) (*MinipoolCommon, error) {
+func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Contract, version uint8) (*MinipoolCommon, error) {
 	mgr, err := NewMinipoolManager(rp) // TODO: get the latest instance instead of making a new one for memory reasons - maybe have RP register singletons
 	if err != nil {
 		return nil, fmt.Errorf("error creating minipool manager: %w", err)
+	}
+
+	mpStatus, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolStatus)
+	if err != nil {
+		return nil, fmt.Errorf("error getting minipool status contract: %w", err)
 	}
 
 	return &MinipoolCommon{
@@ -111,7 +117,8 @@ func NewMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 		},
 		rp:       rp,
 		Contract: contract,
-		mgr:      mgr,
+		mpMgr:    mgr,
+		mpStatus: mpStatus,
 	}, nil
 }
 
@@ -208,32 +215,32 @@ func (c *MinipoolCommon) GetEffectiveDelegate(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.Contract, &c.Details.EffectiveDelegateAddress, "getEffectiveDelegate")
 }
 
-// === Minipool Manager ===
+// === MinipoolManager ===
 
 // Check if a minipool exists
 func (c *MinipoolCommon) GetExists(mc *multicall.MultiCaller) {
 	// TODO: Is this really necessary?
-	multicall.AddCall(mc, c.mgr.Contract, &c.Details.Exists, "getMinipoolExists", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.Exists, "getMinipoolExists", c.Details.Address)
 }
 
 // Get the minipool's pubkey
 func (c *MinipoolCommon) GetPubkey(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mgr.Contract, &c.Details.Pubkey, "getMinipoolPubkey", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.Pubkey, "getMinipoolPubkey", c.Details.Address)
 }
 
 // Get the minipool's 0x01-based withdrawal credentials
 func (c *MinipoolCommon) GetWithdrawalCredentials(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mgr.Contract, &c.Details.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Details.Address)
 }
 
 // Check if the minipool's RPL has been slashed
 func (c *MinipoolCommon) GetRplSlashed(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mgr.Contract, &c.Details.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Details.Address)
 }
 
 // Get the minipool's deposit type
 func (c *MinipoolCommon) GetDepositType(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mgr.Contract, &c.Details.DepositType.RawValue, "getMinipoolDepositType", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.DepositType.RawValue, "getMinipoolDepositType", c.Details.Address)
 }
 
 // Get the basic details
@@ -265,6 +272,8 @@ func (c *MinipoolCommon) QueryAllDetails(mc *multicall.MultiCaller) {
 // ====================
 // === Transactions ===
 // ====================
+
+// === Minipool ===
 
 // Get info for refunding node ETH from the minipool
 func (c *MinipoolCommon) Refund(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
@@ -309,6 +318,13 @@ func (c *MinipoolCommon) SetUseLatestDelegate(setting bool, opts *bind.TransactO
 // Get info for voting to scrub a minipool
 func (c *MinipoolCommon) VoteScrub(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.Contract, "voteScrub", opts)
+}
+
+// === MinipoolStatus ===
+
+// Get info for submitting a minipool withdrawable event
+func (c *MinipoolCommon) SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.mpStatus, "submitMinipoolWithdrawable", opts, c.Details.Address)
 }
 
 // =============
@@ -358,8 +374,8 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 	found := false
 
 	// Backwards scan through blocks to find the event
-	for i := currentBlock; i >= fromBlock; i -= EventScanInterval {
-		from := i - EventScanInterval + 1
+	for i := currentBlock; i >= fromBlock; i -= eventScanInterval {
+		from := i - eventScanInterval + 1
 		if from < fromBlock {
 			from = fromBlock
 		}
