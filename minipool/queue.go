@@ -82,11 +82,6 @@ func (c *MinipoolQueue) GetEffectiveCapacity(mc *multicall.MultiCaller) {
 // === Utils ===
 // =============
 
-// Get queue position of a minipool (-1 means not in the queue, otherwise 0-indexed).
-func (c *MinipoolQueue) GetQueuePositionOfMinipool(mc *multicall.MultiCaller, position_Out *core.Parameter[int64], minipoolAddress common.Address) {
-	multicall.AddCall(mc, c.contract, &position_Out.RawValue, "getMinipoolPosition", minipoolAddress)
-}
-
 // Get the minipool at the specified position in queue (0-indexed).
 func (c *MinipoolQueue) GetQueueMinipoolAtPosition(mc *multicall.MultiCaller, address_Out *common.Address, position uint64) {
 	multicall.AddCall(mc, c.contract, address_Out, "getMinipoolAt", big.NewInt(int64(position)))

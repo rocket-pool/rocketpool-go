@@ -31,7 +31,8 @@ type MinipoolCommon struct {
 	Details  MinipoolCommonDetails
 	Contract *core.Contract
 	rp       *rocketpool.RocketPool
-	mpMgr    *MinipoolManager
+	mpMgr    *core.Contract
+	mpQueue  *core.Contract
 	mpStatus *core.Contract
 }
 
@@ -72,6 +73,9 @@ type MinipoolCommonDetails struct {
 	LastBondReductionTime        core.Parameter[time.Time] `json:"lastBondReductionTime"`
 	LastBondReductionPrevValue   *big.Int                  `json:"lastBondReductionPrevValue"`
 	LastBondReductionPrevNodeFee core.Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
+
+	// MinipoolQueue
+	QueuePosition core.Parameter[int64] `json:"queuePosition"`
 }
 
 // The data from a minipool's MinipoolPrestaked event
@@ -100,9 +104,14 @@ type PrestakeData struct {
 
 // Create a minipool common binding from an explicit version number
 func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Contract, version uint8) (*MinipoolCommon, error) {
-	mgr, err := NewMinipoolManager(rp) // TODO: get the latest instance instead of making a new one for memory reasons - maybe have RP register singletons
+	mgr, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolManager)
 	if err != nil {
 		return nil, fmt.Errorf("error creating minipool manager: %w", err)
+	}
+
+	mpQueue, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolQueue)
+	if err != nil {
+		return nil, fmt.Errorf("error getting minipool queue contract: %w", err)
 	}
 
 	mpStatus, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolStatus)
@@ -118,6 +127,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 		rp:       rp,
 		Contract: contract,
 		mpMgr:    mgr,
+		mpQueue:  mpQueue,
 		mpStatus: mpStatus,
 	}, nil
 }
@@ -220,27 +230,34 @@ func (c *MinipoolCommon) GetEffectiveDelegate(mc *multicall.MultiCaller) {
 // Check if a minipool exists
 func (c *MinipoolCommon) GetExists(mc *multicall.MultiCaller) {
 	// TODO: Is this really necessary?
-	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.Exists, "getMinipoolExists", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr, &c.Details.Exists, "getMinipoolExists", c.Details.Address)
 }
 
 // Get the minipool's pubkey
 func (c *MinipoolCommon) GetPubkey(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.Pubkey, "getMinipoolPubkey", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr, &c.Details.Pubkey, "getMinipoolPubkey", c.Details.Address)
 }
 
 // Get the minipool's 0x01-based withdrawal credentials
 func (c *MinipoolCommon) GetWithdrawalCredentials(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr, &c.Details.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Details.Address)
 }
 
 // Check if the minipool's RPL has been slashed
 func (c *MinipoolCommon) GetRplSlashed(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr, &c.Details.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Details.Address)
 }
 
 // Get the minipool's deposit type
 func (c *MinipoolCommon) GetDepositType(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr.Contract, &c.Details.DepositType.RawValue, "getMinipoolDepositType", c.Details.Address)
+	multicall.AddCall(mc, c.mpMgr, &c.Details.DepositType.RawValue, "getMinipoolDepositType", c.Details.Address)
+}
+
+// === MinipoolQueue ===
+
+// Get queue position of the minipool (-1 means not in the queue, otherwise 0-indexed).
+func (c *MinipoolCommon) GetQueuePosition(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.mpQueue, &c.Details.QueuePosition.RawValue, "getMinipoolPosition", c.Details.Address)
 }
 
 // Get the basic details

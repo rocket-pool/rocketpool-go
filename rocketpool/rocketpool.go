@@ -24,7 +24,7 @@ type RocketPool struct {
 	Client                   core.ExecutionClient
 	Storage                  *storage.Storage
 	MulticallAddress         *common.Address
-	BalanceBatcherAddress    *common.Address
+	BalanceBatcher           *multicall.BalanceBatcher
 	VersionManager           *VersionManager
 	ConcurrentCallLimit      int
 	AddressBatchSize         int
@@ -43,12 +43,18 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		return nil, fmt.Errorf("error creating rocket storage binding: %w", err)
 	}
 
+	// Create the balance batcher
+	balanceBatcher, err := multicall.NewBalanceBatcher(client, balanceBatcherAddress)
+	if err != nil {
+		return nil, fmt.Errorf("error creating balance batcher: %w", err)
+	}
+
 	// Create and return
 	rp := &RocketPool{
 		Client:                   client,
 		Storage:                  storage,
 		MulticallAddress:         &multicallAddress,
-		BalanceBatcherAddress:    &balanceBatcherAddress,
+		BalanceBatcher:           balanceBatcher,
 		ConcurrentCallLimit:      defaultConcurrentCallLimit,
 		AddressBatchSize:         defaultAddressBatchSize,
 		ContractVersionBatchSize: defaultContractVersionBatchSize,

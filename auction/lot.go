@@ -110,7 +110,7 @@ func (c *AuctionLot) GetLotTotalRplAmount(mc *multicall.MultiCaller, out **big.I
 }
 
 // Get the amount of RPL claimed for the lot
-func (c *AuctionLot) GetLotClaimedRPLAmount(mc *multicall.MultiCaller, out **big.Int) {
+func (c *AuctionLot) GetLotClaimedRplAmount(mc *multicall.MultiCaller, out **big.Int) {
 	multicall.AddCall(mc, c.mgr, out, "getLotClaimedRPLAmount", c.Index.RawValue)
 }
 
@@ -130,7 +130,7 @@ func (c *AuctionLot) GetLotIsCleared(mc *multicall.MultiCaller, out *bool) {
 }
 
 // Check whether RPL has been recovered by the lot
-func (c *AuctionLot) GetLotRPLRecovered(mc *multicall.MultiCaller, out *bool) {
+func (c *AuctionLot) GetLotRplRecovered(mc *multicall.MultiCaller, out *bool) {
 	multicall.AddCall(mc, c.mgr, out, "getLotRPLRecovered", c.Index.RawValue)
 }
 
