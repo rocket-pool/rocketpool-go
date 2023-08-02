@@ -136,6 +136,10 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 // === Calls ===
 // =============
 
+func (c *MinipoolCommon) GetContract() *core.Contract {
+	return c.Contract
+}
+
 // === Minipool ===
 
 // Get the minipool's penalty count

@@ -73,7 +73,7 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 
 	// Create the contract binding
 	contracts := &NetworkContracts{
-		RocketStorage: rp.RocketStorageContract,
+		RocketStorage: rp.Storage.Contract,
 		ElBlockNumber: opts.BlockNumber,
 	}
 
@@ -164,10 +164,10 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 	// Add the address and ABI getters to multicall
 	for i, wrapper := range wrappers {
 		// Add the address getter
-		contracts.Multicaller.AddCall(contracts.RocketStorage, &wrappers[i].address, "getAddress", [32]byte(crypto.Keccak256Hash([]byte("contract.address"), []byte(wrapper.name))))
+		multicall.AddCall(contracts.Multicaller, contracts.RocketStorage, &wrappers[i].address, "getAddress", [32]byte(crypto.Keccak256Hash([]byte("contract.address"), []byte(wrapper.name))))
 
 		// Add the ABI getter
-		contracts.Multicaller.AddCall(contracts.RocketStorage, &wrappers[i].abiEncoded, "getString", [32]byte(crypto.Keccak256Hash([]byte("contract.abi"), []byte(wrapper.name))))
+		multicall.AddCall(contracts.Multicaller, contracts.RocketStorage, &wrappers[i].abiEncoded, "getString", [32]byte(crypto.Keccak256Hash([]byte("contract.abi"), []byte(wrapper.name))))
 	}
 
 	// Run the multi-getter
@@ -179,7 +179,7 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 	// Postprocess the contracts
 	for i, wrapper := range wrappers {
 		// Decode the ABI
-		abi, err := rocketpool.DecodeAbi(wrapper.abiEncoded)
+		abi, err := core.DecodeAbi(wrapper.abiEncoded)
 		if err != nil {
 			return nil, fmt.Errorf("error decoding ABI for %s: %w", wrapper.name, err)
 		}
@@ -210,18 +210,25 @@ func (c *NetworkContracts) getCurrentVersion(rp *rocketpool.RocketPool) error {
 		BlockNumber: c.ElBlockNumber,
 	}
 
-	// Check for v1.2
-	nodeStakingVersion, err := rocketpool.GetContractVersion(rp, *c.RocketNodeStaking.Address, opts)
+	// Get the contract versions
+	var nodeStakingVersion uint8
+	var nodeMgrVersion uint8
+	err := rp.Query(func(mc *multicall.MultiCaller) error {
+		rocketpool.GetContractVersion(mc, &nodeStakingVersion, *c.RocketNodeStaking.Address)
+		rocketpool.GetContractVersion(mc, &nodeMgrVersion, *c.RocketNodeManager.Address)
+		return nil
+	}, opts)
 	if err != nil {
 		return fmt.Errorf("error checking node staking version: %w", err)
 	}
+
+	// Check for v1.2
 	if nodeStakingVersion > 3 {
 		c.Version, err = version.NewSemver("1.2.0")
 		return err
 	}
 
 	// Check for v1.1
-	nodeMgrVersion, err := rocketpool.GetContractVersion(rp, *c.RocketNodeManager.Address, opts)
 	if err != nil {
 		return fmt.Errorf("error checking node manager version: %w", err)
 	}

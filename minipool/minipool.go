@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
@@ -16,6 +17,7 @@ import (
 type Minipool interface {
 	QueryAllDetails(mc *multicall.MultiCaller)
 	GetMinipoolCommon() *MinipoolCommon
+	GetContract() *core.Contract
 }
 
 // ====================

@@ -71,11 +71,20 @@ func GetAllOracleDaoMemberDetails(rp *rocketpool.RocketPool, contracts *NetworkC
 
 // Get all Oracle DAO addresses
 func getOdaoAddresses(rp *rocketpool.RocketPool, contracts *NetworkContracts, opts *bind.CallOpts) ([]common.Address, error) {
+	mgr, err := trustednode.NewDaoNodeTrusted(rp)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get minipool count
-	memberCount, err := trustednode.GetMemberCount(rp, opts)
+	err = rp.Query(func(mc *multicall.MultiCaller) error {
+		mgr.GetMemberCount(mc)
+		return nil
+	}, opts)
 	if err != nil {
 		return []common.Address{}, err
 	}
+	memberCount := mgr.Details.MemberCount.Formatted()
 
 	// Sync
 	var wg errgroup.Group
@@ -98,7 +107,7 @@ func getOdaoAddresses(rp *rocketpool.RocketPool, contracts *NetworkContracts, op
 				return err
 			}
 			for j := i; j < max; j++ {
-				mc.AddCall(contracts.RocketDAONodeTrusted, &addresses[j], "getMemberAt", big.NewInt(int64(j)))
+				multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &addresses[j], "getMemberAt", big.NewInt(int64(j)))
 			}
 			_, err = mc.FlexibleCall(true, opts)
 			if err != nil {
@@ -169,14 +178,14 @@ func getOracleDaoDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts,
 // Add the Oracle DAO details getters to the multicaller
 func addOracleDaoMemberDetailsCalls(rp *rocketpool.RocketPool, contracts *NetworkContracts, mc *multicall.MultiCaller, details *OracleDaoMemberDetails, opts *bind.CallOpts) error {
 	address := details.Address
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.Exists, "getMemberIsValid", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.ID, "getMemberID", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.Url, "getMemberUrl", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.joinedTimeRaw, "getMemberJoinedTime", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.lastProposalTimeRaw, "getMemberLastProposalTime", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.RPLBondAmount, "getMemberRPLBondAmount", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.ReplacementAddress, "getMemberReplacedAddress", address)
-	mc.AddCall(contracts.RocketDAONodeTrusted, &details.IsChallenged, "getMemberIsChallenged", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.Exists, "getMemberIsValid", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.ID, "getMemberID", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.Url, "getMemberUrl", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.joinedTimeRaw, "getMemberJoinedTime", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.lastProposalTimeRaw, "getMemberLastProposalTime", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.RPLBondAmount, "getMemberRPLBondAmount", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.ReplacementAddress, "getMemberReplacedAddress", address)
+	multicall.AddCall(mc, contracts.RocketDAONodeTrusted, &details.IsChallenged, "getMemberIsChallenged", address)
 	return nil
 }
 
