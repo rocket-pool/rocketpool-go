@@ -148,10 +148,11 @@ func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client 
 	}
 
 	// Get the details
-	err := rp.Query(func(mc *multicall.MultiCaller) {
-		multicall.AddCall[string](mc, contract, &wrapper.Details.Name, "name")
-		multicall.AddCall[string](mc, contract, &wrapper.Details.Symbol, "symbol")
-		multicall.AddCall[uint8](mc, contract, &wrapper.Details.Decimals, "decimals")
+	err := rp.Query(func(mc *multicall.MultiCaller) error {
+		multicall.AddCall(mc, contract, &wrapper.Details.Name, "name")
+		multicall.AddCall(mc, contract, &wrapper.Details.Symbol, "symbol")
+		multicall.AddCall(mc, contract, &wrapper.Details.Decimals, "decimals")
+		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting ERC-20 details of token %s: %w", address.Hex(), err)

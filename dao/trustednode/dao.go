@@ -12,12 +12,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
-const (
-	// Settings
-	memberAddressBatchSize = 50
-	memberDetailsBatchSize = 20
-)
-
 // ===============
 // === Structs ===
 // ===============
@@ -74,27 +68,6 @@ func (c *DaoNodeTrusted) GetAllDetails(mc *multicall.MultiCaller) {
 	c.GetMinimumMemberCount(mc)
 }
 
-// Get the list of Oracle DAO member addresses
-func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallOpts) ([]*common.Address, error) {
-	// Run the multicall query for each address
-	addresses, err := rocketpool.BatchQuery[common.Address](c.rp,
-		memberCount,
-		memberAddressBatchSize,
-		func(mc *multicall.MultiCaller, index uint64) (*common.Address, error) {
-			address := new(common.Address)
-			multicall.AddCall(mc, c.contract, address, "getMemberAt", big.NewInt(int64(index)))
-			return address, nil
-		},
-		opts,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
-	}
-
-	// Return
-	return addresses, nil
-}
-
 // ====================
 // === Transactions ===
 // ====================
@@ -123,42 +96,32 @@ func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName rocke
 	return core.NewTransactionInfo(c.contract, "bootstrapUpgrade", opts, upgradeType, contractName, compressedAbi, contractAddress)
 }
 
-// ===================
-// === Sub-Getters ===
-// ===================
+// =================
+// === Addresses ===
+// =================
 
-// Get a member's details
-func (c *DaoNodeTrusted) GetMemberAt(index uint64, address common.Address, opts *bind.CallOpts) (*OracleDaoMember, error) {
-	// Create the member and get details via a multicall query
-	member := NewOracleDaoMember(c, index, address)
-	err := c.rp.Query(func(mc *multicall.MultiCaller) {
-		member.GetAllDetails(mc)
-	}, opts)
-	if err != nil {
-		return nil, fmt.Errorf("error getting Oracle DAO member %d: %w", index, err)
-	}
-
-	// Return
-	return member, nil
+// Get an Oracle DAO member address by index
+func (c *DaoNodeTrusted) GetMemberAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
+	multicall.AddCall(mc, c.contract, address_Out, "getMemberAt", big.NewInt(int64(index)))
 }
 
-// Get the details for all members
-func (c *DaoNodeTrusted) GetAllMembers(addresses []*common.Address, opts *bind.CallOpts) ([]*OracleDaoMember, error) {
-	// Run the multicall query for each lot
-	members, err := rocketpool.BatchQuery[OracleDaoMember](c.rp,
-		uint64(len(addresses)),
-		memberDetailsBatchSize,
-		func(mc *multicall.MultiCaller, index uint64) (*OracleDaoMember, error) {
-			member := NewOracleDaoMember(c, index, *addresses[index])
-			member.GetAllDetails(mc)
-			return member, nil
+// Get the list of Oracle DAO member addresses.
+// Use GetMemberCount() for the memberCount parameter.
+func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+	addresses := make([]common.Address, memberCount)
+
+	// Run the multicall query for each address
+	err := c.rp.BatchQuery(int(memberCount), c.rp.AddressBatchSize,
+		func(mc *multicall.MultiCaller, index int) error {
+			c.GetMemberAddress(mc, &addresses[index], uint64(index))
+			return nil
 		},
 		opts,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error getting all Oracle DAO member details: %w", err)
+		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
 
 	// Return
-	return members, nil
+	return addresses, nil
 }

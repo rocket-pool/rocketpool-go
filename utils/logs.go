@@ -28,8 +28,9 @@ func GetLogs(rp *rocketpool.RocketPool, addressFilter []common.Address, topicFil
 		var err error
 		deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
 		var fromBlock *big.Int
-		err = rp.Query(func(mc *multicall.MultiCaller) {
+		err = rp.Query(func(mc *multicall.MultiCaller) error {
 			rp.Storage.GetUint(mc, &fromBlock, deployBlockHash)
+			return nil
 		}, nil)
 		if err != nil {
 			return nil, err

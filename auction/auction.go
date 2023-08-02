@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -94,74 +93,4 @@ func (c *AuctionManager) GetAllDetails(mc *multicall.MultiCaller) {
 // Get info for creating a new lot
 func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "createLot", opts)
-}
-
-// ===================
-// === Sub-Getters ===
-// ===================
-
-// Get a lot with details
-func (c *AuctionManager) GetLot(index uint64, opts *bind.CallOpts) (*AuctionLot, error) {
-	return c.getLotImpl(index, nil, opts)
-}
-
-// Get a lot with details and bids from the provided bidder
-func (c *AuctionManager) GetLotWithBids(index uint64, bidder common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
-	return c.getLotImpl(index, &bidder, opts)
-}
-
-// Get lot implementation
-func (c *AuctionManager) getLotImpl(index uint64, bidder *common.Address, opts *bind.CallOpts) (*AuctionLot, error) {
-	// Create the lot and get details via a multicall query
-	lot := NewAuctionLot(c, index)
-	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
-		if bidder != nil {
-			lot.GetAllDetailsWithBidAmount(mc, *bidder)
-		} else {
-			lot.GetAllDetails(mc)
-		}
-		return nil
-	}, opts)
-	if err != nil {
-		return nil, fmt.Errorf("error getting lot: %w", err)
-	}
-
-	// Return
-	return lot, nil
-}
-
-// Get all lot details
-func (c *AuctionManager) GetLots(lotCount uint64, opts *bind.CallOpts) ([]*AuctionLot, error) {
-	return c.getLotsImpl(lotCount, nil, opts)
-}
-
-// Get all lot details with bids from an address
-func (c *AuctionManager) GetLotsWithBids(lotCount uint64, bidder common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
-	return c.getLotsImpl(lotCount, &bidder, opts)
-}
-
-// Get lots implementation
-func (c *AuctionManager) getLotsImpl(lotCount uint64, bidder *common.Address, opts *bind.CallOpts) ([]*AuctionLot, error) {
-	lots := make([]*AuctionLot, lotCount)
-
-	// Run the multicall query for each lot
-	err := c.rp.BatchQuery(int(lotCount), int(lotDetailsBatchSize),
-		func(mc *multicall.MultiCaller, index int) error {
-			lot := NewAuctionLot(c, uint64(index))
-			lots[index] = lot
-			if bidder != nil {
-				lot.GetAllDetailsWithBidAmount(mc, *bidder)
-			} else {
-				lot.GetAllDetails(mc)
-			}
-			return nil
-		},
-		opts,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error getting lot details: %w", err)
-	}
-
-	// Return
-	return lots, nil
 }

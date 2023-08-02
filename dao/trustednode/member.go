@@ -21,7 +21,6 @@ type OracleDaoMember struct {
 
 // Details for Oracle DAO members
 type OracleDaoMemberDetails struct {
-	Index                  core.Parameter[uint64]    `json:"index"`
 	Address                common.Address            `json:"address"`
 	Exists                 bool                      `json:"exists"`
 	ID                     string                    `json:"id"`
@@ -42,12 +41,9 @@ type OracleDaoMemberDetails struct {
 // ====================
 
 // Creates a new OracleDaoMember instance
-func NewOracleDaoMember(mgr *DaoNodeTrusted, index uint64, address common.Address) *OracleDaoMember {
+func NewOracleDaoMember(mgr *DaoNodeTrusted, address common.Address) *OracleDaoMember {
 	return &OracleDaoMember{
 		Details: OracleDaoMemberDetails{
-			Index: core.Parameter[uint64]{
-				RawValue: big.NewInt(int64(index)),
-			},
 			Address: address,
 		},
 		mgr: mgr,
