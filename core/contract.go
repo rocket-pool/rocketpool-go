@@ -14,7 +14,7 @@ import (
 const ()
 
 type CallReturnType interface {
-	*big.Int | uint8 | bool | string | common.Address | common.Hash | types.ValidatorPubkey
+	*big.Int | uint8 | bool | string | common.Address | common.Hash | types.ValidatorPubkey | []byte
 }
 
 type FormattedType interface {
@@ -22,7 +22,7 @@ type FormattedType interface {
 }
 
 type FormattedUint8Type interface {
-	types.MinipoolStatus | types.MinipoolDeposit
+	types.MinipoolStatus | types.MinipoolDeposit | types.ProposalState
 }
 
 // Contract type wraps go-ethereum bound contract

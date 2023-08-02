@@ -2,19 +2,31 @@ package trustednode
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rocket-pool/rocketpool-go/network"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 	"gonum.org/v1/gonum/mathext"
 )
 
 // ===============
 // === Structs ===
 // ===============
+
+type TrustedNodeParticipationCalculator struct {
+	rp   *rocketpool.RocketPool
+	dnt  *DaoNodeTrusted
+	dnta *DaoNodeTrustedActions
+	dpsn *protocol.DaoProtocolSettingsNetwork
+	nb   *network.NetworkBalances
+	np   *network.NetworkPrices
+}
 
 // The results of the trusted node participation calculation
 type TrustedNodeParticipation struct {
@@ -27,84 +39,144 @@ type TrustedNodeParticipation struct {
 	Participation       map[common.Address][]bool
 }
 
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new TrustedNodeParticipationCalculator
+func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedNodeParticipationCalculator, error) {
+	dnt, err := NewDaoNodeTrusted(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DaoNodeTrusted binding: %w", err)
+	}
+
+	dnta, err := NewDaoNodeTrustedActions(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DaoNodeTrustedActions binding: %w", err)
+	}
+
+	dpsn, err := protocol.NewDaoProtocolSettingsNetwork(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DaoProtocolSettingsNetwork binding: %w", err)
+	}
+
+	nb, err := network.NewNetworkBalances(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting NetworkBalances binding: %w", err)
+	}
+
+	np, err := network.NewNetworkPrices(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error getting NetworkPrices binding: %w", err)
+	}
+
+	return &TrustedNodeParticipationCalculator{
+		rp:   rp,
+		dnt:  dnt,
+		dnta: dnta,
+		dpsn: dpsn,
+		nb:   nb,
+		np:   np,
+	}, nil
+}
+
 // =============
 // === Utils ===
 // =============
 
 // Calculates the participation rate of every trusted node on price submission since the last block that member count changed
-func CalculateTrustedNodePricesParticipation(tn *DaoNodeTrusted, intervalSize *big.Int, opts *bind.CallOpts) (*TrustedNodeParticipation, error) {
-	// Get the update frequency
-	updatePricesFrequency, err := protocol.GetSubmitPricesFrequency(tn.rp, opts)
-	if err != nil {
-		return nil, err
+func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipation(intervalSize *big.Int, opts *bind.CallOpts) (*TrustedNodeParticipation, error) {
+	// Create an opts with the current block if not specified
+	if opts == nil {
+		currentBlockNumber, err := c.rp.Client.BlockNumber(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error getting current block number: %w", err)
+		}
+
+		opts = &bind.CallOpts{
+			BlockNumber: big.NewInt(0).SetUint64(currentBlockNumber),
+		}
 	}
-	// Get the current block
-	currentBlock, err := tn.rp.Client.HeaderByNumber(context.Background(), nil)
+	blockNumber := opts.BlockNumber.Uint64()
+
+	// Get the price frequency and member count
+	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
+		c.dpsn.GetSubmitPricesFrequency(mc)
+		c.dnt.GetMemberCount(mc)
+		return nil
+	}, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	currentBlockNumber := currentBlock.Number.Uint64()
+	updatePricesFrequency := c.dpsn.Details.SubmitPricesFrequency.Formatted()
+	memberCount := c.dnt.Details.MemberCount.Formatted()
+
 	// Get the block of the most recent member join (limiting to 50 intervals)
-	minBlock := (currentBlockNumber/updatePricesFrequency - 50) * updatePricesFrequency
-	latestMemberCountChangedBlock, err := getLatestMemberCountChangedBlock(rp, minBlock, intervalSize, opts)
+	minBlock := (blockNumber/updatePricesFrequency - 50) * updatePricesFrequency
+	latestMemberCountChangedBlock, err := c.dnta.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
-	// Get the number of current members
-	memberCount, err := trustednode.GetMemberCount(rp, nil)
-	if err != nil {
-		return nil, err
-	}
+
 	// Start block is the first interval after the latest join
 	startBlock := (latestMemberCountChangedBlock/updatePricesFrequency + 1) * updatePricesFrequency
 	// The number of members that have to submit each interval
 	consensus := math.Floor(float64(memberCount)/2 + 1)
+
 	// Check if any intervals have passed
 	intervalsPassed := uint64(0)
-	if currentBlockNumber > startBlock {
+	if blockNumber > startBlock {
 		// The number of intervals passed
-		intervalsPassed = (currentBlockNumber-startBlock)/updatePricesFrequency + 1
+		intervalsPassed = (blockNumber-startBlock)/updatePricesFrequency + 1
 	}
+
 	// How many submissions would we expect per member given a random submission
 	expected := float64(intervalsPassed) * consensus / float64(memberCount)
+
 	// Get trusted members
-	members, err := trustednode.GetMembers(rp, nil)
+	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
+
 	// Construct the epoch map
 	participationTable := make(map[common.Address][]bool)
+
 	// Iterate members and sum chi-square
 	submissions := make(map[common.Address]float64)
 	chi := float64(0)
 	for _, member := range members {
-		participationTable[member.Address] = make([]bool, intervalsPassed)
+		participationTable[member] = make([]bool, intervalsPassed)
 		actual := 0
 		if intervalsPassed > 0 {
-			blocks, err := GetPricesSubmissions(rp, member.Address, startBlock, intervalSize, opts)
+			blocks, err := c.np.GetPricesSubmissions(member, startBlock, intervalSize, opts)
 			if err != nil {
 				return nil, err
 			}
 			actual = len(*blocks)
 			delta := float64(actual) - expected
 			chi += (delta * delta) / expected
+
 			// Add to participation table
 			for _, block := range *blocks {
 				// Ignore out of step updates
 				if block%updatePricesFrequency == 0 {
 					index := block/updatePricesFrequency - startBlock/updatePricesFrequency
-					participationTable[member.Address][index] = true
+					participationTable[member][index] = true
 				}
 			}
 		}
+
 		// Save actual submission
-		submissions[member.Address] = float64(actual)
+		submissions[member] = float64(actual)
 	}
+
 	// Calculate inverse cumulative density function with members-1 DoF
 	probability := float64(1)
 	if intervalsPassed > 0 {
 		probability = 1 - mathext.GammaIncReg(float64(len(members)-1)/2, chi/2)
 	}
+
 	// Construct return value
 	participation := TrustedNodeParticipation{
 		Probability:         probability,
@@ -119,79 +191,99 @@ func CalculateTrustedNodePricesParticipation(tn *DaoNodeTrusted, intervalSize *b
 }
 
 // Calculates the participation rate of every trusted node on balance submission since the last block that member count changed
-func CalculateTrustedNodeBalancesParticipation(rp *rocketpool.RocketPool, intervalSize *big.Int, opts *bind.CallOpts) (*TrustedNodeParticipation, error) {
-	// Get the update frequency
-	updateBalancesFrequency, err := protocol.GetSubmitBalancesFrequency(rp, opts)
-	if err != nil {
-		return nil, err
+func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesParticipation(intervalSize *big.Int, opts *bind.CallOpts) (*TrustedNodeParticipation, error) {
+	// Create an opts with the current block if not specified
+	if opts == nil {
+		currentBlockNumber, err := c.rp.Client.BlockNumber(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error getting current block number: %w", err)
+		}
+
+		opts = &bind.CallOpts{
+			BlockNumber: big.NewInt(0).SetUint64(currentBlockNumber),
+		}
 	}
-	// Get the current block
-	currentBlock, err := rp.Client.HeaderByNumber(context.Background(), nil)
+	blockNumber := opts.BlockNumber.Uint64()
+
+	// Get the balance frequency and member count
+	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
+		c.dpsn.GetSubmitBalancesFrequency(mc)
+		c.dnt.GetMemberCount(mc)
+		return nil
+	}, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	currentBlockNumber := currentBlock.Number.Uint64()
+	updateBalancesFrequency := c.dpsn.Details.SubmitBalancesFrequency.Formatted()
+	memberCount := c.dnt.Details.MemberCount.Formatted()
+
 	// Get the block of the most recent member join (limiting to 50 intervals)
-	minBlock := (currentBlockNumber/updateBalancesFrequency - 50) * updateBalancesFrequency
-	latestMemberCountChangedBlock, err := getLatestMemberCountChangedBlock(rp, minBlock, intervalSize, opts)
+	minBlock := (blockNumber/updateBalancesFrequency - 50) * updateBalancesFrequency
+	latestMemberCountChangedBlock, err := c.dnta.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
-	// Get the number of current members
-	memberCount, err := trustednode.GetMemberCount(rp, nil)
-	if err != nil {
-		return nil, err
-	}
+
 	// Start block is the first interval after the latest join
 	startBlock := (latestMemberCountChangedBlock/updateBalancesFrequency + 1) * updateBalancesFrequency
+
 	// The number of members that have to submit each interval
 	consensus := math.Floor(float64(memberCount)/2 + 1)
+
 	// Check if any intervals have passed
 	intervalsPassed := uint64(0)
-	if currentBlockNumber > startBlock {
+	if blockNumber > startBlock {
 		// The number of intervals passed
-		intervalsPassed = (currentBlockNumber-startBlock)/updateBalancesFrequency + 1
+		intervalsPassed = (blockNumber-startBlock)/updateBalancesFrequency + 1
 	}
+
 	// How many submissions would we expect per member given a random submission
 	expected := float64(intervalsPassed) * consensus / float64(memberCount)
+
 	// Get trusted members
-	members, err := trustednode.GetMembers(rp, nil)
+	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
+
 	// Construct the epoch map
 	participationTable := make(map[common.Address][]bool)
+
 	// Iterate members and sum chi-square
 	submissions := make(map[common.Address]float64)
 	chi := float64(0)
 	for _, member := range members {
-		participationTable[member.Address] = make([]bool, intervalsPassed)
+		participationTable[member] = make([]bool, intervalsPassed)
 		actual := 0
 		if intervalsPassed > 0 {
-			blocks, err := GetBalancesSubmissions(rp, member.Address, startBlock, intervalSize, opts)
+			blocks, err := c.nb.GetBalancesSubmissions(member, startBlock, intervalSize, opts)
 			if err != nil {
 				return nil, err
 			}
 			actual = len(*blocks)
 			delta := float64(actual) - expected
 			chi += (delta * delta) / expected
+
 			// Add to participation table
 			for _, block := range *blocks {
 				// Ignore out of step updates
 				if block%updateBalancesFrequency == 0 {
 					index := block/updateBalancesFrequency - startBlock/updateBalancesFrequency
-					participationTable[member.Address][index] = true
+					participationTable[member][index] = true
 				}
 			}
 		}
+
 		// Save actual submission
-		submissions[member.Address] = float64(actual)
+		submissions[member] = float64(actual)
 	}
+
 	// Calculate inverse cumulative density function with members-1 DoF
 	probability := float64(1)
 	if intervalsPassed > 0 {
 		probability = 1 - mathext.GammaIncReg(float64(len(members)-1)/2, chi/2)
 	}
+
 	// Construct return value
 	participation := TrustedNodeParticipation{
 		Probability:         probability,
@@ -206,33 +298,49 @@ func CalculateTrustedNodeBalancesParticipation(rp *rocketpool.RocketPool, interv
 }
 
 // Returns a mapping of members and whether they have submitted balances this interval or not
-func GetTrustedNodeLatestBalancesParticipation(rp *rocketpool.RocketPool, intervalSize *big.Int, opts *bind.CallOpts) (map[common.Address]bool, error) {
-	// Get the update frequency
-	updateBalancesFrequency, err := protocol.GetSubmitBalancesFrequency(rp, opts)
-	if err != nil {
-		return nil, err
+func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestBalancesParticipation(rp *rocketpool.RocketPool, intervalSize *big.Int, opts *bind.CallOpts) (map[common.Address]bool, error) {
+	// Create an opts with the current block if not specified
+	if opts == nil {
+		currentBlockNumber, err := c.rp.Client.BlockNumber(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error getting current block number: %w", err)
+		}
+
+		opts = &bind.CallOpts{
+			BlockNumber: big.NewInt(0).SetUint64(currentBlockNumber),
+		}
 	}
-	// Get the current block
-	currentBlock, err := rp.Client.HeaderByNumber(context.Background(), nil)
+	blockNumber := opts.BlockNumber.Uint64()
+
+	// Get the price frequency and member count
+	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
+		c.dpsn.GetSubmitBalancesFrequency(mc)
+		c.dnt.GetMemberCount(mc)
+		return nil
+	}, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	currentBlockNumber := currentBlock.Number.Uint64()
+	updateBalancesFrequency := c.dpsn.Details.SubmitBalancesFrequency.Formatted()
+	memberCount := c.dnt.Details.MemberCount.Formatted()
+
 	// Get trusted members
-	members, err := trustednode.GetMembers(rp, nil)
+	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
+
 	// Get submission within the current interval
-	fromBlock := currentBlockNumber / updateBalancesFrequency * updateBalancesFrequency
-	submissions, err := GetLatestBalancesSubmissions(rp, fromBlock, intervalSize, opts)
+	fromBlock := blockNumber / updateBalancesFrequency * updateBalancesFrequency
+	submissions, err := c.nb.GetLatestBalancesSubmissions(fromBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
+
 	// Build and return result table
 	participationTable := make(map[common.Address]bool)
 	for _, member := range members {
-		participationTable[member.Address] = false
+		participationTable[member] = false
 	}
 	for _, submission := range submissions {
 		participationTable[submission] = true
@@ -241,33 +349,49 @@ func GetTrustedNodeLatestBalancesParticipation(rp *rocketpool.RocketPool, interv
 }
 
 // Returns a mapping of members and whether they have submitted prices this interval or not
-func GetTrustedNodeLatestPricesParticipation(rp *rocketpool.RocketPool, intervalSize *big.Int, opts *bind.CallOpts) (map[common.Address]bool, error) {
-	// Get the update frequency
-	updatePricesFrequency, err := protocol.GetSubmitPricesFrequency(rp, opts)
-	if err != nil {
-		return nil, err
+func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestPricesParticipation(rp *rocketpool.RocketPool, intervalSize *big.Int, opts *bind.CallOpts) (map[common.Address]bool, error) {
+	// Create an opts with the current block if not specified
+	if opts == nil {
+		currentBlockNumber, err := c.rp.Client.BlockNumber(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error getting current block number: %w", err)
+		}
+
+		opts = &bind.CallOpts{
+			BlockNumber: big.NewInt(0).SetUint64(currentBlockNumber),
+		}
 	}
-	// Get the current block
-	currentBlock, err := rp.Client.HeaderByNumber(context.Background(), nil)
+	blockNumber := opts.BlockNumber.Uint64()
+
+	// Get the price frequency and member count
+	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
+		c.dpsn.GetSubmitPricesFrequency(mc)
+		c.dnt.GetMemberCount(mc)
+		return nil
+	}, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	currentBlockNumber := currentBlock.Number.Uint64()
+	updatePricesFrequency := c.dpsn.Details.SubmitPricesFrequency.Formatted()
+	memberCount := c.dnt.Details.MemberCount.Formatted()
+
 	// Get trusted members
-	members, err := trustednode.GetMembers(rp, nil)
+	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
+
 	// Get submission within the current interval
-	fromBlock := currentBlockNumber / updatePricesFrequency * updatePricesFrequency
-	submissions, err := GetLatestPricesSubmissions(rp, fromBlock, intervalSize, opts)
+	fromBlock := blockNumber / updatePricesFrequency * updatePricesFrequency
+	submissions, err := c.np.GetLatestPricesSubmissions(fromBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
+
 	// Build and return result table
 	participationTable := make(map[common.Address]bool)
 	for _, member := range members {
-		participationTable[member.Address] = false
+		participationTable[member] = false
 	}
 	for _, submission := range submissions {
 		participationTable[submission] = true

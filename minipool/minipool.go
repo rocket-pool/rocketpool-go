@@ -34,10 +34,6 @@ func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, v
 	}
 }
 
-// ================
-// === Creators ===
-// ================
-
 // Create a minipool binding from its address
 func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address, includeDetails bool, opts *bind.CallOpts) (Minipool, error) {
 	// Get the minipool version
