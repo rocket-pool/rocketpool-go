@@ -284,12 +284,12 @@ func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.T
 // === Storage ===
 
 // Get info for setting the node's withdrawal address
-func (c *Node) SetWithdrawalAddress(rplAmount *big.Int, withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *Node) SetWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.storage, "setWithdrawalAddress", opts, c.Details.Address, withdrawalAddress, confirm)
 }
 
 // Get info for confirming the node's withdrawal address
-func (c *Node) ConfirmWithdrawalAddress(nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *Node) ConfirmWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.storage, "confirmWithdrawalAddress", opts, c.Details.Address)
 }
 
