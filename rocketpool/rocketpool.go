@@ -58,6 +58,8 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		ConcurrentCallLimit:      defaultConcurrentCallLimit,
 		AddressBatchSize:         defaultAddressBatchSize,
 		ContractVersionBatchSize: defaultContractVersionBatchSize,
+		contracts:                map[ContractName]*core.Contract{},
+		instanceAbis:             map[ContractName]*abi.ABI{},
 	}
 	rp.VersionManager = NewVersionManager(rp)
 
@@ -92,29 +94,27 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 		// Make the contract binding
 		contract := &core.Contract{
 			Contract: bind.NewBoundContract(addresses[i], *abi, rp.Client, rp.Client, rp.Client),
+			Address:  &addresses[i],
+			ABI:      abi,
+			Client:   rp.Client,
 		}
 		rp.contracts[contractName] = contract
 	}
 
 	// Get the versions of each contract
 	emptyAddress := common.Address{}
-	versions := make([]uint8, len(contractNames))
 	err = rp.Query(func(mc *multicall.MultiCaller) error {
-		for i, contractName := range contractNames {
-			address := addresses[i]
+		for _, contractName := range contractNames {
+			contract := rp.contracts[contractName]
+			address := *contract.Address
 			if address != emptyAddress {
-				multicall.AddCall[uint8](mc, rp.contracts[contractName], &versions[i], "version") // TODO: use the contract version getter once it's ready
+				multicall.AddCall[uint8](mc, contract, &contract.Version, "version") // TODO: use the contract version getter once it's ready
 			}
 		}
 		return nil
 	}, opts)
 	if err != nil {
 		return fmt.Errorf("error getting contract versions: %w", err)
-	}
-
-	// Assign the contract versions
-	for i, contractName := range contractNames {
-		rp.contracts[contractName].Version = versions[i]
 	}
 
 	return nil

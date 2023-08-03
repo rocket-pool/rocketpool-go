@@ -45,9 +45,12 @@ func GetContractVersion(mc *multicall.MultiCaller, version_Out *uint8, address c
 	// Get the contract version
 	contract := &core.Contract{
 		Contract: bind.NewBoundContract(address, *versionAbi, nil, nil, nil),
+		Address:  &address,
+		ABI:      versionAbi,
+		Version:  0,
+		Client:   nil,
 	}
-	version := new(uint8)
-	multicall.AddCall(mc, contract, version, "version")
+	multicall.AddCall(mc, contract, version_Out, "version")
 	return nil
 }
 

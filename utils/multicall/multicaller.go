@@ -7,6 +7,7 @@ package multicall
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum"
@@ -86,7 +87,11 @@ func (caller *MultiCaller) Execute(requireSuccess bool, opts *bind.CallOpts) ([]
 		return nil, err
 	}
 
-	resp, err := caller.Client.CallContract(context.Background(), ethereum.CallMsg{To: &caller.ContractAddress, Data: callData}, opts.BlockNumber)
+	var blockNumber *big.Int
+	if opts != nil {
+		blockNumber = opts.BlockNumber
+	}
+	resp, err := caller.Client.CallContract(context.Background(), ethereum.CallMsg{To: &caller.ContractAddress, Data: callData}, blockNumber)
 	if err != nil {
 		return nil, err
 	}

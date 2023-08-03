@@ -64,7 +64,11 @@ func (b *BalanceBatcher) GetEthBalances(addresses []common.Address, opts *bind.C
 				return fmt.Errorf("error creating calldata for balances: %w", err)
 			}
 
-			response, err := b.Client.CallContract(context.Background(), ethereum.CallMsg{To: &b.ContractAddress, Data: callData}, opts.BlockNumber)
+			var blockNumber *big.Int
+			if opts != nil {
+				blockNumber = opts.BlockNumber
+			}
+			response, err := b.Client.CallContract(context.Background(), ethereum.CallMsg{To: &b.ContractAddress, Data: callData}, blockNumber)
 			if err != nil {
 				return fmt.Errorf("error calling balances: %w", err)
 			}

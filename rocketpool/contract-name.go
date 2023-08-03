@@ -68,6 +68,9 @@ const (
 // List of all singleton contract names
 var ContractNames = []ContractName{
 	ContractName_RocketAuctionManager,
+
+	ContractName_RocketDAOProposal,
+
 	ContractName_RocketDAOProtocol,
 	ContractName_RocketDAOProtocolSettingsAuction,
 	ContractName_RocketDAOProtocolSettingsDeposit,
@@ -76,6 +79,7 @@ var ContractNames = []ContractName{
 	ContractName_RocketDAOProtocolSettingsNetwork,
 	ContractName_RocketDAOProtocolSettingsNode,
 	ContractName_RocketDAOProtocolSettingsRewards,
+
 	ContractName_RocketDAONodeTrustedActions,
 	ContractName_RocketDAONodeTrusted,
 	ContractName_RocketDAONodeTrustedProposals,
@@ -83,18 +87,31 @@ var ContractNames = []ContractName{
 	ContractName_RocketDAONodeTrustedSettingsMinipool,
 	ContractName_RocketDAONodeTrustedSettingsProposals,
 	ContractName_RocketDAONodeTrustedSettingsRewards,
+
 	ContractName_RocketDepositPool,
+
+	ContractName_RocketMinipoolBondReducer,
+	ContractName_RocketMinipoolDelegate,
+	ContractName_RocketMinipoolManager,
+	ContractName_RocketMinipoolFactory,
+	ContractName_RocketMinipoolQueue,
+	ContractName_RocketMinipoolStatus,
+
 	ContractName_RocketNetworkBalances,
 	ContractName_RocketNetworkFees,
 	ContractName_RocketNetworkPenalties,
 	ContractName_RocketNetworkPrices,
+
 	ContractName_RocketNodeDeposit,
 	ContractName_RocketNodeDistributorFactory,
 	ContractName_RocketNodeManager,
 	ContractName_RocketNodeStaking,
+
 	ContractName_RocketMerkleDistributorMainnet,
 	ContractName_RocketRewardsPool,
+
 	ContractName_RocketStorage,
+
 	ContractName_RocketTokenRETH,
 	ContractName_RocketTokenRPLFixedSupply,
 	ContractName_RocketTokenRPL,
