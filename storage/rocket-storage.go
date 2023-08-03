@@ -69,27 +69,3 @@ func (c *Storage) GetAbi(mc *multicall.MultiCaller, abiEncoded_Out *string, cont
 	key := crypto.Keccak256Hash([]byte("contract.abi"), []byte(contractName))
 	multicall.AddCall(mc, c.Contract, abiEncoded_Out, "getString", key)
 }
-
-// Get a node's withdrawal address
-func (c *Storage) GetNodeWithdrawalAddress(mc *multicall.MultiCaller, result_Out *common.Address, nodeAddress common.Address) {
-	multicall.AddCall(mc, c.Contract, result_Out, "getNodeWithdrawalAddress", nodeAddress)
-}
-
-// Get a node's pending withdrawal address
-func (c *Storage) GetNodePendingWithdrawalAddress(mc *multicall.MultiCaller, result_Out *common.Address, nodeAddress common.Address) {
-	multicall.AddCall(mc, c.Contract, result_Out, "getNodePendingWithdrawalAddress", nodeAddress)
-}
-
-// ====================
-// === Transactions ===
-// ====================
-
-// Get info for setting a node's withdrawal address
-func (c *Storage) SetWithdrawalAddress(nodeAddress common.Address, withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "setWithdrawalAddress", opts, nodeAddress, withdrawalAddress, confirm)
-}
-
-// Get info for confirming a node's withdrawal address
-func (c *Storage) ConfirmWithdrawalAddress(nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "confirmWithdrawalAddress", opts, nodeAddress)
-}

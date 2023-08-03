@@ -24,6 +24,7 @@ type Node struct {
 	nodeStaking *core.Contract
 	mpFactory   *core.Contract
 	mpMgr       *core.Contract
+	storage     *core.Contract
 }
 
 // Details for a Rocket Pool Node
@@ -53,6 +54,10 @@ type NodeDetails struct {
 	ActiveMinipoolCount     core.Parameter[uint64] `json:"activeMinipoolCount"`
 	FinalisedMinipoolCount  core.Parameter[uint64] `json:"finalisedMinipoolCount"`
 	ValidatingMinipoolCount core.Parameter[uint64] `json:"validatingMinipoolCount"`
+
+	// Storage
+	WithdrawalAddress        common.Address `json:"withdrawalAddress"`
+	PendingWithdrawalAddress common.Address `json:"pendingWithdrawalAddress"`
 }
 
 // ====================
@@ -87,6 +92,7 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		nodeStaking: nodeStaking,
 		mpFactory:   minipoolFactory,
 		mpMgr:       minipoolManager,
+		storage:     rp.Storage.Contract,
 	}, nil
 }
 
@@ -175,27 +181,6 @@ func (c *Node) GetEthMatchedLimit(mc *multicall.MultiCaller) {
 
 // === MinipoolManager ===
 
-// Get all basic details
-func (c *Node) GetBasicDetails(mc *multicall.MultiCaller) {
-	c.GetExists(mc)
-	c.GetRegistrationTime(mc)
-	c.GetTimezoneLocation(mc)
-	c.GetRewardNetwork(mc)
-	c.GetFeeDistributorInitialized(mc)
-	c.GetAverageFee(mc)
-	c.GetSmoothingPoolRegistrationState(mc)
-	c.GetSmoothingPoolRegistrationChanged(mc)
-	c.GetRplStake(mc)
-	c.GetEffectiveRplStake(mc)
-	c.GetMinimumRplStake(mc)
-	c.GetMaximumRplStake(mc)
-	c.GetRplStakedTime(mc)
-	c.GetEthMatched(mc)
-	c.GetEthMatchedLimit(mc)
-}
-
-// === MinipoolManager ===
-
 // Get the node's minipool count
 func (c *Node) GetMinipoolCount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.mpMgr, &c.Details.MinipoolCount.RawValue, "getNodeMinipoolCount", c.Details.Address)
@@ -216,9 +201,42 @@ func (c *Node) GetValidatingMinipoolCount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.mpMgr, &c.Details.ValidatingMinipoolCount.RawValue, "getNodeValidatingMinipoolCount", c.Details.Address)
 }
 
+// === Storage ===
+
+// Get the node's withdrawal address
+func (c *Node) GetWithdrawalAddress(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.storage, &c.Details.WithdrawalAddress, "getNodeWithdrawalAddress", c.Details.Address)
+}
+
+// Get the node's pending withdrawal address
+func (c *Node) GetPendingWithdrawalAddress(mc *multicall.MultiCaller) {
+	multicall.AddCall(mc, c.storage, &c.Details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", c.Details.Address)
+}
+
+// Get all basic details
+func (c *Node) GetBasicDetails(mc *multicall.MultiCaller) {
+	c.GetExists(mc)
+	c.GetRegistrationTime(mc)
+	c.GetTimezoneLocation(mc)
+	c.GetRewardNetwork(mc)
+	c.GetFeeDistributorInitialized(mc)
+	c.GetAverageFee(mc)
+	c.GetSmoothingPoolRegistrationState(mc)
+	c.GetSmoothingPoolRegistrationChanged(mc)
+	c.GetRplStake(mc)
+	c.GetEffectiveRplStake(mc)
+	c.GetMinimumRplStake(mc)
+	c.GetMaximumRplStake(mc)
+	c.GetRplStakedTime(mc)
+	c.GetEthMatched(mc)
+	c.GetEthMatchedLimit(mc)
+}
+
 // ====================
 // === Transactions ===
 // ====================
+
+// === NodeManager ===
 
 // Get info for registering a node
 func (c *Node) Register(timezoneLocation string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
@@ -261,6 +279,18 @@ func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *
 // Get info for withdrawing staked RPL
 func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.nodeMgr, "withdrawRPL", opts, rplAmount)
+}
+
+// === Storage ===
+
+// Get info for setting the node's withdrawal address
+func (c *Node) SetWithdrawalAddress(rplAmount *big.Int, withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.storage, "setWithdrawalAddress", opts, c.Details.Address, withdrawalAddress, confirm)
+}
+
+// Get info for confirming the node's withdrawal address
+func (c *Node) ConfirmWithdrawalAddress(nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.storage, "confirmWithdrawalAddress", opts, c.Details.Address)
 }
 
 // ===================
