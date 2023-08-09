@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
@@ -54,6 +55,46 @@ func NewDaoProposal(rp *rocketpool.RocketPool) (*DaoProposal, error) {
 // =============
 
 // Get the total number of DAO proposals
-func (c *DaoProposal) GetTotalRPLBalance(mc *multicall.MultiCaller) {
+func (c *DaoProposal) GetProposalCount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
+}
+
+// =============
+// === Utils ===
+// =============
+
+// Get all of the Protocol DAO proposals
+// Returns: Protocol DAO proposals, Oracle DAO proposals, error
+func (c *DaoProposal) GetProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts, proposalCount uint64) ([]*Proposal, []*Proposal, error) {
+	props := make([]*Proposal, proposalCount)
+
+	err := rp.Query(func(mc *multicall.MultiCaller) error {
+		for i := uint64(0); i < proposalCount; i++ {
+			prop, err := NewProposal(rp, i)
+			if err != nil {
+				return fmt.Errorf("error creating DAO proposal %d", i)
+			}
+			props[i] = prop
+			prop.GetAllDetails(mc)
+		}
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pDaoProps := []*Proposal{}
+	oDaoProps := []*Proposal{}
+	for _, prop := range props {
+		if prop.Details.DAO == string(rocketpool.ContractName_RocketDAOProtocolProposals) {
+			pDaoProps = append(pDaoProps, prop)
+		} else if prop.Details.DAO == string(rocketpool.ContractName_RocketDAONodeTrustedProposals) {
+			// oDAO
+			oDaoProps = append(oDaoProps, prop)
+		} else {
+			return nil, nil, fmt.Errorf("proposal %d has DAO [%s] which is not recognized", prop.Details.ID.Formatted(), prop.Details.DAO)
+		}
+	}
+
+	return pDaoProps, oDaoProps, nil
 }

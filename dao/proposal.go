@@ -145,6 +145,24 @@ func (c *Proposal) GetState(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.mgr, &c.Details.State.RawValue, "getState", c.Details.ID.RawValue)
 }
 
+// Get all of the proposal's details
+func (c *Proposal) GetAllDetails(mc *multicall.MultiCaller) {
+	c.GetDAO(mc)
+	c.GetProposerAddress(mc)
+	c.GetMessage(mc)
+	c.GetCreatedTime(mc)
+	c.GetStartTime(mc)
+	c.GetEndTime(mc)
+	c.GetExpiryTime(mc)
+	c.GetVotesRequired(mc)
+	c.GetVotesFor(mc)
+	c.GetVotesAgainst(mc)
+	c.GetIsCancelled(mc)
+	c.GetIsExecuted(mc)
+	c.GetPayload(mc)
+	c.GetState(mc)
+}
+
 // Check if a node has voted on the proposal
 func (c *Proposal) GetMemberHasVoted(mc *multicall.MultiCaller, out *bool, address common.Address) {
 	multicall.AddCall(mc, c.mgr, out, "getReceiptHasVoted", c.Details.ID.RawValue, address)

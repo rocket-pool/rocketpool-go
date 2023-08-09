@@ -177,6 +177,19 @@ func (rp *RocketPool) GetContract(contractName ContractName) (*core.Contract, er
 	return contract, nil
 }
 
+// Get several network contracts
+func (rp *RocketPool) GetContracts(contractNames ...ContractName) ([]*core.Contract, error) {
+	contracts := make([]*core.Contract, len(contractNames))
+	for i, contractName := range contractNames {
+		contract, exists := rp.contracts[contractName]
+		if !exists {
+			return nil, fmt.Errorf("contract %s has not been loaded yet", string(contractName))
+		}
+		contracts[i] = contract
+	}
+	return contracts, nil
+}
+
 // Create a binding for a network contract instance
 func (rp *RocketPool) MakeContract(contractName ContractName, address common.Address) (*core.Contract, error) {
 	abi, exists := rp.instanceAbis[contractName]

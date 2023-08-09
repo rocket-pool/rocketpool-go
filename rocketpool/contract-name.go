@@ -11,6 +11,7 @@ const (
 
 	// Protocol DAO
 	ContractName_RocketDAOProtocol                  ContractName = "rocketDAOProtocol"
+	ContractName_RocketDAOProtocolProposals         ContractName = "rocketDAOProtocolProposals"
 	ContractName_RocketDAOProtocolSettingsAuction   ContractName = "rocketDAOProtocolSettingsAuction"
 	ContractName_RocketDAOProtocolSettingsDeposit   ContractName = "rocketDAOProtocolSettingsDeposit"
 	ContractName_RocketDAOProtocolSettingsInflation ContractName = "rocketDAOProtocolSettingsInflation"
@@ -72,6 +73,7 @@ var ContractNames = []ContractName{
 	ContractName_RocketDAOProposal,
 
 	ContractName_RocketDAOProtocol,
+	ContractName_RocketDAOProtocolProposals,
 	ContractName_RocketDAOProtocolSettingsAuction,
 	ContractName_RocketDAOProtocolSettingsDeposit,
 	ContractName_RocketDAOProtocolSettingsInflation,
