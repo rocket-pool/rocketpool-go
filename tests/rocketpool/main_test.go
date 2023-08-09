@@ -1,37 +1,27 @@
 package rocketpool
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
-
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-
 	"github.com/rocket-pool/rocketpool-go/tests"
 )
 
 var (
-	client *ethclient.Client
-	rp     *rocketpool.RocketPool
+	mgr *tests.TestManager
+	rp  *rocketpool.RocketPool
 )
 
 func TestMain(m *testing.M) {
 	var err error
-
-	// Initialize eth client
-	client, err = ethclient.Dial(tests.Eth1ProviderAddress)
+	mgr, err = tests.NewTestManager()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("error getting test manager: %s", err.Error()))
 	}
-
-	// Initialize contract manager
-	rp, err = rocketpool.NewRocketPool(client, common.HexToAddress(tests.RocketStorageAddress))
-	if err != nil {
-		log.Fatal(err)
-	}
+	rp = mgr.RocketPool
 
 	// Run tests
 	os.Exit(m.Run())

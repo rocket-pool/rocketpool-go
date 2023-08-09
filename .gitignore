@@ -1,3 +1,6 @@
 .idea
 docs/*.md
 docs/docs
+tests/hardhat/node_modules/
+tests/hardhat/artifacts/
+tests/hardhat/cache/

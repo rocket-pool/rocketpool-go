@@ -1,28 +1,26 @@
-package accounts
+package tests
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/hex"
+	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-
-	"github.com/rocket-pool/rocketpool-go/tests"
 )
 
-// An account containing a keypair and address
+// An account containing an address and a transactor for it
 type Account struct {
-	PrivateKey *ecdsa.PrivateKey
 	Address    common.Address
+	Transactor *bind.TransactOpts
 }
 
 // Get an account by index
-func GetAccount(index uint8) (*Account, error) {
-
+func CreateAccountFromPrivateKey(privateKeyHex string, chainID *big.Int) (*Account, error) {
 	// Get private key data
-	privateKeyBytes, err := hex.DecodeString(tests.AccountPrivateKeys[index])
+	privateKeyBytes, err := hex.DecodeString(privateKeyHex)
 	if err != nil {
 		return nil, err
 	}
@@ -33,17 +31,16 @@ func GetAccount(index uint8) (*Account, error) {
 		return nil, err
 	}
 
+	// Get the account transactor
+	opts, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	if err != nil {
+		return nil, fmt.Errorf("error creating transactor: %w", err)
+	}
+	opts.Context = context.Background()
+
 	// Return account
 	return &Account{
-		PrivateKey: privateKey,
 		Address:    crypto.PubkeyToAddress(privateKey.PublicKey),
+		Transactor: opts,
 	}, nil
-
-}
-
-// Get a transactor for an account
-func (a *Account) GetTransactor() *bind.TransactOpts {
-	opts := bind.NewKeyedTransactor(a.PrivateKey)
-	opts.Context = context.Background()
-	return opts
 }

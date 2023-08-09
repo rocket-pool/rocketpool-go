@@ -1,47 +1,16 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# Exit if a command fails
-set -o errexit
-
-# Check commands
-if ! command -v git &> /dev/null; then
-    echo "git command required"; exit
-fi
-if ! command -v npm &> /dev/null; then
-    echo "npm command required"; exit
-fi
-if ! command -v go &> /dev/null; then
-    echo "go command required"; exit
-fi
+## Settings
+RP_REPO_URL="https://github.com/rocket-pool/rocketpool.git"
+RP_REPO_BRANCH="v1.2"
+HARDHAT_PORT=8545
 
 
-##
-# Config
-##
-
-
-# Rocket Pool settings
-rp_repo_url="git@ssh.dev.azure.com:v3/rocket-pool/RocketPool/rocketpool"
-rp_repo_branch="v1.1"
-
-# Dependencies
-rp_dependencies=(
-    "@openzeppelin/contracts@3.3.0"
-    "babel-polyfill@6.26.0"
-    "babel-register@6.26.0"
-    "ganache-cli@6.12.2"
-    "pako@1.0.11"
-    "truffle@5.1.66"
-    "truffle-contract@4.0.31"
-    "@truffle/hdwallet-provider@^1.2.3"
-    "web3@1.2.8"
-)
-
-# Ganache settings
-ganache_eth_balance="1000000"
-ganache_gas_limit="12450000"
-ganache_mnemonic="jungle neck govern chief unaware rubber frequent tissue service license alcohol velvet"
-ganache_port="8545"
+## Dependencies
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+source ~/.bashrc
+nvm install v20
+nvm use v20
 
 
 ##
@@ -53,44 +22,64 @@ ganache_port="8545"
 cleanup() {
 
     # Remove RP repo
-    if [ -d "$rp_tmp_path" ]; then
-        rm -rf "$rp_tmp_path"
+    if [ -d "$RP_TMP_PATH" ]; then
+        rm -rf "$RP_TMP_PATH"
     fi
 
     # Kill ganache instance
-    if [ -n "$ganache_pid" ] && ps -p "$ganache_pid" > /dev/null; then
-        kill -9 "$ganache_pid"
+    if [ -n "$HARDHAT_PID" ] && ps -p "$HARDHAT_PID" > /dev/null; then
+        kill -9 "$HARDHAT_PID"
     fi
 
 }
 
-# Clone Rocket Pool repo
-clone_rp() {
-    rp_tmp_path="$(mktemp -d)"
-    rp_path="$rp_tmp_path/rocketpool"
-    git clone "$rp_repo_url" -b "$rp_repo_branch" "$rp_path"
+# Clone the contract repos
+clone_repos() {
+    RP_TMP_PATH="$(mktemp -d)"
+    
+    RP_PATH="$RP_TMP_PATH/rocketpool"
+    git clone "$RP_REPO_URL" -b "$RP_REPO_BRANCH" "$RP_PATH"
+
+    MULTICALL_PATH="$RP_TMP_PATH/multicall"
+    git clone "$MULTICALL_REPO_URL" "$MULTICALL_PATH"
+
+    BALANCE_BATCHER_PATH="$RP_TMP_PATH/eth-balance-checker"
+    git clone "$BALANCE_BATCHER_REPO_URL" -b "$BALANCE_BATCHER_REPO_BRANCH" "$BALANCE_BATCHER_PATH"
 }
 
 # Install Rocket Pool dependencies
 install_rp_deps() {
-    cd "$rp_path"
-    rm package.json package-lock.json
-    npm install "${rp_dependencies[@]}"
+    cd "$RP_PATH"
+    npm install
     cd - > /dev/null
 }
 
-# Start ganache-cli instance
-start_ganache() {
-    cd "$rp_path"
-    node_modules/.bin/ganache-cli -e "$ganache_eth_balance" -l "$ganache_gas_limit" -m "$ganache_mnemonic" -p "$ganache_port" > /dev/null &
-    ganache_pid=$!
+# Start the hardhat EVM and server
+start_hardhat() {
+    cd "$RP_PATH"
+    npx hardhat node --port $HARDHAT_PORT > /dev/null &
+    HARDHAT_PID=$!
     cd - > /dev/null
 }
 
-# Migrate Rocket Pool contracts
-migrate_rp() {
-    cd "$rp_path"
-    node_modules/.bin/truffle migrate --network localhost
+# Deploy Rocket Pool contracts
+deploy_rp() {
+    cd "$RP_PATH"
+    npx hardhat run --network localhost scripts/deploy.js
+    cd - > /dev/null
+}
+
+# Install dependencies for the test lib
+install_test_deps() {
+    cd tests/hardhat
+    npm install
+    cd - > /dev/null
+}
+
+# Deploy other test contracts
+deploy_other() {
+    cd tests/hardhat
+    npx hardhat run --network localhost scripts/deploy.js
     cd - > /dev/null
 }
 
@@ -104,7 +93,6 @@ run_tests() {
 ##
 # Run
 ##
-
 
 # Clean up before exiting
 trap cleanup EXIT
@@ -121,21 +109,32 @@ echo "Installing Rocket Pool dependencies..."
 echo ""
 install_rp_deps
 
-# Start ganache
+# Start hardhat
 echo ""
-echo "Starting ganache-cli process..."
+echo "Starting the hardhat server..."
 echo ""
-start_ganache
+start_hardhat
 
-# Migrate RP contracts
+# Deploy RP contracts
 echo ""
-echo "Migrating Rocket Pool contracts..."
+echo "Deploying Rocket Pool contracts..."
 echo ""
-migrate_rp
+deploy_rp
+
+# Install RP deps
+echo ""
+echo "Installing other testing dependencies..."
+echo ""
+install_test_deps
+
+# Deploy other contracts
+echo ""
+echo "Deploying other contracts..."
+echo ""
+deploy_other
 
 # Run tests
 echo ""
 echo "Running tests..."
 echo ""
 run_tests
-

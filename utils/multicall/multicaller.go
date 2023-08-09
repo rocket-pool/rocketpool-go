@@ -84,7 +84,7 @@ func (caller *MultiCaller) Execute(requireSuccess bool, opts *bind.CallOpts) ([]
 	}
 	callData, err := caller.ABI.Pack("tryAggregate", requireSuccess, multiCalls)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error packing aggregated call data: %w", err)
 	}
 
 	var blockNumber *big.Int
@@ -93,13 +93,12 @@ func (caller *MultiCaller) Execute(requireSuccess bool, opts *bind.CallOpts) ([]
 	}
 	resp, err := caller.Client.CallContract(context.Background(), ethereum.CallMsg{To: &caller.ContractAddress, Data: callData}, blockNumber)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error calling multicall contract: %w", err)
 	}
 
 	responses, err := caller.ABI.Unpack("tryAggregate", resp)
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unpacking aggregated response data: %w", err)
 	}
 
 	results := make([]CallResponse, len(caller.calls))
@@ -119,7 +118,7 @@ func (caller *MultiCaller) FlexibleCall(requireSuccess bool, opts *bind.CallOpts
 	results, err := caller.Execute(requireSuccess, opts)
 	if err != nil {
 		caller.calls = []Call{}
-		return nil, err
+		return nil, fmt.Errorf("error executing multicall: %w", err)
 	}
 	for i, call := range caller.calls {
 		callSuccess := results[i].Status
@@ -127,7 +126,7 @@ func (caller *MultiCaller) FlexibleCall(requireSuccess bool, opts *bind.CallOpts
 			err := call.Contract.ABI.UnpackIntoInterface(call.output, call.Method, results[i].ReturnDataRaw)
 			if err != nil {
 				caller.calls = []Call{}
-				return nil, err
+				return nil, fmt.Errorf("error unpacking response for contract %s, method %s: %w", call.Contract.Address.Hex(), call.Method, err)
 			}
 		}
 		res[i].Success = callSuccess

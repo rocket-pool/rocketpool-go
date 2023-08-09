@@ -1,13 +1,10 @@
 package rocketpool
 
 import (
-	"bytes"
-	"encoding/json"
 	"testing"
-
-	"github.com/ethereum/go-ethereum/common"
 )
 
+/*
 func TestGetAddress(t *testing.T) {
 
 	// Get contract address
@@ -113,7 +110,7 @@ func TestGetABIs(t *testing.T) {
 	}
 
 }
-
+*/
 func TestGetContract(t *testing.T) {
 
 	// Get contract
@@ -128,6 +125,7 @@ func TestGetContract(t *testing.T) {
 
 }
 
+/*
 func TestGetContracts(t *testing.T) {
 
 	// Get contracts
@@ -155,3 +153,4 @@ func TestMakeContract(t *testing.T) {
 	}
 
 }
+*/

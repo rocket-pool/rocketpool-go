@@ -1,0 +1,33 @@
+{
+  "name": "rocketpool",
+  "version": "3.0.0",
+  "description": "A next generation decentralised Ethereum 2.0 proof of stake protocol",
+  "repository": "git@github.com:rocket-pool/rocketpool.git",
+  "author": "David Rugendyke <contact@rocketpool.net>",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js",
+    "test": "hardhat test test/rocket-pool-tests.js",
+    "slither": "slither --filter-paths node_modules,old --exclude conformance-to-solidity-naming-conventions ."
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/register": "^7.18.9",
+    "@babel/runtime": "^7.20.1",
+    "@chainsafe/lodestar-types": "^0.5.0",
+    "@chainsafe/ssz": "^0.6.1",
+    "@nomiclabs/hardhat-truffle5": "^2.0.7",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/contracts": "^3.3.0",
+    "axios": "^0.21.1",
+    "dotenv": "^16.0.3",
+    "ethereumjs-util": "^6.2.0",
+    "glob": "^7.1.7",
+    "hardhat": "^2.12.2",
+    "mocha": "^10.1.0",
+    "pako": "^1.0.6",
+    "query-string": "^7.0.1",
+    "web3": "^1.2.8"
+  }
+}

@@ -66,13 +66,27 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 	return rp, nil
 }
 
-// Load the provided contracts by their name
+// Load all network contracts
+func (rp *RocketPool) LoadAllContracts(opts *bind.CallOpts) error {
+	err := rp.LoadContracts(opts, ContractNames...)
+	if err != nil {
+		return fmt.Errorf("error loading contracts: %w", err)
+	}
+
+	err = rp.LoadInstanceABIs(opts, InstanceContractNames...)
+	if err != nil {
+		return fmt.Errorf("error loading instance contract ABIs: %w", err)
+	}
+	return nil
+}
+
+// Load only the provided specific contracts by their name
 func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...ContractName) error {
 	addresses := make([]common.Address, len(contractNames))
 	abiStrings := make([]string, len(contractNames))
 
 	// Load the details via multicall
-	err := rp.Query(func(mc *multicall.MultiCaller) error {
+	results, err := rp.FlexQuery(func(mc *multicall.MultiCaller) error {
 		for i, contractName := range contractNames {
 			rp.Storage.GetAddress(mc, &addresses[i], string(contractName))
 			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
@@ -81,6 +95,12 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	}, opts)
 	if err != nil {
 		return fmt.Errorf("error getting addresses and ABIs: %w", err)
+	}
+	for i, result := range results {
+		if !result.Success {
+			contractName := contractNames[i]
+			return fmt.Errorf("error getting address and ABI for contract %s: %w", contractName, err)
+		}
 	}
 
 	// Create the contract objects
