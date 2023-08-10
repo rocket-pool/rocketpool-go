@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -236,6 +237,18 @@ func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi 
 		ABI:      abi,
 		Client:   rp.Client,
 	}, nil
+}
+
+// Signs and submits a transaction to the network
+func (rp *RocketPool) SubmitTransaction(txInfo core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
+}
+
+func (rp *RocketPool) CreateAndSubmitTransactions(creators []func() (*core.TransactionInfo, error)) ([]*types.Transaction, error) {
+	txs := make([]*types.Transaction, len(creators))
+	for i, creator := range creators {
+
+	}
 }
 
 // =========================
