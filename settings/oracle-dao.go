@@ -391,12 +391,12 @@ func (c *OracleDaoSettings) BootstrapProposalCooldownTime(value uint64, opts *bi
 }
 
 // Get info for setting the period, in seconds, a proposal can be voted on
-func (c *OracleDaoSettings) BootstrapProposalVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoSettings) BootstrapVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteTimeSettingPath, value, opts)
 }
 
 // Get info for setting the delay, in seconds, after creation before a proposal can be voted on
-func (c *OracleDaoSettings) BootstrapProposalVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoSettings) BootstrapVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteDelayTimeSettingPath, value, opts)
 }
 
@@ -416,12 +416,12 @@ func (c *OracleDaoSettings) ProposeProposalCooldownTime(value uint64, opts *bind
 }
 
 // Get info for setting the period, in seconds, a proposal can be voted on
-func (c *OracleDaoSettings) ProposeProposalVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoSettings) ProposeVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteTimeSettingPath, value, opts)
 }
 
 // Get info for setting the delay, in seconds, after creation before a proposal can be voted on
-func (c *OracleDaoSettings) ProposeProposalVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoSettings) ProposeVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteDelayTimeSettingPath, value, opts)
 }
 

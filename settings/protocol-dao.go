@@ -426,54 +426,54 @@ func (c *ProtocolDaoSettings) GetAllDetails(mc *multicall.MultiCaller) {
 // === RocketDAOProtocolSettingsAuction ===
 
 // Set the create lot enabled flag
-func (c *ProtocolDaoSettings) BootstrapCreateLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapCreateAuctionLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.create.enabled", value, opts)
 }
 
 // Set the create lot enabled flag
-func (c *ProtocolDaoSettings) BootstrapBidOnLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapBidOnAuctionLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.bidding.enabled", value, opts)
 }
 
 // Set the minimum ETH value for lots
-func (c *ProtocolDaoSettings) BootstrapLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapAuctionLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.minimum", value, opts)
 }
 
 // Set the maximum ETH value for lots
-func (c *ProtocolDaoSettings) BootstrapLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapAuctionLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.maximum", value, opts)
 }
 
 // Set the duration value for lots, in blocks
-func (c *ProtocolDaoSettings) BootstrapLotDuration(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapAuctionLotDuration(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.duration", value, opts)
 }
 
 // Set the starting price ratio for lots
-func (c *ProtocolDaoSettings) BootstrapLotStartingPriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapAuctionLotStartingPriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.start", value, opts)
 }
 
 // Set the reserve price ratio for lots
-func (c *ProtocolDaoSettings) BootstrapLotReservePriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapAuctionLotReservePriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.reserve", value, opts)
 }
 
 // === RocketDAOProtocolSettingsDeposit ===
 
 // Set the deposit enabled flag
-func (c *ProtocolDaoSettings) BootstrapDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapPoolDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.enabled", value, opts)
 }
 
 // Set the deposit assignments enabled flag
-func (c *ProtocolDaoSettings) BootstrapAssignDepositsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapAssignPoolDepositsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.enabled", value, opts)
 }
 
 // Set the minimum deposit amount
-func (c *ProtocolDaoSettings) BootstrapMinimumDeposit(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapMinimumPoolDeposit(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.minimum", value, opts)
 }
 
@@ -483,7 +483,7 @@ func (c *ProtocolDaoSettings) BootstrapMaximumDepositPoolSize(value *big.Int, op
 }
 
 // Set the max assignments per deposit
-func (c *ProtocolDaoSettings) BootstrapMaximumDepositAssignments(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapMaximumPoolDepositAssignments(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.maximum", value, opts)
 }
 
@@ -516,7 +516,7 @@ func (c *ProtocolDaoSettings) BootstrapBondReductionEnabled(value bool, opts *bi
 
 // === RocketDAOProtocolSettingsNetwork ===
 
-func (c *ProtocolDaoSettings) BootstrapNodeConsensusThreshold(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoSettings) BootstrapOracleDaoConsensusThreshold(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.consensus.threshold", value, opts)
 }
 
