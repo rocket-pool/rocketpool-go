@@ -9,7 +9,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
@@ -18,8 +17,8 @@ import (
 // ===============
 
 // Binding for Protocol DAO settings
-type DaoProtocolSettings struct {
-	Details           DaoProtocolSettingsDetails
+type ProtocolDaoSettings struct {
+	Details           ProtocolDaoSettingsDetails
 	AuctionContract   *core.Contract
 	DepositContract   *core.Contract
 	InflationContract *core.Contract
@@ -33,7 +32,7 @@ type DaoProtocolSettings struct {
 }
 
 // Details for Protocol DAO settings
-type DaoProtocolSettingsDetails struct {
+type ProtocolDaoSettingsDetails struct {
 	Auction struct {
 		IsCreateLotEnabled    bool                    `json:"isCreateLotEnabled"`
 		IsBidOnLotEnabled     bool                    `json:"isBidOnLotEnabled"`
@@ -101,8 +100,8 @@ type DaoProtocolSettingsDetails struct {
 // === Constructors ===
 // ====================
 
-// Creates a new DaoProtocolSettingsAuction contract binding
-func NewDaoProtocolSettingsAuction(rp *rocketpool.RocketPool) (*DaoProtocolSettings, error) {
+// Creates a new ProtocolDaoSettings binding
+func NewProtocolDaoSettings(rp *rocketpool.RocketPool) (*ProtocolDaoSettings, error) {
 	daoProtocol, err := protocol.NewDaoProtocol(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol binding: %w", err)
@@ -122,8 +121,8 @@ func NewDaoProtocolSettingsAuction(rp *rocketpool.RocketPool) (*DaoProtocolSetti
 		return nil, fmt.Errorf("error getting protocol DAO settings contracts: %w", err)
 	}
 
-	return &DaoProtocolSettings{
-		Details:     DaoProtocolSettingsDetails{},
+	return &ProtocolDaoSettings{
+		Details:     ProtocolDaoSettingsDetails{},
 		rp:          rp,
 		daoProtocol: daoProtocol,
 
@@ -144,226 +143,226 @@ func NewDaoProtocolSettingsAuction(rp *rocketpool.RocketPool) (*DaoProtocolSetti
 // === RocketDAOProtocolSettingsAuction ===
 
 // Check if lot creation is currently enabled
-func (c *DaoProtocolSettings) GetCreateAuctionLotEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetCreateAuctionLotEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.IsCreateLotEnabled, "getCreateLotEnabled")
 }
 
 // Check if lot bidding is currently enabled
-func (c *DaoProtocolSettings) GetBidOnAuctionLotEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetBidOnAuctionLotEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.IsBidOnLotEnabled, "getBidOnLotEnabled")
 }
 
 // Get the minimum lot size in ETH
-func (c *DaoProtocolSettings) GetAuctionLotMinimumEthValue(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAuctionLotMinimumEthValue(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotMinimumEthValue, "getLotMinimumEthValue")
 }
 
 // Get the maximum lot size in ETH
-func (c *DaoProtocolSettings) GetAuctionLotMaximumEthValue(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAuctionLotMaximumEthValue(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotMaximumEthValue, "getLotMaximumEthValue")
 }
 
 // Get the lot duration, in blocks
-func (c *DaoProtocolSettings) GetAuctionLotDuration(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAuctionLotDuration(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotDuration.RawValue, "getLotDuration")
 }
 
 // Get the lot starting price relative to current ETH price, as a fraction
-func (c *DaoProtocolSettings) GetAuctionLotStartingPriceRatio(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAuctionLotStartingPriceRatio(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotStartingPriceRatio.RawValue, "getStartingPriceRatio")
 }
 
 // Get the reserve price relative to current ETH price, as a fraction
-func (c *DaoProtocolSettings) GetAuctionLotReservePriceRatio(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAuctionLotReservePriceRatio(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotReservePriceRatio.RawValue, "getReservePriceRatio")
 }
 
 // === RocketDAOProtocolSettingsDeposit ===
 
 // Check if deposits are currently enabled
-func (c *DaoProtocolSettings) GetPoolDepositEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetPoolDepositEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.IsDepositingEnabled, "getDepositEnabled")
 }
 
 // Check if deposit assignments are currently enabled
-func (c *DaoProtocolSettings) GetAssignPoolDepositsEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAssignPoolDepositsEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.AreDepositAssignmentsEnabled, "getAssignDepositsEnabled")
 }
 
 // Get the minimum deposit to the deposit pool
-func (c *DaoProtocolSettings) GetMinimumPoolDeposit(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMinimumPoolDeposit(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.MinimumDeposit, "getMinimumDeposit")
 }
 
 // Get the maximum size of the deposit pool
-func (c *DaoProtocolSettings) GetMaximumDepositPoolSize(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMaximumDepositPoolSize(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumDepositPoolSize, "getMaximumDepositPoolSize")
 }
 
 // Get the maximum assignments per deposit transaction
-func (c *DaoProtocolSettings) GetMaximumPoolDepositAssignments(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMaximumPoolDepositAssignments(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumAssignmentsPerDeposit.RawValue, "getMaximumDepositAssignments")
 }
 
 // === RocketDAOProtocolSettingsInflation ===
 
 // Get the RPL inflation rate per interval
-func (c *DaoProtocolSettings) GetInflationIntervalRate(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetInflationIntervalRate(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.InflationContract, &c.Details.Inflation.IntervalRate.RawValue, "getInflationIntervalRate")
 }
 
 // Get the RPL inflation start time
-func (c *DaoProtocolSettings) GetInflationIntervalStartTime(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetInflationIntervalStartTime(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.InflationContract, &c.Details.Inflation.StartTime.RawValue, "getInflationIntervalStartTime")
 }
 
 // === RocketDAOProtocolSettingsMinipool ===
 
 // Get the minipool launch balance
-func (c *DaoProtocolSettings) GetMinipoolLaunchBalance(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMinipoolLaunchBalance(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchBalance, "getLaunchBalance")
 }
 
 // Get the amount required from the node for a full deposit
-func (c *DaoProtocolSettings) GetFullDepositNodeAmount(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetFullDepositNodeAmount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositNodeAmount, "getFullDepositNodeAmount")
 }
 
 // Get the amount required from the node for a half deposit
-func (c *DaoProtocolSettings) GetHalfDepositNodeAmount(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetHalfDepositNodeAmount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositNodeAmount, "getHalfDepositNodeAmount")
 }
 
 // Get the amount required from the node for an empty deposit
-func (c *DaoProtocolSettings) GetEmptyDepositNodeAmount(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetEmptyDepositNodeAmount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositNodeAmount, "getEmptyDepositNodeAmount")
 }
 
 // Get the amount required from the pool stakers for a full deposit
-func (c *DaoProtocolSettings) GetFullDepositUserAmount(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetFullDepositUserAmount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositUserAmount, "getFullDepositUserAmount")
 }
 
 // Get the amount required from the pool stakers for a half deposit
-func (c *DaoProtocolSettings) GetHalfDepositUserAmount(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetHalfDepositUserAmount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositUserAmount, "getHalfDepositUserAmount")
 }
 
 // Get the amount required from the pool stakers for an empty deposit
-func (c *DaoProtocolSettings) GetEmptyDepositUserAmount(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetEmptyDepositUserAmount(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositUserAmount, "getEmptyDepositUserAmount")
 }
 
 // Check if minipool withdrawable event submissions are currently enabled
-func (c *DaoProtocolSettings) GetSubmitWithdrawableEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetSubmitWithdrawableEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsSubmitWithdrawableEnabled, "getSubmitWithdrawableEnabled")
 }
 
 // Get the timeout period, in seconds, for prelaunch minipools to launch
-func (c *DaoProtocolSettings) GetMinipoolLaunchTimeout(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMinipoolLaunchTimeout(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchTimeout.RawValue, "getLaunchTimeout")
 }
 
 // Check if minipool bond reductions are currently enabled
-func (c *DaoProtocolSettings) GetBondReductionEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetBondReductionEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsBondReductionEnabled, "getBondReductionEnabled")
 }
 
 // === RocketDAOProtocolSettingsNetwork ===
 
 // Get the threshold of Oracle DAO nodes that must reach consensus on oracle data to commit it
-func (c *DaoProtocolSettings) GetOracleDaoConsensusThreshold(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetOracleDaoConsensusThreshold(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.OracleDaoConsensusThreshold.RawValue, "getNodeConsensusThreshold")
 }
 
 // Check if network balance submission is enabled
-func (c *DaoProtocolSettings) GetSubmitBalancesEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetSubmitBalancesEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitBalancesEnabled, "getSubmitBalancesEnabled")
 }
 
 // Get the frequency, in blocks, at which network balances should be submitted by the Oracle DAO
-func (c *DaoProtocolSettings) GetSubmitBalancesFrequency(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetSubmitBalancesFrequency(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.SubmitBalancesFrequency.RawValue, "getSubmitBalancesFrequency")
 }
 
 // Check if network price submission is enabled
-func (c *DaoProtocolSettings) GetSubmitPricesEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetSubmitPricesEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitPricesEnabled, "getSubmitPricesEnabled")
 }
 
 // Get the frequency, in blocks, at which network prices should be submitted by the Oracle DAO
-func (c *DaoProtocolSettings) GetSubmitPricesFrequency(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetSubmitPricesFrequency(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.SubmitPricesFrequency.RawValue, "getSubmitPricesFrequency")
 }
 
 // Get the minimum node commission rate
-func (c *DaoProtocolSettings) GetMinimumNodeFee(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMinimumNodeFee(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.MinimumNodeFee.RawValue, "getMinimumNodeFee")
 }
 
 // Get the target node commission rate
-func (c *DaoProtocolSettings) GetTargetNodeFee(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetTargetNodeFee(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetNodeFee.RawValue, "getTargetNodeFee")
 }
 
 // Get the maximum node commission rate
-func (c *DaoProtocolSettings) GetMaximumNodeFee(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMaximumNodeFee(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.MaximumNodeFee.RawValue, "getMaximumNodeFee")
 }
 
 // Get the range of node demand values to base fee calculations on
-func (c *DaoProtocolSettings) GetNodeFeeDemandRange(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetNodeFeeDemandRange(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.NodeFeeDemandRange, "getNodeFeeDemandRange")
 }
 
 // Get the target collateralization rate for the rETH NetworkContract as a fraction
-func (c *DaoProtocolSettings) GetTargetRethCollateralRate(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetTargetRethCollateralRate(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetRethCollateralRate.RawValue, "getTargetRethCollateralRate")
 }
 
 // === RocketDAOProtocolSettingsNode ===
 
 // Check if node registration is currently enabled
-func (c *DaoProtocolSettings) GetNodeRegistrationEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetNodeRegistrationEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.IsRegistrationEnabled, "getRegistrationEnabled")
 }
 
 // Check if node deposits are currently enabled
-func (c *DaoProtocolSettings) GetNodeDepositEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetNodeDepositEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.IsDepositingEnabled, "getDepositEnabled")
 }
 
 // Check if creating vacant minipools is currently enabled
-func (c *DaoProtocolSettings) GetVacantMinipoolsEnabled(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetVacantMinipoolsEnabled(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.AreVacantMinipoolsEnabled, "getVacantMinipoolsEnabled")
 }
 
 // Get the minimum RPL stake per minipool as a fraction of assigned user ETH
-func (c *DaoProtocolSettings) GetMinimumPerMinipoolStake(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMinimumPerMinipoolStake(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.MinimumPerMinipoolStake.RawValue, "getMinimumPerMinipoolStake")
 }
 
 // Get the maximum RPL stake per minipool as a fraction of assigned user ETH
-func (c *DaoProtocolSettings) GetMaximumPerMinipoolStake(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetMaximumPerMinipoolStake(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.MaximumPerMinipoolStake.RawValue, "getMaximumPerMinipoolStake")
 }
 
 // === RocketDAOProtocolSettingsRewards ===
 
-// Get the total rewards amount for all rewards recipients as a fraction
-func (c *DaoProtocolSettings) GetRewardsPercentageTotal(mc *multicall.MultiCaller) {
+// Get the total RPL rewards amount for all rewards recipients as a fraction
+func (c *ProtocolDaoSettings) GetRewardsPercentageTotal(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.RewardsContract, &c.Details.Rewards.PercentageTotal.RawValue, "getRewardsClaimersPercTotal")
 }
 
 // Get the rewards interval time
-func (c *DaoProtocolSettings) GetRewardsIntervalTime(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetRewardsIntervalTime(mc *multicall.MultiCaller) {
 	multicall.AddCall(mc, c.RewardsContract, &c.Details.Rewards.IntervalTime.RawValue, "getRewardsClaimIntervalTime")
 }
 
 // === Universal ===
 
 // Get all basic details
-func (c *DaoProtocolSettings) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAllDetails(mc *multicall.MultiCaller) {
 	// Auction
 	c.GetCreateAuctionLotEnabled(mc)
 	c.GetBidOnAuctionLotEnabled(mc)
@@ -427,160 +426,160 @@ func (c *DaoProtocolSettings) GetAllDetails(mc *multicall.MultiCaller) {
 // === RocketDAOProtocolSettingsAuction ===
 
 // Set the create lot enabled flag
-func (c *DaoProtocolSettings) BootstrapCreateLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.create.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapCreateLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.create.enabled", value, opts)
 }
 
 // Set the create lot enabled flag
-func (c *DaoProtocolSettings) BootstrapBidOnLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.bidding.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapBidOnLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.bidding.enabled", value, opts)
 }
 
 // Set the minimum ETH value for lots
-func (c *DaoProtocolSettings) BootstrapLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.minimum", value, opts)
+func (c *ProtocolDaoSettings) BootstrapLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.minimum", value, opts)
 }
 
 // Set the maximum ETH value for lots
-func (c *DaoProtocolSettings) BootstrapLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.maximum", value, opts)
+func (c *ProtocolDaoSettings) BootstrapLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.maximum", value, opts)
 }
 
 // Set the duration value for lots, in blocks
-func (c *DaoProtocolSettings) BootstrapLotDuration(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.duration", big.NewInt(int64(value)), opts)
+func (c *ProtocolDaoSettings) BootstrapLotDuration(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.duration", value, opts)
 }
 
 // Set the starting price ratio for lots
-func (c *DaoProtocolSettings) BootstrapLotStartingPriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.start", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapLotStartingPriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.start", value, opts)
 }
 
 // Set the reserve price ratio for lots
-func (c *DaoProtocolSettings) BootstrapLotReservePriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.reserve", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapLotReservePriceRatio(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.reserve", value, opts)
 }
 
 // === RocketDAOProtocolSettingsDeposit ===
 
 // Set the deposit enabled flag
-func (c *DaoProtocolSettings) BootstrapDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.enabled", value, opts)
 }
 
 // Set the deposit assignments enabled flag
-func (c *DaoProtocolSettings) BootstrapAssignDepositsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapAssignDepositsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.enabled", value, opts)
 }
 
 // Set the minimum deposit amount
-func (c *DaoProtocolSettings) BootstrapMinimumDeposit(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.minimum", value, opts)
+func (c *ProtocolDaoSettings) BootstrapMinimumDeposit(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.minimum", value, opts)
 }
 
 // Set the maximum deposit pool size
-func (c *DaoProtocolSettings) BootstrapMaximumDepositPoolSize(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.pool.maximum", value, opts)
+func (c *ProtocolDaoSettings) BootstrapMaximumDepositPoolSize(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.pool.maximum", value, opts)
 }
 
 // Set the max assignments per deposit
-func (c *DaoProtocolSettings) BootstrapMaximumDepositAssignments(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.maximum", big.NewInt(int64(value)), opts)
+func (c *ProtocolDaoSettings) BootstrapMaximumDepositAssignments(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.maximum", value, opts)
 }
 
 // === RocketDAOProtocolSettingsInflation ===
 
 // Set the RPL inflation rate per interval
-func (c *DaoProtocolSettings) BootstrapInflationIntervalRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.rate", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapInflationIntervalRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.rate", value, opts)
 }
 
 // Set the RPL inflation start time
-func (c *DaoProtocolSettings) BootstrapInflationIntervalStartTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.start", big.NewInt(int64(value)), opts)
+func (c *ProtocolDaoSettings) BootstrapInflationIntervalStartTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.start", value, opts)
 }
 
 // === RocketDAOProtocolSettingsMinipool ===
 
 // Set the flag for enabling minipool withdrawable event submissions
-func (c *DaoProtocolSettings) BootstrapSubmitWithdrawableEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.submit.withdrawable.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapSubmitWithdrawableEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.submit.withdrawable.enabled", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapMinipoolLaunchTimeout(value time.Duration, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.launch.timeout", big.NewInt(int64(value.Seconds())), opts)
+func (c *ProtocolDaoSettings) BootstrapMinipoolLaunchTimeout(value time.Duration, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.launch.timeout", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapBondReductionEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.bond.reduction.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapBondReductionEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.bond.reduction.enabled", value, opts)
 }
 
 // === RocketDAOProtocolSettingsNetwork ===
 
-func (c *DaoProtocolSettings) BootstrapNodeConsensusThreshold(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.consensus.threshold", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapNodeConsensusThreshold(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.consensus.threshold", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapSubmitBalancesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapSubmitBalancesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.enabled", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapSubmitBalancesFrequency(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.frequency", big.NewInt(int64(value)), opts)
+func (c *ProtocolDaoSettings) BootstrapSubmitBalancesFrequency(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.frequency", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapSubmitPricesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapSubmitPricesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.enabled", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapSubmitPricesFrequency(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.frequency", big.NewInt(int64(value)), opts)
+func (c *ProtocolDaoSettings) BootstrapSubmitPricesFrequency(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.frequency", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapMinimumNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.minimum", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapMinimumNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.minimum", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapTargetNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.target", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapTargetNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.target", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapMaximumNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.maximum", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapMaximumNodeFee(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.maximum", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapNodeFeeDemandRange(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.demand.range", value, opts)
+func (c *ProtocolDaoSettings) BootstrapNodeFeeDemandRange(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.demand.range", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapTargetRethCollateralRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.collateral.target", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapTargetRethCollateralRate(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.collateral.target", value, opts)
 }
 
 // === RocketDAOProtocolSettingsNode ===
 
-func (c *DaoProtocolSettings) BootstrapNodeRegistrationEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.registration.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapNodeRegistrationEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.registration.enabled", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapNodeDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.deposit.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapNodeDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.deposit.enabled", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapVacantMinipoolsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.vacant.minipools.enabled", value, opts)
+func (c *ProtocolDaoSettings) BootstrapVacantMinipoolsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.vacant.minipools.enabled", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapMinimumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.minimum", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapMinimumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.minimum", value, opts)
 }
 
-func (c *DaoProtocolSettings) BootstrapMaximumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.maximum", eth.EthToWei(value), opts)
+func (c *ProtocolDaoSettings) BootstrapMaximumPerMinipoolStake(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.maximum", value, opts)
 }
 
 // === RocketDAOProtocolSettingsRewards ===
 
-func (c *DaoProtocolSettings) BootstrapRewardsIntervalTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsRewards, "rpl.rewards.claim.period.time", big.NewInt(int64(value)), opts)
+func (c *ProtocolDaoSettings) BootstrapRewardsIntervalTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoProtocol, rocketpool.ContractName_RocketDAOProtocolSettingsRewards, "rpl.rewards.claim.period.time", value, opts)
 }
