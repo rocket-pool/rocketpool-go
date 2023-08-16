@@ -2,6 +2,7 @@ package rocketpool
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -245,11 +246,24 @@ func (rp *RocketPool) SubmitTransaction(txInfo core.TransactionInfo, opts *bind.
 	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
 }
 
-func (rp *RocketPool) CreateAndSubmitTransactions(creators []func() (*core.TransactionInfo, error)) ([]*types.Transaction, error) {
-	txs := make([]*types.Transaction, len(creators))
-	for i, creator := range creators {
-
+// Signs and submits a bundle of transactions to the network.
+// NOTE: this assumes the bundle is meant to be submitted sequentially.
+// If the nonce has been set in opts, this will use it for the first transaction and automatically increment it for each subsequent transaction.
+func (rp *RocketPool) SubmitTransactions(txInfos []*core.TransactionInfo, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+	txs := make([]*types.Transaction, len(txInfos))
+	one := big.NewInt(1)
+	for i, txInfo := range txInfos {
+		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
+		}
+		txs[i] = tx
+		if opts.Nonce != nil {
+			// Increment the nonce for the next TX if it's explicitly set
+			opts.Nonce.Add(opts.Nonce, one)
+		}
 	}
+	return txs, nil
 }
 
 // =========================

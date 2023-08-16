@@ -58,13 +58,13 @@ type OracleDaoSettings struct {
 type OracleDaoSettingsDetails struct {
 	// Members
 	Members struct {
-		Quorum                 core.Parameter[float64] `json:"quorum"`
-		RplBond                *big.Int                `json:"rplBond"`
-		UnbondedMinipoolMax    core.Parameter[uint64]  `json:"unbondedMinipoolMax"`
-		UnbondedMinipoolMinFee core.Parameter[float64] `json:"unbondedMinipoolMinFee"`
-		ChallengeCooldown      core.Parameter[uint64]  `json:"challengeCooldown"`
-		ChallengeWindow        core.Parameter[uint64]  `json:"challengeWindow"`
-		ChallengeCost          *big.Int                `json:"challengeCost"`
+		Quorum                 core.Parameter[float64]       `json:"quorum"`
+		RplBond                *big.Int                      `json:"rplBond"`
+		UnbondedMinipoolMax    core.Parameter[uint64]        `json:"unbondedMinipoolMax"`
+		UnbondedMinipoolMinFee core.Parameter[float64]       `json:"unbondedMinipoolMinFee"`
+		ChallengeCooldown      core.Parameter[time.Duration] `json:"challengeCooldown"`
+		ChallengeWindow        core.Parameter[uint64]        `json:"challengeWindow"`
+		ChallengeCost          *big.Int                      `json:"challengeCost"`
 	} `json:"members"`
 
 	// Minipools
