@@ -7,8 +7,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -32,7 +32,7 @@ const (
 var versionAbi *abi.ABI
 
 // Get the version of the given contract
-func GetContractVersion(mc *multicall.MultiCaller, version_Out *uint8, address common.Address) error {
+func GetContractVersion(mc *batch.MultiCaller, version_Out *uint8, address common.Address) error {
 	if versionAbi == nil {
 		// Parse ABI using the hardcoded string until the contract is deployed
 		abiParsed, err := abi.JSON(strings.NewReader(rocketVersionInterfaceAbiString))
@@ -50,7 +50,7 @@ func GetContractVersion(mc *multicall.MultiCaller, version_Out *uint8, address c
 		Version:  0,
 		Client:   nil,
 	}
-	multicall.AddCall(mc, contract, version_Out, "version")
+	core.AddCall(mc, contract, version_Out, "version")
 	return nil
 }
 

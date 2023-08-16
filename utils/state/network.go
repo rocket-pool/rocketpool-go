@@ -7,10 +7,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/minipool"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
+
 	"golang.org/x/sync/errgroup"
 )
 
@@ -91,46 +93,50 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	var windowLengthRaw *big.Int
 
 	// Multicall getters
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkPrices, &details.RplPrice, "getRPLPrice")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAOProtocolSettingsNode, &details.MinCollateralFraction, "getMinimumPerMinipoolStake")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAOProtocolSettingsNode, &details.MaxCollateralFraction, "getMaximumPerMinipoolStake")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &rewardIndex, "getRewardIndex")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &intervalStart, "getClaimIntervalTimeStart")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &intervalDuration, "getClaimIntervalTime")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &details.NodeOperatorRewardsPercent, "getClaimingContractPerc", "rocketClaimNode")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &details.TrustedNodeOperatorRewardsPercent, "getClaimingContractPerc", "rocketClaimTrustedNode")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &details.ProtocolDaoRewardsPercent, "getClaimingContractPerc", "rocketClaimDAO")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketRewardsPool, &details.PendingRPLRewards, "getPendingRPLRewards")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAONodeTrustedSettingsMinipool, &scrubPeriodSeconds, "getScrubPeriod")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDepositPool, &details.DepositPoolBalance, "getBalance")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDepositPool, &details.DepositPoolExcess, "getExcessBalance")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketMinipoolQueue, &totalQueueCapacity, "getTotalCapacity")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketMinipoolQueue, &effectiveQueueCapacity, "getEffectiveCapacity")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketMinipoolQueue, &totalQueueLength, "getTotalLength")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketTokenRPL, &details.RPLInflationIntervalRate, "getInflationIntervalRate")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketTokenRPL, &details.RPLTotalSupply, "totalSupply")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkPrices, &pricesBlock, "getPricesBlock")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkPrices, &latestReportablePricesBlock, "getLatestReportableBlock")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkBalances, &ethUtilizationRate, "getETHUtilizationRate")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkBalances, &details.StakingETHBalance, "getStakingETHBalance")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketTokenRETH, &rETHExchangeRate, "getExchangeRate")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkBalances, &details.TotalETHBalance, "getTotalETHBalance")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketTokenRETH, &details.TotalRETHSupply, "totalSupply")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNodeStaking, &details.TotalRPLStake, "getTotalRPLStake")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkFees, &nodeFee, "getNodeFee")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkBalances, &balancesBlock, "getBalancesBlock")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketNetworkBalances, &latestReportableBalancesBlock, "getLatestReportableBlock")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAOProtocolSettingsNetwork, &details.SubmitBalancesEnabled, "getSubmitBalancesEnabled")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAOProtocolSettingsNetwork, &details.SubmitPricesEnabled, "getSubmitPricesEnabled")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAOProtocolSettingsMinipool, &minipoolLaunchTimeout, "getLaunchTimeout")
+	mc, err := batch.NewMultiCaller(rp.Client, contracts.MulticallerAddress)
+	if err != nil {
+		return nil, fmt.Errorf("error creating multicaller: %w", err)
+	}
+	core.AddCall(mc, contracts.RocketNetworkPrices, &details.RplPrice, "getRPLPrice")
+	core.AddCall(mc, contracts.RocketDAOProtocolSettingsNode, &details.MinCollateralFraction, "getMinimumPerMinipoolStake")
+	core.AddCall(mc, contracts.RocketDAOProtocolSettingsNode, &details.MaxCollateralFraction, "getMaximumPerMinipoolStake")
+	core.AddCall(mc, contracts.RocketRewardsPool, &rewardIndex, "getRewardIndex")
+	core.AddCall(mc, contracts.RocketRewardsPool, &intervalStart, "getClaimIntervalTimeStart")
+	core.AddCall(mc, contracts.RocketRewardsPool, &intervalDuration, "getClaimIntervalTime")
+	core.AddCall(mc, contracts.RocketRewardsPool, &details.NodeOperatorRewardsPercent, "getClaimingContractPerc", "rocketClaimNode")
+	core.AddCall(mc, contracts.RocketRewardsPool, &details.TrustedNodeOperatorRewardsPercent, "getClaimingContractPerc", "rocketClaimTrustedNode")
+	core.AddCall(mc, contracts.RocketRewardsPool, &details.ProtocolDaoRewardsPercent, "getClaimingContractPerc", "rocketClaimDAO")
+	core.AddCall(mc, contracts.RocketRewardsPool, &details.PendingRPLRewards, "getPendingRPLRewards")
+	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &scrubPeriodSeconds, "getScrubPeriod")
+	core.AddCall(mc, contracts.RocketDepositPool, &details.DepositPoolBalance, "getBalance")
+	core.AddCall(mc, contracts.RocketDepositPool, &details.DepositPoolExcess, "getExcessBalance")
+	core.AddCall(mc, contracts.RocketMinipoolQueue, &totalQueueCapacity, "getTotalCapacity")
+	core.AddCall(mc, contracts.RocketMinipoolQueue, &effectiveQueueCapacity, "getEffectiveCapacity")
+	core.AddCall(mc, contracts.RocketMinipoolQueue, &totalQueueLength, "getTotalLength")
+	core.AddCall(mc, contracts.RocketTokenRPL, &details.RPLInflationIntervalRate, "getInflationIntervalRate")
+	core.AddCall(mc, contracts.RocketTokenRPL, &details.RPLTotalSupply, "totalSupply")
+	core.AddCall(mc, contracts.RocketNetworkPrices, &pricesBlock, "getPricesBlock")
+	core.AddCall(mc, contracts.RocketNetworkPrices, &latestReportablePricesBlock, "getLatestReportableBlock")
+	core.AddCall(mc, contracts.RocketNetworkBalances, &ethUtilizationRate, "getETHUtilizationRate")
+	core.AddCall(mc, contracts.RocketNetworkBalances, &details.StakingETHBalance, "getStakingETHBalance")
+	core.AddCall(mc, contracts.RocketTokenRETH, &rETHExchangeRate, "getExchangeRate")
+	core.AddCall(mc, contracts.RocketNetworkBalances, &details.TotalETHBalance, "getTotalETHBalance")
+	core.AddCall(mc, contracts.RocketTokenRETH, &details.TotalRETHSupply, "totalSupply")
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.TotalRPLStake, "getTotalRPLStake")
+	core.AddCall(mc, contracts.RocketNetworkFees, &nodeFee, "getNodeFee")
+	core.AddCall(mc, contracts.RocketNetworkBalances, &balancesBlock, "getBalancesBlock")
+	core.AddCall(mc, contracts.RocketNetworkBalances, &latestReportableBalancesBlock, "getLatestReportableBlock")
+	core.AddCall(mc, contracts.RocketDAOProtocolSettingsNetwork, &details.SubmitBalancesEnabled, "getSubmitBalancesEnabled")
+	core.AddCall(mc, contracts.RocketDAOProtocolSettingsNetwork, &details.SubmitPricesEnabled, "getSubmitPricesEnabled")
+	core.AddCall(mc, contracts.RocketDAOProtocolSettingsMinipool, &minipoolLaunchTimeout, "getLaunchTimeout")
 
 	// Atlas things
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAONodeTrustedSettingsMinipool, &promotionScrubPeriodSeconds, "getPromotionScrubPeriod")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAONodeTrustedSettingsMinipool, &windowStartRaw, "getBondReductionWindowStart")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDAONodeTrustedSettingsMinipool, &windowLengthRaw, "getBondReductionWindowLength")
-	multicall.AddCall(contracts.Multicaller, contracts.RocketDepositPool, &details.DepositPoolUserBalance, "getUserBalance")
+	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &promotionScrubPeriodSeconds, "getPromotionScrubPeriod")
+	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &windowStartRaw, "getBondReductionWindowStart")
+	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &windowLengthRaw, "getBondReductionWindowLength")
+	core.AddCall(mc, contracts.RocketDepositPool, &details.DepositPoolUserBalance, "getUserBalance")
 
-	_, err := contracts.Multicaller.FlexibleCall(true, opts)
+	_, err = mc.FlexibleCall(true, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error executing multicall: %w", err)
 	}
@@ -202,14 +208,14 @@ func GetTotalEffectiveRplStake(rp *rocketpool.RocketPool, contracts *NetworkCont
 
 		wg.Go(func() error {
 			var err error
-			mc, err := multicall.NewMultiCaller(rp.Client, contracts.Multicaller.ContractAddress)
+			mc, err := batch.NewMultiCaller(rp.Client, contracts.MulticallerAddress)
 			if err != nil {
 				return err
 			}
 			for j := i; j < max; j++ {
 				address := addresses[j]
-				multicall.AddCall(mc, contracts.RocketNodeStaking, &minimumStakes[j], "getNodeMinimumRPLStake", address)
-				multicall.AddCall(mc, contracts.RocketNodeStaking, &effectiveStakes[j], "getNodeEffectiveRPLStake", address)
+				core.AddCall(mc, contracts.RocketNodeStaking, &minimumStakes[j], "getNodeMinimumRPLStake", address)
+				core.AddCall(mc, contracts.RocketNodeStaking, &effectiveStakes[j], "getNodeEffectiveRPLStake", address)
 			}
 			_, err = mc.FlexibleCall(true, opts)
 			if err != nil {

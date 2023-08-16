@@ -5,9 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -43,8 +43,8 @@ func NewNodeDistributorFactory(rp *rocketpool.RocketPool) (*NodeDistributorFacto
 // =============
 
 // Gets the deterministic address for a node's reward distributor contract
-func (c *NodeDistributorFactory) GetDistributorAddress(mc *multicall.MultiCaller, nodeAddress common.Address, address_Out *common.Address) {
-	multicall.AddCall(mc, c.contract, address_Out, "getProxyAddress", nodeAddress)
+func (c *NodeDistributorFactory) GetDistributorAddress(mc *batch.MultiCaller, nodeAddress common.Address, address_Out *common.Address) {
+	core.AddCall(mc, c.contract, address_Out, "getProxyAddress", nodeAddress)
 }
 
 // ===================
@@ -60,7 +60,7 @@ func (c *NodeDistributorFactory) GetNodeDistributor(nodeAddress common.Address, 
 	}
 
 	// Get details via a multicall query
-	err = c.rp.Query(func(mc *multicall.MultiCaller) error {
+	err = c.rp.Query(func(mc *batch.MultiCaller) error {
 		distributor.GetAllDetails(mc)
 		return nil
 	}, opts)

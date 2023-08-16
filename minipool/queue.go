@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -64,18 +64,18 @@ func NewMinipoolQueue(rp *rocketpool.RocketPool) (*MinipoolQueue, error) {
 // =============
 
 // Get the total length of the minipool queue
-func (c *MinipoolQueue) GetTotalLength(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalLength.RawValue, "getTotalLength")
+func (c *MinipoolQueue) GetTotalLength(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalLength.RawValue, "getTotalLength")
 }
 
 // Get the total capacity of the minipool queue
-func (c *MinipoolQueue) GetTotalCapacity(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalCapacity, "getTotalCapacity")
+func (c *MinipoolQueue) GetTotalCapacity(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalCapacity, "getTotalCapacity")
 }
 
 // Get the total effective capacity of the minipool queue (used in node demand calculation)
-func (c *MinipoolQueue) GetEffectiveCapacity(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.EffectiveCapacity, "getEffectiveCapacity")
+func (c *MinipoolQueue) GetEffectiveCapacity(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.EffectiveCapacity, "getEffectiveCapacity")
 }
 
 // =============
@@ -83,6 +83,6 @@ func (c *MinipoolQueue) GetEffectiveCapacity(mc *multicall.MultiCaller) {
 // =============
 
 // Get the minipool at the specified position in queue (0-indexed).
-func (c *MinipoolQueue) GetQueueMinipoolAtPosition(mc *multicall.MultiCaller, address_Out *common.Address, position uint64) {
-	multicall.AddCall(mc, c.contract, address_Out, "getMinipoolAt", big.NewInt(int64(position)))
+func (c *MinipoolQueue) GetQueueMinipoolAtPosition(mc *batch.MultiCaller, address_Out *common.Address, position uint64) {
+	core.AddCall(mc, c.contract, address_Out, "getMinipoolAt", big.NewInt(int64(position)))
 }

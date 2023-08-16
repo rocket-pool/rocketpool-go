@@ -9,15 +9,16 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"golang.org/x/sync/errgroup"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/storage"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
 	defaultConcurrentCallLimit      int = 6
 	defaultAddressBatchSize         int = 1000
 	defaultContractVersionBatchSize int = 500
+	defaultBalanceBatchSize         int = 1000
 )
 
 // Rocket Pool contract manager
@@ -25,7 +26,7 @@ type RocketPool struct {
 	Client                   core.ExecutionClient
 	Storage                  *storage.Storage
 	MulticallAddress         *common.Address
-	BalanceBatcher           *multicall.BalanceBatcher
+	BalanceBatcher           *batch.BalanceBatcher
 	VersionManager           *VersionManager
 	ConcurrentCallLimit      int
 	AddressBatchSize         int
@@ -45,7 +46,7 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 	}
 
 	// Create the balance batcher
-	balanceBatcher, err := multicall.NewBalanceBatcher(client, balanceBatcherAddress)
+	balanceBatcher, err := batch.NewBalanceBatcher(client, balanceBatcherAddress, defaultBalanceBatchSize, defaultConcurrentCallLimit)
 	if err != nil {
 		return nil, fmt.Errorf("error creating balance batcher: %w", err)
 	}
@@ -87,7 +88,7 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	abiStrings := make([]string, len(contractNames))
 
 	// Load the details via multicall
-	results, err := rp.FlexQuery(func(mc *multicall.MultiCaller) error {
+	results, err := rp.FlexQuery(func(mc *batch.MultiCaller) error {
 		for i, contractName := range contractNames {
 			rp.Storage.GetAddress(mc, &addresses[i], string(contractName))
 			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
@@ -98,7 +99,7 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 		return fmt.Errorf("error getting addresses and ABIs: %w", err)
 	}
 	for i, result := range results {
-		if !result.Success {
+		if !result {
 			contractName := contractNames[i]
 			return fmt.Errorf("error getting address and ABI for contract %s: %w", contractName, err)
 		}
@@ -124,12 +125,12 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 
 	// Get the versions of each contract
 	emptyAddress := common.Address{}
-	err = rp.Query(func(mc *multicall.MultiCaller) error {
+	err = rp.Query(func(mc *batch.MultiCaller) error {
 		for _, contractName := range contractNames {
 			contract := rp.contracts[contractName]
 			address := *contract.Address
 			if address != emptyAddress {
-				multicall.AddCall[uint8](mc, contract, &contract.Version, "version") // TODO: use the contract version getter once it's ready
+				core.AddCall(mc, contract, &contract.Version, "version") // TODO: use the contract version getter once it's ready
 			}
 		}
 		return nil
@@ -146,7 +147,7 @@ func (rp *RocketPool) LoadInstanceABIs(opts *bind.CallOpts, contractNames ...Con
 	abiStrings := make([]string, len(contractNames))
 
 	// Load the details via multicall
-	err := rp.Query(func(mc *multicall.MultiCaller) error {
+	err := rp.Query(func(mc *batch.MultiCaller) error {
 		for i, contractName := range contractNames {
 			rp.Storage.GetAbi(mc, &abiStrings[i], string(contractName))
 		}
@@ -256,9 +257,9 @@ func (rp *RocketPool) CreateAndSubmitTransactions(creators []func() (*core.Trans
 // =========================
 
 // Run a multicall query that doesn't perform any return type allocation
-func (rp *RocketPool) Query(query func(*multicall.MultiCaller) error, opts *bind.CallOpts) error {
+func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.CallOpts) error {
 	// Create the multicaller
-	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+	mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 	if err != nil {
 		return fmt.Errorf("error creating multicaller: %w", err)
 	}
@@ -280,9 +281,9 @@ func (rp *RocketPool) Query(query func(*multicall.MultiCaller) error, opts *bind
 
 // Run a multicall query that doesn't perform any return type allocation
 // Use this if one of the calls is allowed to fail without interrupting the others; the returned result array provides information about the success of each call.
-func (rp *RocketPool) FlexQuery(query func(*multicall.MultiCaller) error, opts *bind.CallOpts) ([]multicall.Result, error) {
+func (rp *RocketPool) FlexQuery(query func(*batch.MultiCaller) error, opts *bind.CallOpts) ([]bool, error) {
 	// Create the multicaller
-	mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+	mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 	if err != nil {
 		return nil, fmt.Errorf("error creating multicaller: %w", err)
 	}
@@ -298,7 +299,7 @@ func (rp *RocketPool) FlexQuery(query func(*multicall.MultiCaller) error, opts *
 }
 
 // Create and execute a multicall query that is too big for one call and must be run in batches
-func (rp *RocketPool) BatchQuery(count int, batchSize int, query func(*multicall.MultiCaller, int) error, opts *bind.CallOpts) error {
+func (rp *RocketPool) BatchQuery(count int, batchSize int, query func(*batch.MultiCaller, int) error, opts *bind.CallOpts) error {
 	// Sync
 	var wg errgroup.Group
 	wg.SetLimit(rp.ConcurrentCallLimit)
@@ -313,7 +314,7 @@ func (rp *RocketPool) BatchQuery(count int, batchSize int, query func(*multicall
 
 		// Load details
 		wg.Go(func() error {
-			mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+			mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 			if err != nil {
 				return err
 			}
@@ -341,7 +342,7 @@ func (rp *RocketPool) BatchQuery(count int, batchSize int, query func(*multicall
 
 // Create and execute a multicall query that is too big for one call and must be run in batches.
 // Use this if one of the calls is allowed to fail without interrupting the others; the returned result array provides information about the success of each call.
-func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*multicall.MultiCaller, int) error, handleResult func(multicall.Result, int) error, opts *bind.CallOpts) error {
+func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch.MultiCaller, int) error, handleResult func(bool, int) error, opts *bind.CallOpts) error {
 	// Sync
 	var wg errgroup.Group
 	wg.SetLimit(rp.ConcurrentCallLimit)
@@ -356,7 +357,7 @@ func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*multi
 
 		// Load details
 		wg.Go(func() error {
-			mc, err := multicall.NewMultiCaller(rp.Client, *rp.MulticallAddress)
+			mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 			if err != nil {
 				return err
 			}

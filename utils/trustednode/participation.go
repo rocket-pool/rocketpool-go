@@ -8,10 +8,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
 	"github.com/rocket-pool/rocketpool-go/network"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
+	"github.com/rocket-pool/rocketpool-go/settings"
 	"gonum.org/v1/gonum/mathext"
 )
 
@@ -21,9 +22,9 @@ import (
 
 type TrustedNodeParticipationCalculator struct {
 	rp   *rocketpool.RocketPool
-	dnt  *DaoNodeTrusted
-	dnta *DaoNodeTrustedActions
-	dpsn *protocol.DaoProtocolSettingsNetwork
+	dnt  *trustednode.DaoNodeTrusted
+	dnta *trustednode.DaoNodeTrustedActions
+	pds  *settings.ProtocolDaoSettings
 	nb   *network.NetworkBalances
 	np   *network.NetworkPrices
 }
@@ -45,19 +46,19 @@ type TrustedNodeParticipation struct {
 
 // Creates a new TrustedNodeParticipationCalculator
 func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedNodeParticipationCalculator, error) {
-	dnt, err := NewDaoNodeTrusted(rp)
+	dnt, err := trustednode.NewDaoNodeTrusted(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DaoNodeTrusted binding: %w", err)
 	}
 
-	dnta, err := NewDaoNodeTrustedActions(rp)
+	dnta, err := trustednode.NewDaoNodeTrustedActions(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DaoNodeTrustedActions binding: %w", err)
 	}
 
-	dpsn, err := protocol.NewDaoProtocolSettingsNetwork(rp)
+	pds, err := settings.NewProtocolDaoSettings(rp)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DaoProtocolSettingsNetwork binding: %w", err)
+		return nil, fmt.Errorf("error getting Protocol DAO settings binding: %w", err)
 	}
 
 	nb, err := network.NewNetworkBalances(rp)
@@ -74,7 +75,7 @@ func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedN
 		rp:   rp,
 		dnt:  dnt,
 		dnta: dnta,
-		dpsn: dpsn,
+		pds:  pds,
 		nb:   nb,
 		np:   np,
 	}, nil
@@ -100,15 +101,15 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipa
 	blockNumber := opts.BlockNumber.Uint64()
 
 	// Get the price frequency and member count
-	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
-		c.dpsn.GetSubmitPricesFrequency(mc)
+	err := c.rp.Query(func(mc *batch.MultiCaller) error {
+		c.pds.GetSubmitPricesFrequency(mc)
 		c.dnt.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updatePricesFrequency := c.dpsn.Details.SubmitPricesFrequency.Formatted()
+	updatePricesFrequency := c.pds.Details.Network.SubmitPricesFrequency.Formatted()
 	memberCount := c.dnt.Details.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
@@ -206,15 +207,15 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesPartici
 	blockNumber := opts.BlockNumber.Uint64()
 
 	// Get the balance frequency and member count
-	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
-		c.dpsn.GetSubmitBalancesFrequency(mc)
+	err := c.rp.Query(func(mc *batch.MultiCaller) error {
+		c.pds.GetSubmitBalancesFrequency(mc)
 		c.dnt.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updateBalancesFrequency := c.dpsn.Details.SubmitBalancesFrequency.Formatted()
+	updateBalancesFrequency := c.pds.Details.Network.SubmitBalancesFrequency.Formatted()
 	memberCount := c.dnt.Details.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
@@ -313,15 +314,15 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestBalancesPartici
 	blockNumber := opts.BlockNumber.Uint64()
 
 	// Get the price frequency and member count
-	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
-		c.dpsn.GetSubmitBalancesFrequency(mc)
+	err := c.rp.Query(func(mc *batch.MultiCaller) error {
+		c.pds.GetSubmitBalancesFrequency(mc)
 		c.dnt.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updateBalancesFrequency := c.dpsn.Details.SubmitBalancesFrequency.Formatted()
+	updateBalancesFrequency := c.pds.Details.Network.SubmitBalancesFrequency.Formatted()
 	memberCount := c.dnt.Details.MemberCount.Formatted()
 
 	// Get trusted members
@@ -364,15 +365,15 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestPricesParticipa
 	blockNumber := opts.BlockNumber.Uint64()
 
 	// Get the price frequency and member count
-	err := c.rp.Query(func(mc *multicall.MultiCaller) error {
-		c.dpsn.GetSubmitPricesFrequency(mc)
+	err := c.rp.Query(func(mc *batch.MultiCaller) error {
+		c.pds.GetSubmitPricesFrequency(mc)
 		c.dnt.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updatePricesFrequency := c.dpsn.Details.SubmitPricesFrequency.Formatted()
+	updatePricesFrequency := c.pds.Details.Network.SubmitPricesFrequency.Formatted()
 	memberCount := c.dnt.Details.MemberCount.Formatted()
 
 	// Get trusted members

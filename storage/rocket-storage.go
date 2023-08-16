@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -49,23 +49,23 @@ func NewStorage(client core.ExecutionClient, rocketStorageAddress common.Address
 // =============
 
 // Get a boolean value
-func (c *Storage) GetBool(mc *multicall.MultiCaller, result_Out *bool, key common.Hash) {
-	multicall.AddCall(mc, c.Contract, result_Out, "getBool", key)
+func (c *Storage) GetBool(mc *batch.MultiCaller, result_Out *bool, key common.Hash) {
+	core.AddCall(mc, c.Contract, result_Out, "getBool", key)
 }
 
 // Get a uint value
-func (c *Storage) GetUint(mc *multicall.MultiCaller, result_Out **big.Int, key common.Hash) {
-	multicall.AddCall(mc, c.Contract, result_Out, "getUint", key)
+func (c *Storage) GetUint(mc *batch.MultiCaller, result_Out **big.Int, key common.Hash) {
+	core.AddCall(mc, c.Contract, result_Out, "getUint", key)
 }
 
 // Get an address
-func (c *Storage) GetAddress(mc *multicall.MultiCaller, address_Out *common.Address, contractName string) {
+func (c *Storage) GetAddress(mc *batch.MultiCaller, address_Out *common.Address, contractName string) {
 	key := crypto.Keccak256Hash([]byte("contract.address"), []byte(contractName))
-	multicall.AddCall(mc, c.Contract, address_Out, "getAddress", key)
+	core.AddCall(mc, c.Contract, address_Out, "getAddress", key)
 }
 
 // Get an ABI
-func (c *Storage) GetAbi(mc *multicall.MultiCaller, abiEncoded_Out *string, contractName string) {
+func (c *Storage) GetAbi(mc *batch.MultiCaller, abiEncoded_Out *string, contractName string) {
 	key := crypto.Keccak256Hash([]byte("contract.abi"), []byte(contractName))
-	multicall.AddCall(mc, c.Contract, abiEncoded_Out, "getString", key)
+	core.AddCall(mc, c.Contract, abiEncoded_Out, "getString", key)
 }

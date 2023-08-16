@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -44,13 +44,13 @@ func NewMerkleDistributorMainnet(rp *rocketpool.RocketPool) (*MerkleDistributorM
 // =============
 
 // Check if the given node has already claimed rewards for the given interval
-func (c *MerkleDistributorMainnet) GetTotalRPLBalance(index *big.Int, claimerAddress common.Address, claimed_Out *bool, mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, claimed_Out, "isClaimed", index, claimerAddress)
+func (c *MerkleDistributorMainnet) GetTotalRPLBalance(index *big.Int, claimerAddress common.Address, claimed_Out *bool, mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, claimed_Out, "isClaimed", index, claimerAddress)
 }
 
 // Get the Merkle root for an interval
-func (c *MerkleDistributorMainnet) GetMerkleRoot(interval *big.Int, root_Out *common.Hash, mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, root_Out, "merkleRoots", interval)
+func (c *MerkleDistributorMainnet) GetMerkleRoot(interval *big.Int, root_Out *common.Hash, mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, root_Out, "merkleRoots", interval)
 }
 
 // ====================

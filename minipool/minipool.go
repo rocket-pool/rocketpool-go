@@ -5,9 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ==================
@@ -15,7 +15,7 @@ import (
 // ==================
 
 type Minipool interface {
-	QueryAllDetails(mc *multicall.MultiCaller)
+	QueryAllDetails(mc *batch.MultiCaller)
 	GetMinipoolCommon() *MinipoolCommon
 	GetContract() *core.Contract
 }
@@ -40,13 +40,13 @@ func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, v
 func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address, includeDetails bool, opts *bind.CallOpts) (Minipool, error) {
 	// Get the minipool version
 	var version uint8
-	results, err := rp.FlexQuery(func(mc *multicall.MultiCaller) error {
+	results, err := rp.FlexQuery(func(mc *batch.MultiCaller) error {
 		return rocketpool.GetContractVersion(mc, &version, address)
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error querying minipool version: %w", err)
 	}
-	if !results[0].Success {
+	if !results[0] {
 		// If it failed, this is a contract on Prater from before version() existed so it's v1
 		version = 1
 	}
@@ -59,7 +59,7 @@ func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address
 
 	// Include the details if requested
 	if includeDetails {
-		err := rp.Query(func(mc *multicall.MultiCaller) error {
+		err := rp.Query(func(mc *batch.MultiCaller) error {
 			minipool.QueryAllDetails(mc)
 			return nil
 		}, opts)
@@ -79,11 +79,11 @@ func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.
 	// Get the minipool versions
 	versions := make([]uint8, minipoolCount)
 	err := rp.FlexBatchQuery(int(minipoolCount), rp.ContractVersionBatchSize,
-		func(mc *multicall.MultiCaller, index int) error {
+		func(mc *batch.MultiCaller, index int) error {
 			return rocketpool.GetContractVersion(mc, &versions[index], addresses[index])
 		},
-		func(result multicall.Result, index int) error {
-			if !result.Success {
+		func(result bool, index int) error {
+			if !result {
 				// If it failed, this is a contract on Prater from before version() existed so it's v1
 				versions[index] = 1
 			}
@@ -106,7 +106,7 @@ func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.
 	// Include the details if requested
 	if includeDetails {
 		err := rp.BatchQuery(int(minipoolCount), minipoolBatchSize,
-			func(mc *multicall.MultiCaller, index int) error {
+			func(mc *batch.MultiCaller, index int) error {
 				minipools[index].QueryAllDetails(mc)
 				return nil
 			}, opts)

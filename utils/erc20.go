@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -148,10 +148,10 @@ func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client 
 	}
 
 	// Get the details
-	err := rp.Query(func(mc *multicall.MultiCaller) error {
-		multicall.AddCall(mc, contract, &wrapper.Details.Name, "name")
-		multicall.AddCall(mc, contract, &wrapper.Details.Symbol, "symbol")
-		multicall.AddCall(mc, contract, &wrapper.Details.Decimals, "decimals")
+	err := rp.Query(func(mc *batch.MultiCaller) error {
+		core.AddCall(mc, contract, &wrapper.Details.Name, "name")
+		core.AddCall(mc, contract, &wrapper.Details.Symbol, "symbol")
+		core.AddCall(mc, contract, &wrapper.Details.Decimals, "decimals")
 		return nil
 	}, opts)
 	if err != nil {
@@ -166,8 +166,8 @@ func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client 
 // =============
 
 // Get the token balance for an address
-func (c *Erc20Contract) BalanceOf(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
-	multicall.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
+func (c *Erc20Contract) BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+	core.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
 }
 
 // ====================

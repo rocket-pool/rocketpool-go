@@ -10,9 +10,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/types"
 )
 
-// Transaction settings
-const ()
-
 type CallReturnType interface {
 	*big.Int | uint8 | bool | string | common.Address | common.Hash | types.ValidatorPubkey | []byte
 }
@@ -57,47 +54,4 @@ func Call[retType CallReturnType](contract *Contract, opts *bind.CallOpts, metho
 	// Run the function
 	err := contract.Call(opts, &results, method, params...)
 	return *result, err
-}
-
-// Calls a contract method without type safety on the return type (useful for custom structs)
-func CallUntyped[retType any](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (retType, error) {
-	// Set up the return capture
-	result := new(retType)
-	results := make([]interface{}, 1)
-	results[0] = result
-
-	// Run the function
-	err := contract.Call(opts, &results, method, params...)
-	return *result, err
-}
-
-// Calls a contract method that returns a slice
-func CallForSlice[retType CallReturnType](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) ([]retType, error) {
-	// Set up the return capture
-	result := new([]retType)
-	results := make([]interface{}, 1)
-	results[0] = result
-
-	// Run the function
-	err := contract.Call(opts, &results, method, params...)
-	return *result, err
-}
-
-// Calls a contract method for a parameter
-func CallForParameter[fType FormattedType](contract *Contract, opts *bind.CallOpts, method string, params ...interface{}) (Parameter[fType], error) {
-	// Set up the return capture
-	result := new(*big.Int)
-	results := make([]interface{}, 1)
-	results[0] = result
-
-	// Run the function
-	var param Parameter[fType]
-	err := contract.Call(opts, &results, method, params...)
-	if err != nil {
-		return param, err
-	}
-
-	// Wrap and return
-	param.RawValue = *result
-	return param, err
 }

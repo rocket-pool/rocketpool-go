@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -143,226 +143,226 @@ func NewProtocolDaoSettings(rp *rocketpool.RocketPool) (*ProtocolDaoSettings, er
 // === RocketDAOProtocolSettingsAuction ===
 
 // Check if lot creation is currently enabled
-func (c *ProtocolDaoSettings) GetCreateAuctionLotEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.IsCreateLotEnabled, "getCreateLotEnabled")
+func (c *ProtocolDaoSettings) GetCreateAuctionLotEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.IsCreateLotEnabled, "getCreateLotEnabled")
 }
 
 // Check if lot bidding is currently enabled
-func (c *ProtocolDaoSettings) GetBidOnAuctionLotEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.IsBidOnLotEnabled, "getBidOnLotEnabled")
+func (c *ProtocolDaoSettings) GetBidOnAuctionLotEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.IsBidOnLotEnabled, "getBidOnLotEnabled")
 }
 
 // Get the minimum lot size in ETH
-func (c *ProtocolDaoSettings) GetAuctionLotMinimumEthValue(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotMinimumEthValue, "getLotMinimumEthValue")
+func (c *ProtocolDaoSettings) GetAuctionLotMinimumEthValue(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotMinimumEthValue, "getLotMinimumEthValue")
 }
 
 // Get the maximum lot size in ETH
-func (c *ProtocolDaoSettings) GetAuctionLotMaximumEthValue(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotMaximumEthValue, "getLotMaximumEthValue")
+func (c *ProtocolDaoSettings) GetAuctionLotMaximumEthValue(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotMaximumEthValue, "getLotMaximumEthValue")
 }
 
 // Get the lot duration, in blocks
-func (c *ProtocolDaoSettings) GetAuctionLotDuration(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotDuration.RawValue, "getLotDuration")
+func (c *ProtocolDaoSettings) GetAuctionLotDuration(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotDuration.RawValue, "getLotDuration")
 }
 
 // Get the lot starting price relative to current ETH price, as a fraction
-func (c *ProtocolDaoSettings) GetAuctionLotStartingPriceRatio(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotStartingPriceRatio.RawValue, "getStartingPriceRatio")
+func (c *ProtocolDaoSettings) GetAuctionLotStartingPriceRatio(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotStartingPriceRatio.RawValue, "getStartingPriceRatio")
 }
 
 // Get the reserve price relative to current ETH price, as a fraction
-func (c *ProtocolDaoSettings) GetAuctionLotReservePriceRatio(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotReservePriceRatio.RawValue, "getReservePriceRatio")
+func (c *ProtocolDaoSettings) GetAuctionLotReservePriceRatio(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.AuctionContract, &c.Details.Auction.LotReservePriceRatio.RawValue, "getReservePriceRatio")
 }
 
 // === RocketDAOProtocolSettingsDeposit ===
 
 // Check if deposits are currently enabled
-func (c *ProtocolDaoSettings) GetPoolDepositEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.IsDepositingEnabled, "getDepositEnabled")
+func (c *ProtocolDaoSettings) GetPoolDepositEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.IsDepositingEnabled, "getDepositEnabled")
 }
 
 // Check if deposit assignments are currently enabled
-func (c *ProtocolDaoSettings) GetAssignPoolDepositsEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.AreDepositAssignmentsEnabled, "getAssignDepositsEnabled")
+func (c *ProtocolDaoSettings) GetAssignPoolDepositsEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.AreDepositAssignmentsEnabled, "getAssignDepositsEnabled")
 }
 
 // Get the minimum deposit to the deposit pool
-func (c *ProtocolDaoSettings) GetMinimumPoolDeposit(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.MinimumDeposit, "getMinimumDeposit")
+func (c *ProtocolDaoSettings) GetMinimumPoolDeposit(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.MinimumDeposit, "getMinimumDeposit")
 }
 
 // Get the maximum size of the deposit pool
-func (c *ProtocolDaoSettings) GetMaximumDepositPoolSize(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumDepositPoolSize, "getMaximumDepositPoolSize")
+func (c *ProtocolDaoSettings) GetMaximumDepositPoolSize(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumDepositPoolSize, "getMaximumDepositPoolSize")
 }
 
 // Get the maximum assignments per deposit transaction
-func (c *ProtocolDaoSettings) GetMaximumPoolDepositAssignments(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumAssignmentsPerDeposit.RawValue, "getMaximumDepositAssignments")
+func (c *ProtocolDaoSettings) GetMaximumPoolDepositAssignments(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumAssignmentsPerDeposit.RawValue, "getMaximumDepositAssignments")
 }
 
 // === RocketDAOProtocolSettingsInflation ===
 
 // Get the RPL inflation rate per interval
-func (c *ProtocolDaoSettings) GetInflationIntervalRate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.InflationContract, &c.Details.Inflation.IntervalRate.RawValue, "getInflationIntervalRate")
+func (c *ProtocolDaoSettings) GetInflationIntervalRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.InflationContract, &c.Details.Inflation.IntervalRate.RawValue, "getInflationIntervalRate")
 }
 
 // Get the RPL inflation start time
-func (c *ProtocolDaoSettings) GetInflationIntervalStartTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.InflationContract, &c.Details.Inflation.StartTime.RawValue, "getInflationIntervalStartTime")
+func (c *ProtocolDaoSettings) GetInflationIntervalStartTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.InflationContract, &c.Details.Inflation.StartTime.RawValue, "getInflationIntervalStartTime")
 }
 
 // === RocketDAOProtocolSettingsMinipool ===
 
 // Get the minipool launch balance
-func (c *ProtocolDaoSettings) GetMinipoolLaunchBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchBalance, "getLaunchBalance")
+func (c *ProtocolDaoSettings) GetMinipoolLaunchBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchBalance, "getLaunchBalance")
 }
 
 // Get the amount required from the node for a full deposit
-func (c *ProtocolDaoSettings) GetFullDepositNodeAmount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositNodeAmount, "getFullDepositNodeAmount")
+func (c *ProtocolDaoSettings) GetFullDepositNodeAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositNodeAmount, "getFullDepositNodeAmount")
 }
 
 // Get the amount required from the node for a half deposit
-func (c *ProtocolDaoSettings) GetHalfDepositNodeAmount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositNodeAmount, "getHalfDepositNodeAmount")
+func (c *ProtocolDaoSettings) GetHalfDepositNodeAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositNodeAmount, "getHalfDepositNodeAmount")
 }
 
 // Get the amount required from the node for an empty deposit
-func (c *ProtocolDaoSettings) GetEmptyDepositNodeAmount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositNodeAmount, "getEmptyDepositNodeAmount")
+func (c *ProtocolDaoSettings) GetEmptyDepositNodeAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositNodeAmount, "getEmptyDepositNodeAmount")
 }
 
 // Get the amount required from the pool stakers for a full deposit
-func (c *ProtocolDaoSettings) GetFullDepositUserAmount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositUserAmount, "getFullDepositUserAmount")
+func (c *ProtocolDaoSettings) GetFullDepositUserAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositUserAmount, "getFullDepositUserAmount")
 }
 
 // Get the amount required from the pool stakers for a half deposit
-func (c *ProtocolDaoSettings) GetHalfDepositUserAmount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositUserAmount, "getHalfDepositUserAmount")
+func (c *ProtocolDaoSettings) GetHalfDepositUserAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositUserAmount, "getHalfDepositUserAmount")
 }
 
 // Get the amount required from the pool stakers for an empty deposit
-func (c *ProtocolDaoSettings) GetEmptyDepositUserAmount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositUserAmount, "getEmptyDepositUserAmount")
+func (c *ProtocolDaoSettings) GetEmptyDepositUserAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositUserAmount, "getEmptyDepositUserAmount")
 }
 
 // Check if minipool withdrawable event submissions are currently enabled
-func (c *ProtocolDaoSettings) GetSubmitWithdrawableEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsSubmitWithdrawableEnabled, "getSubmitWithdrawableEnabled")
+func (c *ProtocolDaoSettings) GetSubmitWithdrawableEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsSubmitWithdrawableEnabled, "getSubmitWithdrawableEnabled")
 }
 
 // Get the timeout period, in seconds, for prelaunch minipools to launch
-func (c *ProtocolDaoSettings) GetMinipoolLaunchTimeout(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchTimeout.RawValue, "getLaunchTimeout")
+func (c *ProtocolDaoSettings) GetMinipoolLaunchTimeout(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchTimeout.RawValue, "getLaunchTimeout")
 }
 
 // Check if minipool bond reductions are currently enabled
-func (c *ProtocolDaoSettings) GetBondReductionEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsBondReductionEnabled, "getBondReductionEnabled")
+func (c *ProtocolDaoSettings) GetBondReductionEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsBondReductionEnabled, "getBondReductionEnabled")
 }
 
 // === RocketDAOProtocolSettingsNetwork ===
 
 // Get the threshold of Oracle DAO nodes that must reach consensus on oracle data to commit it
-func (c *ProtocolDaoSettings) GetOracleDaoConsensusThreshold(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.OracleDaoConsensusThreshold.RawValue, "getNodeConsensusThreshold")
+func (c *ProtocolDaoSettings) GetOracleDaoConsensusThreshold(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.OracleDaoConsensusThreshold.RawValue, "getNodeConsensusThreshold")
 }
 
 // Check if network balance submission is enabled
-func (c *ProtocolDaoSettings) GetSubmitBalancesEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitBalancesEnabled, "getSubmitBalancesEnabled")
+func (c *ProtocolDaoSettings) GetSubmitBalancesEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitBalancesEnabled, "getSubmitBalancesEnabled")
 }
 
 // Get the frequency, in blocks, at which network balances should be submitted by the Oracle DAO
-func (c *ProtocolDaoSettings) GetSubmitBalancesFrequency(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.SubmitBalancesFrequency.RawValue, "getSubmitBalancesFrequency")
+func (c *ProtocolDaoSettings) GetSubmitBalancesFrequency(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.SubmitBalancesFrequency.RawValue, "getSubmitBalancesFrequency")
 }
 
 // Check if network price submission is enabled
-func (c *ProtocolDaoSettings) GetSubmitPricesEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitPricesEnabled, "getSubmitPricesEnabled")
+func (c *ProtocolDaoSettings) GetSubmitPricesEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitPricesEnabled, "getSubmitPricesEnabled")
 }
 
 // Get the frequency, in blocks, at which network prices should be submitted by the Oracle DAO
-func (c *ProtocolDaoSettings) GetSubmitPricesFrequency(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.SubmitPricesFrequency.RawValue, "getSubmitPricesFrequency")
+func (c *ProtocolDaoSettings) GetSubmitPricesFrequency(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.SubmitPricesFrequency.RawValue, "getSubmitPricesFrequency")
 }
 
 // Get the minimum node commission rate
-func (c *ProtocolDaoSettings) GetMinimumNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.MinimumNodeFee.RawValue, "getMinimumNodeFee")
+func (c *ProtocolDaoSettings) GetMinimumNodeFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.MinimumNodeFee.RawValue, "getMinimumNodeFee")
 }
 
 // Get the target node commission rate
-func (c *ProtocolDaoSettings) GetTargetNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetNodeFee.RawValue, "getTargetNodeFee")
+func (c *ProtocolDaoSettings) GetTargetNodeFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetNodeFee.RawValue, "getTargetNodeFee")
 }
 
 // Get the maximum node commission rate
-func (c *ProtocolDaoSettings) GetMaximumNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.MaximumNodeFee.RawValue, "getMaximumNodeFee")
+func (c *ProtocolDaoSettings) GetMaximumNodeFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.MaximumNodeFee.RawValue, "getMaximumNodeFee")
 }
 
 // Get the range of node demand values to base fee calculations on
-func (c *ProtocolDaoSettings) GetNodeFeeDemandRange(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.NodeFeeDemandRange, "getNodeFeeDemandRange")
+func (c *ProtocolDaoSettings) GetNodeFeeDemandRange(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.NodeFeeDemandRange, "getNodeFeeDemandRange")
 }
 
 // Get the target collateralization rate for the rETH NetworkContract as a fraction
-func (c *ProtocolDaoSettings) GetTargetRethCollateralRate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetRethCollateralRate.RawValue, "getTargetRethCollateralRate")
+func (c *ProtocolDaoSettings) GetTargetRethCollateralRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetRethCollateralRate.RawValue, "getTargetRethCollateralRate")
 }
 
 // === RocketDAOProtocolSettingsNode ===
 
 // Check if node registration is currently enabled
-func (c *ProtocolDaoSettings) GetNodeRegistrationEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.IsRegistrationEnabled, "getRegistrationEnabled")
+func (c *ProtocolDaoSettings) GetNodeRegistrationEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NodeContract, &c.Details.Node.IsRegistrationEnabled, "getRegistrationEnabled")
 }
 
 // Check if node deposits are currently enabled
-func (c *ProtocolDaoSettings) GetNodeDepositEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.IsDepositingEnabled, "getDepositEnabled")
+func (c *ProtocolDaoSettings) GetNodeDepositEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NodeContract, &c.Details.Node.IsDepositingEnabled, "getDepositEnabled")
 }
 
 // Check if creating vacant minipools is currently enabled
-func (c *ProtocolDaoSettings) GetVacantMinipoolsEnabled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.AreVacantMinipoolsEnabled, "getVacantMinipoolsEnabled")
+func (c *ProtocolDaoSettings) GetVacantMinipoolsEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NodeContract, &c.Details.Node.AreVacantMinipoolsEnabled, "getVacantMinipoolsEnabled")
 }
 
 // Get the minimum RPL stake per minipool as a fraction of assigned user ETH
-func (c *ProtocolDaoSettings) GetMinimumPerMinipoolStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.MinimumPerMinipoolStake.RawValue, "getMinimumPerMinipoolStake")
+func (c *ProtocolDaoSettings) GetMinimumPerMinipoolStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NodeContract, &c.Details.Node.MinimumPerMinipoolStake.RawValue, "getMinimumPerMinipoolStake")
 }
 
 // Get the maximum RPL stake per minipool as a fraction of assigned user ETH
-func (c *ProtocolDaoSettings) GetMaximumPerMinipoolStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.NodeContract, &c.Details.Node.MaximumPerMinipoolStake.RawValue, "getMaximumPerMinipoolStake")
+func (c *ProtocolDaoSettings) GetMaximumPerMinipoolStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NodeContract, &c.Details.Node.MaximumPerMinipoolStake.RawValue, "getMaximumPerMinipoolStake")
 }
 
 // === RocketDAOProtocolSettingsRewards ===
 
 // Get the total RPL rewards amount for all rewards recipients as a fraction
-func (c *ProtocolDaoSettings) GetRewardsPercentageTotal(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.RewardsContract, &c.Details.Rewards.PercentageTotal.RawValue, "getRewardsClaimersPercTotal")
+func (c *ProtocolDaoSettings) GetRewardsPercentageTotal(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.RewardsContract, &c.Details.Rewards.PercentageTotal.RawValue, "getRewardsClaimersPercTotal")
 }
 
 // Get the rewards interval time
-func (c *ProtocolDaoSettings) GetRewardsIntervalTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.RewardsContract, &c.Details.Rewards.IntervalTime.RawValue, "getRewardsClaimIntervalTime")
+func (c *ProtocolDaoSettings) GetRewardsIntervalTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.RewardsContract, &c.Details.Rewards.IntervalTime.RawValue, "getRewardsClaimIntervalTime")
 }
 
 // === Universal ===
 
 // Get all basic details
-func (c *ProtocolDaoSettings) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 	// Auction
 	c.GetCreateAuctionLotEnabled(mc)
 	c.GetBidOnAuctionLotEnabled(mc)

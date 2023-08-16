@@ -7,9 +7,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -103,118 +103,118 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 // === NodeManager ===
 
 // Check whether or not the node exists
-func (c *Node) GetExists(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.Exists, "getNodeExists", c.Details.Address)
+func (c *Node) GetExists(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.Exists, "getNodeExists", c.Details.Address)
 }
 
 // Get the time that the user registered
-func (c *Node) GetRegistrationTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.RegistrationTime.RawValue, "getNodeRegistrationTime", c.Details.Address)
+func (c *Node) GetRegistrationTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.RegistrationTime.RawValue, "getNodeRegistrationTime", c.Details.Address)
 }
 
 // Get the node's timezone location
-func (c *Node) GetTimezoneLocation(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.TimezoneLocation, "getNodeTimezoneLocation", c.Details.Address)
+func (c *Node) GetTimezoneLocation(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.TimezoneLocation, "getNodeTimezoneLocation", c.Details.Address)
 }
 
 // Get the network ID for the node's rewards
-func (c *Node) GetRewardNetwork(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.RewardNetwork.RawValue, "getRewardNetwork", c.Details.Address)
+func (c *Node) GetRewardNetwork(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.RewardNetwork.RawValue, "getRewardNetwork", c.Details.Address)
 }
 
 // Check if the node's fee distributor has been initialized yet
-func (c *Node) GetFeeDistributorInitialized(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.IsFeeDistributorInitialized, "getFeeDistributorInitialised", c.Details.Address)
+func (c *Node) GetFeeDistributorInitialized(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.IsFeeDistributorInitialized, "getFeeDistributorInitialised", c.Details.Address)
 }
 
 // Get a node's average minipool fee (commission)
-func (c *Node) GetAverageFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.AverageFee.RawValue, "getAverageNodeFee", c.Details.Address)
+func (c *Node) GetAverageFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.AverageFee.RawValue, "getAverageNodeFee", c.Details.Address)
 }
 
 // Get the node's smoothing pool opt-in status
-func (c *Node) GetSmoothingPoolRegistrationState(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.SmoothingPoolRegistrationState, "getSmoothingPoolRegistrationState", c.Details.Address)
+func (c *Node) GetSmoothingPoolRegistrationState(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.SmoothingPoolRegistrationState, "getSmoothingPoolRegistrationState", c.Details.Address)
 }
 
 // Get the time of the node's last smoothing pool opt-in / opt-out
-func (c *Node) GetSmoothingPoolRegistrationChanged(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeMgr, &c.Details.SmoothingPoolRegistrationChanged.RawValue, "getSmoothingPoolRegistrationChanged", c.Details.Address)
+func (c *Node) GetSmoothingPoolRegistrationChanged(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeMgr, &c.Details.SmoothingPoolRegistrationChanged.RawValue, "getSmoothingPoolRegistrationChanged", c.Details.Address)
 }
 
 // === NodeStaking ===
 
 // Get the node's RPL stake
-func (c *Node) GetRplStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.RplStake, "getNodeRPLStake", c.Details.Address)
+func (c *Node) GetRplStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.RplStake, "getNodeRPLStake", c.Details.Address)
 }
 
 // Get the node's effective RPL stake
-func (c *Node) GetEffectiveRplStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.EffectiveRplStake, "getNodeEffectiveRPLStake", c.Details.Address)
+func (c *Node) GetEffectiveRplStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.EffectiveRplStake, "getNodeEffectiveRPLStake", c.Details.Address)
 }
 
 // Get the node's minimum RPL stake to collateralize its minipools
-func (c *Node) GetMinimumRplStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.MinimumRplStake, "getNodeMinimumRPLStake", c.Details.Address)
+func (c *Node) GetMinimumRplStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.MinimumRplStake, "getNodeMinimumRPLStake", c.Details.Address)
 }
 
 // Get the node's maximum RPL stake to collateralize its minipools
-func (c *Node) GetMaximumRplStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.MaximumRplStake, "getNodeMaximumRPLStake", c.Details.Address)
+func (c *Node) GetMaximumRplStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.MaximumRplStake, "getNodeMaximumRPLStake", c.Details.Address)
 }
 
 // Get the time the node last staked RPL
-func (c *Node) GetRplStakedTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.RplStakedTime.RawValue, "getNodeRPLStakedTime", c.Details.Address)
+func (c *Node) GetRplStakedTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.RplStakedTime.RawValue, "getNodeRPLStakedTime", c.Details.Address)
 }
 
 // Get the amount of ETH the node has borrowed from the deposit pool to create its minipools
-func (c *Node) GetEthMatched(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.EthMatched, "getNodeETHMatched", c.Details.Address)
+func (c *Node) GetEthMatched(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.EthMatched, "getNodeETHMatched", c.Details.Address)
 }
 
 // Get the amount of ETH the node can still borrow from the deposit pool to create any new minipools
-func (c *Node) GetEthMatchedLimit(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.nodeStaking, &c.Details.EthMatchedLimit, "getNodeETHMatchedLimit", c.Details.Address)
+func (c *Node) GetEthMatchedLimit(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeStaking, &c.Details.EthMatchedLimit, "getNodeETHMatchedLimit", c.Details.Address)
 }
 
 // === MinipoolManager ===
 
 // Get the node's minipool count
-func (c *Node) GetMinipoolCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.MinipoolCount.RawValue, "getNodeMinipoolCount", c.Details.Address)
+func (c *Node) GetMinipoolCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.MinipoolCount.RawValue, "getNodeMinipoolCount", c.Details.Address)
 }
 
 // Get the number of minipools owned by a node that are not finalised
-func (c *Node) GetActiveMinipoolCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.ActiveMinipoolCount.RawValue, "getNodeActiveMinipoolCount", c.Details.Address)
+func (c *Node) GetActiveMinipoolCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.ActiveMinipoolCount.RawValue, "getNodeActiveMinipoolCount", c.Details.Address)
 }
 
 // Get the number of minipools owned by a node that are finalised
-func (c *Node) GetFinalisedMinipoolCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.FinalisedMinipoolCount.RawValue, "getNodeFinalisedMinipoolCount", c.Details.Address)
+func (c *Node) GetFinalisedMinipoolCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.FinalisedMinipoolCount.RawValue, "getNodeFinalisedMinipoolCount", c.Details.Address)
 }
 
 // Get the number of minipools owned by a node that are validating
-func (c *Node) GetValidatingMinipoolCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.ValidatingMinipoolCount.RawValue, "getNodeValidatingMinipoolCount", c.Details.Address)
+func (c *Node) GetValidatingMinipoolCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.ValidatingMinipoolCount.RawValue, "getNodeValidatingMinipoolCount", c.Details.Address)
 }
 
 // === Storage ===
 
 // Get the node's withdrawal address
-func (c *Node) GetWithdrawalAddress(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.storage, &c.Details.WithdrawalAddress, "getNodeWithdrawalAddress", c.Details.Address)
+func (c *Node) GetWithdrawalAddress(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.storage, &c.Details.WithdrawalAddress, "getNodeWithdrawalAddress", c.Details.Address)
 }
 
 // Get the node's pending withdrawal address
-func (c *Node) GetPendingWithdrawalAddress(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.storage, &c.Details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", c.Details.Address)
+func (c *Node) GetPendingWithdrawalAddress(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.storage, &c.Details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", c.Details.Address)
 }
 
 // Get all basic details
-func (c *Node) GetBasicDetails(mc *multicall.MultiCaller) {
+func (c *Node) GetBasicDetails(mc *batch.MultiCaller) {
 	c.GetExists(mc)
 	c.GetRegistrationTime(mc)
 	c.GetTimezoneLocation(mc)
@@ -300,13 +300,13 @@ func (c *Node) ConfirmWithdrawalAddress(opts *bind.TransactOpts) (*core.Transact
 // === MinipoolManager ===
 
 // Get one of the node's minipool addresses by index
-func (c *Node) GetMinipoolAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
-	multicall.AddCall(mc, c.mpMgr, address_Out, "getNodeMinipoolAt", c.Details.Address, big.NewInt(int64(index)))
+func (c *Node) GetMinipoolAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
+	core.AddCall(mc, c.mpMgr, address_Out, "getNodeMinipoolAt", c.Details.Address, big.NewInt(int64(index)))
 }
 
 // Get one of the node's validating minipool addresses by index
-func (c *Node) GetValidatingMinipoolAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
-	multicall.AddCall(mc, c.mpMgr, address_Out, "getNodeValidatingMinipoolAt", c.Details.Address, big.NewInt(int64(index)))
+func (c *Node) GetValidatingMinipoolAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
+	core.AddCall(mc, c.mpMgr, address_Out, "getNodeValidatingMinipoolAt", c.Details.Address, big.NewInt(int64(index)))
 }
 
 // Get all of the node's minipool addresses in a standalone call.
@@ -317,7 +317,7 @@ func (c *Node) GetMinipoolAddresses(minipoolCount uint64, opts *bind.CallOpts) (
 
 	// Run the multicall query for each address
 	err := c.rp.BatchQuery(int(minipoolCount), c.rp.AddressBatchSize,
-		func(mc *multicall.MultiCaller, index int) error {
+		func(mc *batch.MultiCaller, index int) error {
 			c.GetMinipoolAddress(mc, &addresses[index], uint64(index))
 			return nil
 		}, opts)
@@ -337,7 +337,7 @@ func (c *Node) GetValidatingMinipoolAddresses(minipoolCount uint64, opts *bind.C
 
 	// Run the multicall query for each address
 	err := c.rp.BatchQuery(int(minipoolCount), c.rp.AddressBatchSize,
-		func(mc *multicall.MultiCaller, index int) error {
+		func(mc *batch.MultiCaller, index int) error {
 			c.GetValidatingMinipoolAddress(mc, &addresses[index], uint64(index))
 			return nil
 		}, opts)
@@ -356,6 +356,6 @@ func (c *Node) GetValidatingMinipoolAddresses(minipoolCount uint64, opts *bind.C
 // === MinipoolFactory ===
 
 // Get the address of a minipool based on the node's address and a salt
-func (c *Node) GetExpectedMinipoolAddress(mc *multicall.MultiCaller, address_Out *common.Address, salt *big.Int) {
-	multicall.AddCall(mc, c.mpFactory, address_Out, "getExpectedAddress", c.Details.Address, salt)
+func (c *Node) GetExpectedMinipoolAddress(mc *batch.MultiCaller, address_Out *common.Address, salt *big.Int) {
+	core.AddCall(mc, c.mpFactory, address_Out, "getExpectedAddress", c.Details.Address, salt)
 }

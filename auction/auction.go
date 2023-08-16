@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -48,7 +48,6 @@ func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 	}
 
 	return &AuctionManager{
-		Details:  AuctionManagerDetails{},
 		rp:       rp,
 		contract: contract,
 	}, nil
@@ -59,27 +58,27 @@ func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 // =============
 
 // Get the total RPL balance of the auction contract
-func (c *AuctionManager) GetTotalRPLBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalRplBalance, "getTotalRPLBalance")
+func (c *AuctionManager) GetTotalRPLBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalRplBalance, "getTotalRPLBalance")
 }
 
 // Get the allotted RPL balance of the auction contract
-func (c *AuctionManager) GetAllottedRPLBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.AllottedRplBalance, "getAllottedRPLBalance")
+func (c *AuctionManager) GetAllottedRPLBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.AllottedRplBalance, "getAllottedRPLBalance")
 }
 
 // Get the remaining RPL balance of the auction contract
-func (c *AuctionManager) GetRemainingRPLBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.RemainingRplBalance, "getRemainingRPLBalance")
+func (c *AuctionManager) GetRemainingRPLBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.RemainingRplBalance, "getRemainingRPLBalance")
 }
 
 // Get the number of lots for auction
-func (c *AuctionManager) GetLotCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.LotCount.RawValue, "getLotCount")
+func (c *AuctionManager) GetLotCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.LotCount.RawValue, "getLotCount")
 }
 
 // Get all basic details
-func (c *AuctionManager) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *AuctionManager) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetTotalRPLBalance(mc)
 	c.GetAllottedRPLBalance(mc)
 	c.GetRemainingRPLBalance(mc)

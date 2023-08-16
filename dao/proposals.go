@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // Settings
@@ -55,8 +55,8 @@ func NewDaoProposal(rp *rocketpool.RocketPool) (*DaoProposal, error) {
 // =============
 
 // Get the total number of DAO proposals
-func (c *DaoProposal) GetProposalCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
+func (c *DaoProposal) GetProposalCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
 }
 
 // =============
@@ -68,7 +68,7 @@ func (c *DaoProposal) GetProposalCount(mc *multicall.MultiCaller) {
 func (c *DaoProposal) GetProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts, proposalCount uint64) ([]*Proposal, []*Proposal, error) {
 	props := make([]*Proposal, proposalCount)
 
-	err := rp.Query(func(mc *multicall.MultiCaller) error {
+	err := rp.Query(func(mc *batch.MultiCaller) error {
 		for i := uint64(0); i < proposalCount; i++ {
 			prop, err := NewProposal(rp, i)
 			if err != nil {

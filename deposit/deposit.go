@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -53,22 +53,22 @@ func NewDepositPool(rp *rocketpool.RocketPool) (*DepositPool, error) {
 // =============
 
 // Get the deposit pool balance
-func (c *DepositPool) GetBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.Balance, "getBalance")
+func (c *DepositPool) GetBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.Balance, "getBalance")
 }
 
 // Get the deposit pool balance provided by pool stakers
-func (c *DepositPool) GetUserBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.Balance, "getUserBalance")
+func (c *DepositPool) GetUserBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.Balance, "getUserBalance")
 }
 
 // Get the excess deposit pool balance
-func (c *DepositPool) GetExcessBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.Balance, "getExcessBalance")
+func (c *DepositPool) GetExcessBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.Balance, "getExcessBalance")
 }
 
 // Get all basic details
-func (c *DepositPool) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *DepositPool) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetBalance(mc)
 	c.GetUserBalance(mc)
 	c.GetExcessBalance(mc)

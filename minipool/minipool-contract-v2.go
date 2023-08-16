@@ -7,9 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -78,7 +78,7 @@ func (c *MinipoolV2) GetMinipoolCommon() *MinipoolCommon {
 }
 
 // Query all of the minipool details
-func (c *MinipoolV2) QueryAllDetails(mc *multicall.MultiCaller) {
+func (c *MinipoolV2) QueryAllDetails(mc *batch.MultiCaller) {
 	c.MinipoolCommon.QueryAllDetails(mc)
 }
 

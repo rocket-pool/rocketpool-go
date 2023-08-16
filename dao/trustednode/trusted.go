@@ -7,9 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -53,17 +53,17 @@ func NewDaoNodeTrusted(rp *rocketpool.RocketPool) (*DaoNodeTrusted, error) {
 // =============
 
 // Get the member count
-func (c *DaoNodeTrusted) GetMemberCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.MemberCount.RawValue, "getMemberCount")
+func (c *DaoNodeTrusted) GetMemberCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.MemberCount.RawValue, "getMemberCount")
 }
 
 // Get the minimum member count
-func (c *DaoNodeTrusted) GetMinimumMemberCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.MinimumMemberCount.RawValue, "getMemberMinRequired")
+func (c *DaoNodeTrusted) GetMinimumMemberCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.MinimumMemberCount.RawValue, "getMemberMinRequired")
 }
 
 // Get all basic details
-func (c *DaoNodeTrusted) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *DaoNodeTrusted) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetMemberCount(mc)
 	c.GetMinimumMemberCount(mc)
 }
@@ -101,8 +101,8 @@ func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName rocke
 // =================
 
 // Get an Oracle DAO member address by index
-func (c *DaoNodeTrusted) GetMemberAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
-	multicall.AddCall(mc, c.contract, address_Out, "getMemberAt", big.NewInt(int64(index)))
+func (c *DaoNodeTrusted) GetMemberAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
+	core.AddCall(mc, c.contract, address_Out, "getMemberAt", big.NewInt(int64(index)))
 }
 
 // Get the list of Oracle DAO member addresses.
@@ -112,7 +112,7 @@ func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallO
 
 	// Run the multicall query for each address
 	err := c.rp.BatchQuery(int(memberCount), c.rp.AddressBatchSize,
-		func(mc *multicall.MultiCaller, index int) error {
+		func(mc *batch.MultiCaller, index int) error {
 			c.GetMemberAddress(mc, &addresses[index], uint64(index))
 			return nil
 		},

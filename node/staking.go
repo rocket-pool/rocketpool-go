@@ -6,9 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -52,17 +52,17 @@ func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 // =============
 
 // Get the version of the Node Staking contract
-func (c *NodeStaking) GetVersion(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.Version, "version")
+func (c *NodeStaking) GetVersion(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.Version, "version")
 }
 
 // Get the total RPL staked in the network
-func (c *NodeStaking) GetTotalRPLStake(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalRplStake, "getTotalRPLStake")
+func (c *NodeStaking) GetTotalRPLStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalRplStake, "getTotalRPLStake")
 }
 
 // Get all basic details
-func (c *NodeStaking) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *NodeStaking) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetVersion(mc)
 	c.GetTotalRPLStake(mc)
 }

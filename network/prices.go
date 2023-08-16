@@ -7,10 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -54,22 +54,22 @@ func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 // =============
 
 // Get the block number which network prices are current for
-func (c *NetworkPrices) GetPricesBlock(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.PricesBlock.RawValue, "getPricesBlock")
+func (c *NetworkPrices) GetPricesBlock(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.PricesBlock.RawValue, "getPricesBlock")
 }
 
 // Get the current network RPL price in ETH
-func (c *NetworkPrices) GetRplPrice(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.RplPrice.RawValue, "getRPLPrice")
+func (c *NetworkPrices) GetRplPrice(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.RplPrice.RawValue, "getRPLPrice")
 }
 
 // Returns the latest block number that oracles should be reporting prices for
-func (c *NetworkPrices) GetLatestReportablePricesBlock(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
+func (c *NetworkPrices) GetLatestReportablePricesBlock(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
 }
 
 // Get all basic details
-func (c *NetworkPrices) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *NetworkPrices) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetPricesBlock(mc)
 	c.GetRplPrice(mc)
 	c.GetLatestReportablePricesBlock(mc)

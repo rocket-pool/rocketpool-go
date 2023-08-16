@@ -7,10 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -58,37 +58,37 @@ func NewNetworkBalances(rp *rocketpool.RocketPool) (*NetworkBalances, error) {
 // =============
 
 // Get the block number which network balances are current for
-func (c *NetworkBalances) GetBalancesBlock(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.BalancesBlock.RawValue, "getBalancesBlock")
+func (c *NetworkBalances) GetBalancesBlock(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.BalancesBlock.RawValue, "getBalancesBlock")
 }
 
 // Get the current network total ETH balance
-func (c *NetworkBalances) GetTotalETHBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalETHBalance, "getTotalETHBalance")
+func (c *NetworkBalances) GetTotalETHBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalETHBalance, "getTotalETHBalance")
 }
 
 // Get the current network staking ETH balance
-func (c *NetworkBalances) GetStakingETHBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.StakingETHBalance, "getStakingETHBalance")
+func (c *NetworkBalances) GetStakingETHBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.StakingETHBalance, "getStakingETHBalance")
 }
 
 // Get the current network total rETH supply
-func (c *NetworkBalances) GetTotalRETHSupply(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalRETHSupply, "getTotalRETHSupply")
+func (c *NetworkBalances) GetTotalRETHSupply(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalRETHSupply, "getTotalRETHSupply")
 }
 
 // Get the current network ETH utilization rate
-func (c *NetworkBalances) GetETHUtilizationRate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.ETHUtilizationRate.RawValue, "getETHUtilizationRate")
+func (c *NetworkBalances) GetETHUtilizationRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.ETHUtilizationRate.RawValue, "getETHUtilizationRate")
 }
 
 // Returns the latest block number that oracles should be reporting balances for
-func (c *NetworkBalances) GetLatestReportableBalancesBlock(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.LatestReportableBalancesBlock.RawValue, "getLatestReportableBlock")
+func (c *NetworkBalances) GetLatestReportableBalancesBlock(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.LatestReportableBalancesBlock.RawValue, "getLatestReportableBlock")
 }
 
 // Get all basic details
-func (c *NetworkBalances) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *NetworkBalances) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetBalancesBlock(mc)
 	c.GetTotalETHBalance(mc)
 	c.GetStakingETHBalance(mc)

@@ -7,10 +7,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/node"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
+
 	"golang.org/x/sync/errgroup"
 )
 
@@ -64,9 +66,13 @@ func GetNativeNodeDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts
 		DistributorBalanceNodeETH: big.NewInt(0),
 	}
 
-	addNodeDetailsCalls(contracts, contracts.Multicaller, &details, nodeAddress)
+	mc, err := batch.NewMultiCaller(rp.Client, contracts.MulticallerAddress)
+	if err != nil {
+		return NativeNodeDetails{}, fmt.Errorf("error creating multicaller: %w", err)
+	}
+	addNodeDetailsCalls(contracts, mc, &details, nodeAddress)
 
-	_, err := contracts.Multicaller.FlexibleCall(true, opts)
+	_, err = mc.FlexibleCall(true, opts)
 	if err != nil {
 		return NativeNodeDetails{}, fmt.Errorf("error executing multicall: %w", err)
 	}
@@ -122,7 +128,7 @@ func GetAllNativeNodeDetails(rp *rocketpool.RocketPool, contracts *NetworkContra
 
 		wg.Go(func() error {
 			var err error
-			mc, err := multicall.NewMultiCaller(rp.Client, contracts.Multicaller.ContractAddress)
+			mc, err := batch.NewMultiCaller(rp.Client, contracts.MulticallerAddress)
 			if err != nil {
 				return err
 			}
@@ -239,7 +245,7 @@ func getNodeAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkContracts
 	}
 
 	// Get node count
-	err = rp.Query(func(mc *multicall.MultiCaller) error {
+	err = rp.Query(func(mc *batch.MultiCaller) error {
 		nodeMgr.GetNodeCount(mc)
 		return nil
 	}, opts)
@@ -264,12 +270,12 @@ func getNodeAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkContracts
 
 		wg.Go(func() error {
 			var err error
-			mc, err := multicall.NewMultiCaller(rp.Client, contracts.Multicaller.ContractAddress)
+			mc, err := batch.NewMultiCaller(rp.Client, contracts.MulticallerAddress)
 			if err != nil {
 				return err
 			}
 			for j := i; j < max; j++ {
-				multicall.AddCall(mc, contracts.RocketNodeManager, &addresses[j], "getNodeAt", big.NewInt(int64(j)))
+				core.AddCall(mc, contracts.RocketNodeManager, &addresses[j], "getNodeAt", big.NewInt(int64(j)))
 			}
 			_, err = mc.FlexibleCall(true, opts)
 			if err != nil {
@@ -287,29 +293,29 @@ func getNodeAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkContracts
 }
 
 // Add all of the calls for the node details to the multicaller
-func addNodeDetailsCalls(contracts *NetworkContracts, mc *multicall.MultiCaller, details *NativeNodeDetails, address common.Address) {
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.Exists, "getNodeExists", address)
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.RegistrationTime, "getNodeRegistrationTime", address)
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.TimezoneLocation, "getNodeTimezoneLocation", address)
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.FeeDistributorInitialised, "getFeeDistributorInitialised", address)
-	multicall.AddCall(mc, contracts.RocketNodeDistributorFactory, &details.FeeDistributorAddress, "getProxyAddress", address)
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.RewardNetwork, "getRewardNetwork", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.RplStake, "getNodeRPLStake", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.EffectiveRPLStake, "getNodeEffectiveRPLStake", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.MinimumRPLStake, "getNodeMinimumRPLStake", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.MaximumRPLStake, "getNodeMaximumRPLStake", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.EthMatched, "getNodeETHMatched", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.EthMatchedLimit, "getNodeETHMatchedLimit", address)
-	multicall.AddCall(mc, contracts.RocketMinipoolManager, &details.MinipoolCount, "getNodeMinipoolCount", address)
-	multicall.AddCall(mc, contracts.RocketTokenRETH, &details.BalanceRETH, "balanceOf", address)
-	multicall.AddCall(mc, contracts.RocketTokenRPL, &details.BalanceRPL, "balanceOf", address)
-	multicall.AddCall(mc, contracts.RocketTokenRPLFixedSupply, &details.BalanceOldRPL, "balanceOf", address)
-	multicall.AddCall(mc, contracts.RocketStorage, &details.WithdrawalAddress, "getNodeWithdrawalAddress", address)
-	multicall.AddCall(mc, contracts.RocketStorage, &details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", address)
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.SmoothingPoolRegistrationState, "getSmoothingPoolRegistrationState", address)
-	multicall.AddCall(mc, contracts.RocketNodeManager, &details.SmoothingPoolRegistrationChanged, "getSmoothingPoolRegistrationChanged", address)
+func addNodeDetailsCalls(contracts *NetworkContracts, mc *batch.MultiCaller, details *NativeNodeDetails, address common.Address) {
+	core.AddCall(mc, contracts.RocketNodeManager, &details.Exists, "getNodeExists", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.RegistrationTime, "getNodeRegistrationTime", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.TimezoneLocation, "getNodeTimezoneLocation", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.FeeDistributorInitialised, "getFeeDistributorInitialised", address)
+	core.AddCall(mc, contracts.RocketNodeDistributorFactory, &details.FeeDistributorAddress, "getProxyAddress", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.RewardNetwork, "getRewardNetwork", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.RplStake, "getNodeRPLStake", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.EffectiveRPLStake, "getNodeEffectiveRPLStake", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.MinimumRPLStake, "getNodeMinimumRPLStake", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.MaximumRPLStake, "getNodeMaximumRPLStake", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.EthMatched, "getNodeETHMatched", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.EthMatchedLimit, "getNodeETHMatchedLimit", address)
+	core.AddCall(mc, contracts.RocketMinipoolManager, &details.MinipoolCount, "getNodeMinipoolCount", address)
+	core.AddCall(mc, contracts.RocketTokenRETH, &details.BalanceRETH, "balanceOf", address)
+	core.AddCall(mc, contracts.RocketTokenRPL, &details.BalanceRPL, "balanceOf", address)
+	core.AddCall(mc, contracts.RocketTokenRPLFixedSupply, &details.BalanceOldRPL, "balanceOf", address)
+	core.AddCall(mc, contracts.RocketStorage, &details.WithdrawalAddress, "getNodeWithdrawalAddress", address)
+	core.AddCall(mc, contracts.RocketStorage, &details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.SmoothingPoolRegistrationState, "getSmoothingPoolRegistrationState", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.SmoothingPoolRegistrationChanged, "getSmoothingPoolRegistrationChanged", address)
 
 	// Atlas
-	multicall.AddCall(mc, contracts.RocketNodeDeposit, &details.DepositCreditBalance, "getNodeDepositCredit", address)
-	multicall.AddCall(mc, contracts.RocketNodeStaking, &details.CollateralisationRatio, "getNodeETHCollateralisationRatio", address)
+	core.AddCall(mc, contracts.RocketNodeDeposit, &details.DepositCreditBalance, "getNodeDepositCredit", address)
+	core.AddCall(mc, contracts.RocketNodeStaking, &details.CollateralisationRatio, "getNodeETHCollateralisationRatio", address)
 }

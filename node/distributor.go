@@ -7,9 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -58,17 +58,17 @@ func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, d
 // =============
 
 // Gets the node share of the distributor's current balance
-func (c *NodeDistributor) GetNodeShare(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.NodeShare, "getNodeShare")
+func (c *NodeDistributor) GetNodeShare(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.NodeShare, "getNodeShare")
 }
 
 // Gets the user share of the distributor's current balance
-func (c *NodeDistributor) GetUserShare(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.UserShare, "getUserShare")
+func (c *NodeDistributor) GetUserShare(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.UserShare, "getUserShare")
 }
 
 // Get all basic details
-func (c *NodeDistributor) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *NodeDistributor) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetNodeShare(mc)
 	c.GetUserShare(mc)
 }

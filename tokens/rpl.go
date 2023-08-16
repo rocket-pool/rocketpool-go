@@ -7,9 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -55,25 +55,25 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 // === Core ERC-20 functions ===
 
 // Get the RPL total supply
-func (c *TokenRpl) GetTotalSupply(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.TotalSupply, "totalSupply")
+func (c *TokenRpl) GetTotalSupply(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.TotalSupply, "totalSupply")
 }
 
 // Get the RPL balance of an address
-func (c *TokenRpl) GetBalance(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
-	multicall.AddCall(mc, c.Contract, balance_Out, "balanceOf", address)
+func (c *TokenRpl) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+	core.AddCall(mc, c.Contract, balance_Out, "balanceOf", address)
 }
 
 // Get the RPL spending allowance of an address and spender
-func (c *TokenRpl) GetAllowance(mc *multicall.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
-	multicall.AddCall(mc, c.Contract, allowance_Out, "allowance", owner, spender)
+func (c *TokenRpl) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
+	core.AddCall(mc, c.Contract, allowance_Out, "allowance", owner, spender)
 }
 
 // === RPL functions ===
 
 // Get the RPL inflation interval rate
-func (c *TokenRpl) GetInflationIntervalRate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.InflationIntervalRate, "getInflationIntervalRate")
+func (c *TokenRpl) GetInflationIntervalRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.InflationIntervalRate, "getInflationIntervalRate")
 }
 
 // ====================

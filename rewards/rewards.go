@@ -11,10 +11,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -101,53 +101,53 @@ func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 // =============
 
 // Get the index of the active rewards period
-func (c *RewardsPool) GetRewardIndex(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.RewardIndex.RawValue, "getRewardIndex")
+func (c *RewardsPool) GetRewardIndex(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.RewardIndex.RawValue, "getRewardIndex")
 }
 
 // Get the timestamp that the current rewards interval started
-func (c *RewardsPool) GetIntervalStart(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.IntervalStart.RawValue, "getClaimIntervalTimeStart")
+func (c *RewardsPool) GetIntervalStart(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.IntervalStart.RawValue, "getClaimIntervalTimeStart")
 }
 
 // Get the number of seconds in a claim interval
-func (c *RewardsPool) GetIntervalDuration(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.IntervalDuration.RawValue, "getClaimIntervalTime")
+func (c *RewardsPool) GetIntervalDuration(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.IntervalDuration.RawValue, "getClaimIntervalTime")
 }
 
 // Get the percent of checkpoint rewards that goes to node operators
-func (c *RewardsPool) GetNodeOperatorRewardsPercent(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.NodeOperatorRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimNode")
+func (c *RewardsPool) GetNodeOperatorRewardsPercent(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.NodeOperatorRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimNode")
 }
 
 // Get the percent of checkpoint rewards that goes to Ooracle DAO members
-func (c *RewardsPool) GetOracleDaoRewardsPercent(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.OracleDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimTrustedNode")
+func (c *RewardsPool) GetOracleDaoRewardsPercent(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.OracleDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimTrustedNode")
 }
 
 // Get the percent of checkpoint rewards that goes to the Protocol DAO
-func (c *RewardsPool) GetProtocolDaoRewardsPercent(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.ProtocolDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimDAO")
+func (c *RewardsPool) GetProtocolDaoRewardsPercent(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.ProtocolDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimDAO")
 }
 
 // Get the amount of RPL rewards that are currently pending distribution
-func (c *RewardsPool) GetPendingRplRewards(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.PendingRplRewards, "getPendingRPLRewards")
+func (c *RewardsPool) GetPendingRplRewards(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.PendingRplRewards, "getPendingRPLRewards")
 }
 
 // Get the amount of ETH rewards that are currently pending distribution
-func (c *RewardsPool) GetPendingEthRewards(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.PendingRplRewards, "getPendingETHRewards")
+func (c *RewardsPool) GetPendingEthRewards(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.PendingRplRewards, "getPendingETHRewards")
 }
 
 // Check whether or not the given address has submitted for the given rewards interval
-func (c *RewardsPool) GetTrustedNodeSubmitted(mc *multicall.MultiCaller, nodeAddress common.Address, rewardsIndex uint64, hasSubmitted_Out *bool, opts *bind.CallOpts) {
+func (c *RewardsPool) GetTrustedNodeSubmitted(mc *batch.MultiCaller, nodeAddress common.Address, rewardsIndex uint64, hasSubmitted_Out *bool, opts *bind.CallOpts) {
 	indexBig := big.NewInt(0).SetUint64(rewardsIndex)
-	multicall.AddCall(mc, c.contract, hasSubmitted_Out, "getTrustedNodeSubmitted", nodeAddress, indexBig)
+	core.AddCall(mc, c.contract, hasSubmitted_Out, "getTrustedNodeSubmitted", nodeAddress, indexBig)
 }
 
 // Check whether or not the given address has submitted specific rewards info
-func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *multicall.MultiCaller, nodeAddress common.Address, submission RewardSubmission, hasSubmitted_Out *bool, opts *bind.CallOpts) error {
+func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *batch.MultiCaller, nodeAddress common.Address, submission RewardSubmission, hasSubmitted_Out *bool, opts *bind.CallOpts) error {
 	// NOTE: this doesn't have a view yet so we have to construct it manually, and RLP encode it
 	stringTy, _ := abi.NewType("string", "string", nil)
 	addressTy, _ := abi.NewType("address", "address", nil)

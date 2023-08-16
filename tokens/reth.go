@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -58,18 +58,18 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 // === Core ERC-20 functions ===
 
 // Get the rETH total supply
-func (c *TokenReth) GetTotalSupply(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
+func (c *TokenReth) GetTotalSupply(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
 }
 
 // Get the rETH balance of an address
-func (c *TokenReth) GetBalance(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
-	multicall.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
+func (c *TokenReth) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+	core.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
 }
 
 // Get the rETH spending allowance of an address and spender
-func (c *TokenReth) GetAllowance(mc *multicall.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
-	multicall.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
+func (c *TokenReth) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
+	core.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
 }
 
 // === rETH functions ===
@@ -84,28 +84,28 @@ func (c *TokenReth) GetContractEthBalance(opts *bind.CallOpts) (*big.Int, error)
 }
 
 // Get the ETH value of an amount of rETH
-func (c *TokenReth) GetEthValueOfReth(mc *multicall.MultiCaller, value_Out **big.Int, rethAmount *big.Int) {
-	multicall.AddCall(mc, c.contract, value_Out, "getEthValue", rethAmount)
+func (c *TokenReth) GetEthValueOfReth(mc *batch.MultiCaller, value_Out **big.Int, rethAmount *big.Int) {
+	core.AddCall(mc, c.contract, value_Out, "getEthValue", rethAmount)
 }
 
 // Get the rETH value of an amount of ETH
-func (c *TokenReth) GetRethValueOfEth(mc *multicall.MultiCaller, value_Out **big.Int, ethAmount *big.Int) {
-	multicall.AddCall(mc, c.contract, value_Out, "getRethValue", ethAmount)
+func (c *TokenReth) GetRethValueOfEth(mc *batch.MultiCaller, value_Out **big.Int, ethAmount *big.Int) {
+	core.AddCall(mc, c.contract, value_Out, "getRethValue", ethAmount)
 }
 
 // Get the current ETH : rETH exchange rate
-func (c *TokenReth) GetExchangeRate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.ExchangeRate.RawValue, "getExchangeRate")
+func (c *TokenReth) GetExchangeRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.ExchangeRate.RawValue, "getExchangeRate")
 }
 
 // Get the total amount of ETH collateral available for rETH trades
-func (c *TokenReth) GetTotalCollateral(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalCollateral, "getTotalCollateral")
+func (c *TokenReth) GetTotalCollateral(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalCollateral, "getTotalCollateral")
 }
 
 // Get the rETH collateralization rate
-func (c *TokenReth) GetCollateralRate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.CollateralRate.RawValue, "getCollateralRate")
+func (c *TokenReth) GetCollateralRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.CollateralRate.RawValue, "getCollateralRate")
 }
 
 // ====================

@@ -7,9 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -54,18 +54,18 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 // === Core ERC-20 functions ===
 
 // Get the fixed-supply RPL total supply
-func (c *TokenRplFixedSupply) GetTotalSupply(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
+func (c *TokenRplFixedSupply) GetTotalSupply(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
 }
 
 // Get the fixed-supply RPL balance of an address
-func (c *TokenRplFixedSupply) GetBalance(mc *multicall.MultiCaller, balance_Out **big.Int, address common.Address) {
-	multicall.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
+func (c *TokenRplFixedSupply) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+	core.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
 }
 
 // Get the fixed-supply RPL spending allowance of an address and spender
-func (c *TokenRplFixedSupply) GetAllowance(mc *multicall.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
-	multicall.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
+func (c *TokenRplFixedSupply) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
+	core.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
 }
 
 // ====================

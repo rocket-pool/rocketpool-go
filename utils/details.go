@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
+	batch "github.com/rocket-pool/batch-query"
 )
 
-func GetAllDetails(contract any, details any, mc *multicall.MultiCaller) error {
+func GetAllDetails(contract any, details any, mc *batch.MultiCaller) error {
 	// Get the value and type of the contract
 	contractValue := reflect.ValueOf(contract)
 	contractType := reflect.TypeOf(contract)

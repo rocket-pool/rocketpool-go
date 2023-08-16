@@ -7,11 +7,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -47,8 +47,8 @@ func NewNodeDeposit(rp *rocketpool.RocketPool) (*NodeDeposit, error) {
 // =============
 
 // Get the amount of ETH in the node's deposit credit bank
-func (c *NodeDeposit) GetNodeDepositCredit(mc *multicall.MultiCaller, nodeAddress common.Address, credit_Out **big.Int) {
-	multicall.AddCall(mc, c.contract, credit_Out, "getNodeDepositCredit", nodeAddress)
+func (c *NodeDeposit) GetNodeDepositCredit(mc *batch.MultiCaller, nodeAddress common.Address, credit_Out **big.Int) {
+	core.AddCall(mc, c.contract, credit_Out, "getNodeDepositCredit", nodeAddress)
 }
 
 // ====================

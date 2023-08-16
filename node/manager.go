@@ -7,9 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // Settings
@@ -65,17 +65,17 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 // =============
 
 // Get the version of the Node Manager contract
-func (c *NodeManager) GetVersion(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.Version, "version")
+func (c *NodeManager) GetVersion(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.Version, "version")
 }
 
 // Get the number of nodes in the network
-func (c *NodeManager) GetNodeCount(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.NodeCount.RawValue, "getNodeCount")
+func (c *NodeManager) GetNodeCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.NodeCount.RawValue, "getNodeCount")
 }
 
 // Get all basic details
-func (c *NodeManager) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *NodeManager) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetVersion(mc)
 	c.GetNodeCount(mc)
 }
@@ -85,8 +85,8 @@ func (c *NodeManager) GetAllDetails(mc *multicall.MultiCaller) {
 // =================
 
 // Get a node address by index
-func (c *NodeManager) GetNodeAddress(mc *multicall.MultiCaller, address_Out *common.Address, index uint64) {
-	multicall.AddCall(mc, c.contract, address_Out, "getNodeAt", big.NewInt(int64(index)))
+func (c *NodeManager) GetNodeAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
+	core.AddCall(mc, c.contract, address_Out, "getNodeAt", big.NewInt(int64(index)))
 }
 
 // Get all minipool addresses in a standalone call.
@@ -97,7 +97,7 @@ func (c *NodeManager) GetNodeAddresses(nodeCount uint64, opts *bind.CallOpts) ([
 
 	// Run the multicall query for each address
 	err := c.rp.BatchQuery(int(nodeCount), c.rp.AddressBatchSize,
-		func(mc *multicall.MultiCaller, index int) error {
+		func(mc *batch.MultiCaller, index int) error {
 			c.GetNodeAddress(mc, &addresses[index], uint64(index))
 			return nil
 		}, opts)

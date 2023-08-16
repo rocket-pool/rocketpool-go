@@ -9,9 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -101,7 +101,7 @@ func (c *MinipoolV3) GetMinipoolCommon() *MinipoolCommon {
 }
 
 // Get the basic details
-func (c *MinipoolV3) QueryAllDetails(mc *multicall.MultiCaller) {
+func (c *MinipoolV3) QueryAllDetails(mc *batch.MultiCaller) {
 	c.MinipoolCommon.QueryAllDetails(mc)
 	c.GetVacant(mc)
 	c.GetPreMigrationBalance(mc)
@@ -117,56 +117,56 @@ func (c *MinipoolV3) QueryAllDetails(mc *multicall.MultiCaller) {
 // === Minipool ===
 
 // Check if this is a vacant minipool (pre-staking solo migration)
-func (c *MinipoolV3) GetVacant(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.IsVacant, "getVacant")
+func (c *MinipoolV3) GetVacant(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.IsVacant, "getVacant")
 }
 
 // Get the node deposit balance of this minipool before its last bond reduction
-func (c *MinipoolV3) GetPreMigrationBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.PreMigrationBalance, "getPreMigrationBalance")
+func (c *MinipoolV3) GetPreMigrationBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.PreMigrationBalance, "getPreMigrationBalance")
 }
 
 // Check if the minipool's balance has already been distributed by someone other than the node operator
-func (c *MinipoolV3) GetUserDistributed(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.PreMigrationBalance, "getUserDistributed")
+func (c *MinipoolV3) GetUserDistributed(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.PreMigrationBalance, "getUserDistributed")
 }
 
 // === BondReducer ===
 
 // Gets whether or not the bond reduction process for the minipool has already been cancelled
 // The output will be stored in details - note that the Address must already be set!
-func (c *MinipoolV3) GetReduceBondCancelled(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.IsBondReduceCancelled, "getReduceBondCancelled", c.MinipoolCommon.Details.Address)
+func (c *MinipoolV3) GetReduceBondCancelled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.br, &c.Details.IsBondReduceCancelled, "getReduceBondCancelled", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the time at which the MP owner started the bond reduction process
 // The output will be stored in details - note that the Address must already be set!
-func (c *MinipoolV3) GetReduceBondTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.ReduceBondTime.RawValue, "getReduceBondTime", c.MinipoolCommon.Details.Address)
+func (c *MinipoolV3) GetReduceBondTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.br, &c.Details.ReduceBondTime.RawValue, "getReduceBondTime", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the amount of ETH a minipool is reducing its bond to
 // The output will be stored in details - note that the Address must already be set!
-func (c *MinipoolV3) GetReduceBondValue(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.ReduceBondValue, "getReduceBondValue", c.MinipoolCommon.Details.Address)
+func (c *MinipoolV3) GetReduceBondValue(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.br, &c.Details.ReduceBondValue, "getReduceBondValue", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the timestamp at which the bond was last reduced
 // The output will be stored in details - note that the Address must already be set!
-func (c *MinipoolV3) GetLastBondReductionTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionTime.RawValue, "getLastBondReductionTime", c.MinipoolCommon.Details.Address)
+func (c *MinipoolV3) GetLastBondReductionTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.br, &c.Details.LastBondReductionTime.RawValue, "getLastBondReductionTime", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the previous bond amount of the minipool prior to its last reduction
 // The output will be stored in details - note that the Address must already be set!
-func (c *MinipoolV3) GetLastBondReductionPrevValue(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionPrevValue, "getLastBondReductionPrevValue", c.MinipoolCommon.Details.Address)
+func (c *MinipoolV3) GetLastBondReductionPrevValue(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.br, &c.Details.LastBondReductionPrevValue, "getLastBondReductionPrevValue", c.MinipoolCommon.Details.Address)
 }
 
 // Gets the previous node fee (commission) of the minipool prior to its last reduction
 // The output will be stored in details - note that the Address must already be set!
-func (c *MinipoolV3) GetLastBondReductionPrevNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.br, &c.Details.LastBondReductionPrevNodeFee.RawValue, "getLastBondReductionPrevNodeFee", c.MinipoolCommon.Details.Address)
+func (c *MinipoolV3) GetLastBondReductionPrevNodeFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.br, &c.Details.LastBondReductionPrevNodeFee.RawValue, "getLastBondReductionPrevNodeFee", c.MinipoolCommon.Details.Address)
 }
 
 // ====================

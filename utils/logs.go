@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 type FilterQuery struct {
@@ -28,7 +28,7 @@ func GetLogs(rp *rocketpool.RocketPool, addressFilter []common.Address, topicFil
 		var err error
 		deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
 		var fromBlock *big.Int
-		err = rp.Query(func(mc *multicall.MultiCaller) error {
+		err = rp.Query(func(mc *batch.MultiCaller) error {
 			rp.Storage.GetUint(mc, &fromBlock, deployBlockHash)
 			return nil
 		}, nil)

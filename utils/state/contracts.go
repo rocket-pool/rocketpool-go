@@ -9,17 +9,17 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/hashicorp/go-version"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // Container for network contracts
 type NetworkContracts struct {
 	// Non-RP Utility
-	BalanceBatcher *multicall.BalanceBatcher
-	Multicaller    *multicall.MultiCaller
-	ElBlockNumber  *big.Int
+	BalanceBatcher     *batch.BalanceBatcher
+	MulticallerAddress common.Address
+	ElBlockNumber      *big.Int
 
 	// Network version
 	Version *version.Version
@@ -73,19 +73,14 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 
 	// Create the contract binding
 	contracts := &NetworkContracts{
-		RocketStorage: rp.Storage.Contract,
-		ElBlockNumber: opts.BlockNumber,
-	}
-
-	// Create the multicaller
-	var err error
-	contracts.Multicaller, err = multicall.NewMultiCaller(rp.Client, multicallerAddress)
-	if err != nil {
-		return nil, err
+		RocketStorage:      rp.Storage.Contract,
+		ElBlockNumber:      opts.BlockNumber,
+		MulticallerAddress: multicallerAddress,
 	}
 
 	// Create the balance batcher
-	contracts.BalanceBatcher, err = multicall.NewBalanceBatcher(rp.Client, balanceBatcherAddress)
+	var err error
+	contracts.BalanceBatcher, err = batch.NewBalanceBatcher(rp.Client, balanceBatcherAddress, 1000, 6)
 	if err != nil {
 		return nil, err
 	}
@@ -161,17 +156,23 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 		contract: &contracts.RocketMinipoolBondReducer,
 	})
 
+	// Create a multicaller
+	mc, err := batch.NewMultiCaller(rp.Client, multicallerAddress)
+	if err != nil {
+		return nil, fmt.Errorf("error creating multicaller: %w", err)
+	}
+
 	// Add the address and ABI getters to multicall
 	for i, wrapper := range wrappers {
 		// Add the address getter
-		multicall.AddCall(contracts.Multicaller, contracts.RocketStorage, &wrappers[i].address, "getAddress", [32]byte(crypto.Keccak256Hash([]byte("contract.address"), []byte(wrapper.name))))
+		core.AddCall(mc, contracts.RocketStorage, &wrappers[i].address, "getAddress", [32]byte(crypto.Keccak256Hash([]byte("contract.address"), []byte(wrapper.name))))
 
 		// Add the ABI getter
-		multicall.AddCall(contracts.Multicaller, contracts.RocketStorage, &wrappers[i].abiEncoded, "getString", [32]byte(crypto.Keccak256Hash([]byte("contract.abi"), []byte(wrapper.name))))
+		core.AddCall(mc, contracts.RocketStorage, &wrappers[i].abiEncoded, "getString", [32]byte(crypto.Keccak256Hash([]byte("contract.abi"), []byte(wrapper.name))))
 	}
 
 	// Run the multi-getter
-	_, err = contracts.Multicaller.FlexibleCall(true, opts)
+	_, err = mc.FlexibleCall(true, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error executing multicall for contract retrieval: %w", err)
 	}
@@ -213,7 +214,7 @@ func (c *NetworkContracts) getCurrentVersion(rp *rocketpool.RocketPool) error {
 	// Get the contract versions
 	var nodeStakingVersion uint8
 	var nodeMgrVersion uint8
-	err := rp.Query(func(mc *multicall.MultiCaller) error {
+	err := rp.Query(func(mc *batch.MultiCaller) error {
 		rocketpool.GetContractVersion(mc, &nodeStakingVersion, *c.RocketNodeStaking.Address)
 		rocketpool.GetContractVersion(mc, &nodeMgrVersion, *c.RocketNodeManager.Address)
 		return nil

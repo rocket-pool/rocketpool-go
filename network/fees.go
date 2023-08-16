@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/big"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 // ===============
@@ -51,22 +51,22 @@ func NewNetworkFees(rp *rocketpool.RocketPool) (*NetworkFees, error) {
 // =============
 
 // Get the current network node demand in ETH
-func (c *NetworkFees) GetNodeDemand(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.NodeDemand, "getNodeDemand")
+func (c *NetworkFees) GetNodeDemand(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.NodeDemand, "getNodeDemand")
 }
 
 // Get the current network node commission rate
-func (c *NetworkFees) GetNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.NodeFee.RawValue, "getNodeFee")
+func (c *NetworkFees) GetNodeFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.NodeFee.RawValue, "getNodeFee")
 }
 
 // Get the network node fee for a node demand value
-func (c *NetworkFees) GetNodeFeeByDemand(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.contract, &c.Details.NodeFeeByDemand.RawValue, "getNodeFeeByDemand")
+func (c *NetworkFees) GetNodeFeeByDemand(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.NodeFeeByDemand.RawValue, "getNodeFeeByDemand")
 }
 
 // Get all basic details
-func (c *NetworkFees) GetAllDetails(mc *multicall.MultiCaller) {
+func (c *NetworkFees) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetNodeDemand(mc)
 	c.GetNodeFee(mc)
 	c.GetNodeFeeByDemand(mc)

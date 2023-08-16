@@ -10,12 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
 	rptypes "github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils"
-	"github.com/rocket-pool/rocketpool-go/utils/multicall"
 )
 
 const (
@@ -143,129 +143,129 @@ func (c *MinipoolCommon) GetContract() *core.Contract {
 // === Minipool ===
 
 // Get the minipool's penalty count
-func (c *MinipoolCommon) GetPenaltyCount(mc *multicall.MultiCaller) {
+func (c *MinipoolCommon) GetPenaltyCount(mc *batch.MultiCaller) {
 	// This isn't in the manager, it's in RocketStorage
 	key := crypto.Keccak256Hash([]byte("network.penalties.penalty"), c.Details.Address.Bytes())
 	c.rp.Storage.GetUint(mc, &c.Details.PenaltyCount.RawValue, key)
 }
 
 // Get the minipool's status
-func (c *MinipoolCommon) GetStatus(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.Status.RawValue, "getStatus")
+func (c *MinipoolCommon) GetStatus(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.Status.RawValue, "getStatus")
 }
 
 // Get the block that the minipool's status last changed
-func (c *MinipoolCommon) GetStatusBlock(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.StatusBlock.RawValue, "getStatusBlock")
+func (c *MinipoolCommon) GetStatusBlock(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.StatusBlock.RawValue, "getStatusBlock")
 }
 
 // Get the time that the minipool's status last changed
-func (c *MinipoolCommon) GetStatusTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.StatusTime.RawValue, "getStatusTime")
+func (c *MinipoolCommon) GetStatusTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.StatusTime.RawValue, "getStatusTime")
 }
 
 // Check if the minipool has been finalised
-func (c *MinipoolCommon) GetFinalised(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.IsFinalised, "getFinalised")
+func (c *MinipoolCommon) GetFinalised(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.IsFinalised, "getFinalised")
 }
 
 // Get the minipool's node address
-func (c *MinipoolCommon) GetNodeAddress(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.NodeAddress, "getNodeAddress")
+func (c *MinipoolCommon) GetNodeAddress(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.NodeAddress, "getNodeAddress")
 }
 
 // Get the minipool's commission rate
-func (c *MinipoolCommon) GetNodeFee(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.NodeFee.RawValue, "getNodeFee")
+func (c *MinipoolCommon) GetNodeFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.NodeFee.RawValue, "getNodeFee")
 }
 
 // Get the balance the node has deposited to the minipool
-func (c *MinipoolCommon) GetNodeDepositBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.NodeDepositBalance, "getNodeDepositBalance")
+func (c *MinipoolCommon) GetNodeDepositBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.NodeDepositBalance, "getNodeDepositBalance")
 }
 
 // Get the amount of ETH ready to be refunded to the node
-func (c *MinipoolCommon) GetNodeRefundBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.NodeRefundBalance, "getNodeRefundBalance")
+func (c *MinipoolCommon) GetNodeRefundBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.NodeRefundBalance, "getNodeRefundBalance")
 }
 
 // Check if the node deposit has been assigned to the minipool
-func (c *MinipoolCommon) GetNodeDepositAssigned(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.NodeDepositAssigned, "getNodeDepositAssigned")
+func (c *MinipoolCommon) GetNodeDepositAssigned(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.NodeDepositAssigned, "getNodeDepositAssigned")
 }
 
 // Get the balance the pool stakers have deposited to the minipool
-func (c *MinipoolCommon) GetUserDepositBalance(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.UserDepositBalance, "getUserDepositBalance")
+func (c *MinipoolCommon) GetUserDepositBalance(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.UserDepositBalance, "getUserDepositBalance")
 }
 
 // Check if the pool staker deposits has been assigned to the minipool
-func (c *MinipoolCommon) GetUserDepositAssigned(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.UserDepositAssigned, "getUserDepositAssigned")
+func (c *MinipoolCommon) GetUserDepositAssigned(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.UserDepositAssigned, "getUserDepositAssigned")
 }
 
 // Get the time at which the pool stakers were assigned to the minipool
-func (c *MinipoolCommon) GetUserDepositAssignedTime(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.UserDepositAssignedTime.RawValue, "getUserDepositAssignedTime")
+func (c *MinipoolCommon) GetUserDepositAssignedTime(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.UserDepositAssignedTime.RawValue, "getUserDepositAssignedTime")
 }
 
 // Check if the "use latest delegate" flag is enabled
-func (c *MinipoolCommon) GetUseLatestDelegate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.IsUseLatestDelegateEnabled, "getUseLatestDelegate")
+func (c *MinipoolCommon) GetUseLatestDelegate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.IsUseLatestDelegateEnabled, "getUseLatestDelegate")
 }
 
 // Get the address of the current delegate the minipool has recorded
-func (c *MinipoolCommon) GetDelegate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.DelegateAddress, "getDelegate")
+func (c *MinipoolCommon) GetDelegate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.DelegateAddress, "getDelegate")
 }
 
 // Get the address of the previous delegate the minipool will use after a rollback
-func (c *MinipoolCommon) GetPreviousDelegate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.PreviousDelegateAddress, "getPreviousDelegate")
+func (c *MinipoolCommon) GetPreviousDelegate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.PreviousDelegateAddress, "getPreviousDelegate")
 }
 
 // Get the address of the delegate the minipool will use (may be different than DelegateAddress if UseLatestDelegate is enabled)
-func (c *MinipoolCommon) GetEffectiveDelegate(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.Contract, &c.Details.EffectiveDelegateAddress, "getEffectiveDelegate")
+func (c *MinipoolCommon) GetEffectiveDelegate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.Contract, &c.Details.EffectiveDelegateAddress, "getEffectiveDelegate")
 }
 
 // === MinipoolManager ===
 
 // Check if a minipool exists
-func (c *MinipoolCommon) GetExists(mc *multicall.MultiCaller) {
+func (c *MinipoolCommon) GetExists(mc *batch.MultiCaller) {
 	// TODO: Is this really necessary?
-	multicall.AddCall(mc, c.mpMgr, &c.Details.Exists, "getMinipoolExists", c.Details.Address)
+	core.AddCall(mc, c.mpMgr, &c.Details.Exists, "getMinipoolExists", c.Details.Address)
 }
 
 // Get the minipool's pubkey
-func (c *MinipoolCommon) GetPubkey(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.Pubkey, "getMinipoolPubkey", c.Details.Address)
+func (c *MinipoolCommon) GetPubkey(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.Pubkey, "getMinipoolPubkey", c.Details.Address)
 }
 
 // Get the minipool's 0x01-based withdrawal credentials
-func (c *MinipoolCommon) GetWithdrawalCredentials(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Details.Address)
+func (c *MinipoolCommon) GetWithdrawalCredentials(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Details.Address)
 }
 
 // Check if the minipool's RPL has been slashed
-func (c *MinipoolCommon) GetRplSlashed(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Details.Address)
+func (c *MinipoolCommon) GetRplSlashed(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Details.Address)
 }
 
 // Get the minipool's deposit type
-func (c *MinipoolCommon) GetDepositType(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpMgr, &c.Details.DepositType.RawValue, "getMinipoolDepositType", c.Details.Address)
+func (c *MinipoolCommon) GetDepositType(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpMgr, &c.Details.DepositType.RawValue, "getMinipoolDepositType", c.Details.Address)
 }
 
 // === MinipoolQueue ===
 
 // Get queue position of the minipool (-1 means not in the queue, otherwise 0-indexed).
-func (c *MinipoolCommon) GetQueuePosition(mc *multicall.MultiCaller) {
-	multicall.AddCall(mc, c.mpQueue, &c.Details.QueuePosition.RawValue, "getMinipoolPosition", c.Details.Address)
+func (c *MinipoolCommon) GetQueuePosition(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mpQueue, &c.Details.QueuePosition.RawValue, "getMinipoolPosition", c.Details.Address)
 }
 
 // Get the basic details
-func (c *MinipoolCommon) QueryAllDetails(mc *multicall.MultiCaller) {
+func (c *MinipoolCommon) QueryAllDetails(mc *batch.MultiCaller) {
 	c.GetPenaltyCount(mc)
 	c.GetStatus(mc)
 	c.GetStatusBlock(mc)
@@ -358,13 +358,13 @@ func (c *MinipoolCommon) GetCommonDetails() *MinipoolCommonDetails {
 }
 
 // Given a validator balance, calculates how much belongs to the node (taking into consideration rewards and penalties)
-func (c *MinipoolCommon) CalculateNodeShare(mc *multicall.MultiCaller, share_Out **big.Int, balance *big.Int) {
-	multicall.AddCall(mc, c.Contract, share_Out, "calculateNodeShare", balance)
+func (c *MinipoolCommon) CalculateNodeShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int) {
+	core.AddCall(mc, c.Contract, share_Out, "calculateNodeShare", balance)
 }
 
 // Given a validator balance, calculates how much belongs to rETH pool stakers (taking into consideration rewards and penalties)
-func (c *MinipoolCommon) CalculateUserShare(mc *multicall.MultiCaller, share_Out **big.Int, balance *big.Int) {
-	multicall.AddCall(mc, c.Contract, share_Out, "calculateUserShare", balance)
+func (c *MinipoolCommon) CalculateUserShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int) {
+	core.AddCall(mc, c.Contract, share_Out, "calculateUserShare", balance)
 }
 
 // Get the data from this minipool's MinipoolPrestaked event
@@ -382,7 +382,7 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 	// Grab the lowest block number worth querying from (should never have to go back this far in practice)
 	deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
 	var fromBlockBig *big.Int
-	err = c.rp.Query(func(mc *multicall.MultiCaller) error {
+	err = c.rp.Query(func(mc *batch.MultiCaller) error {
 		c.rp.Storage.GetUint(mc, &fromBlockBig, deployBlockHash)
 		return nil
 	}, opts)
