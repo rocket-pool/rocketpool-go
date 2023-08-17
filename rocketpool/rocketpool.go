@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/sync/errgroup"
 
 	batch "github.com/rocket-pool/batch-query"
@@ -26,6 +27,7 @@ const (
 type RocketPool struct {
 	Client                   core.ExecutionClient
 	Storage                  *storage.Storage
+	DeployBlock              *big.Int
 	MulticallAddress         *common.Address
 	BalanceBatcher           *batch.BalanceBatcher
 	VersionManager           *VersionManager
@@ -52,7 +54,7 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		return nil, fmt.Errorf("error creating balance batcher: %w", err)
 	}
 
-	// Create and return
+	// Create the binding
 	rp := &RocketPool{
 		Client:                   client,
 		Storage:                  storage,
@@ -65,6 +67,16 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		instanceAbis:             map[ContractName]*abi.ABI{},
 	}
 	rp.VersionManager = NewVersionManager(rp)
+
+	// Get the block the protocol was deployed on
+	deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
+	err = rp.Query(func(mc *batch.MultiCaller) error {
+		rp.Storage.GetUint(mc, &rp.DeployBlock, deployBlockHash)
+		return nil
+	}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error getting deployment block: %w", err)
+	}
 
 	return rp, nil
 }
@@ -102,7 +114,7 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	for i, result := range results {
 		if !result {
 			contractName := contractNames[i]
-			return fmt.Errorf("error getting address and ABI for contract %s: %w", contractName, err)
+			return fmt.Errorf("failed getting address and ABI for contract %s", contractName)
 		}
 	}
 
@@ -125,19 +137,24 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	}
 
 	// Get the versions of each contract
-	emptyAddress := common.Address{}
-	err = rp.Query(func(mc *batch.MultiCaller) error {
+	results, err = rp.FlexQuery(func(mc *batch.MultiCaller) error {
 		for _, contractName := range contractNames {
 			contract := rp.contracts[contractName]
-			address := *contract.Address
-			if address != emptyAddress {
-				core.AddCall(mc, contract, &contract.Version, "version") // TODO: use the contract version getter once it's ready
+			err := GetContractVersion(mc, &contract.Version, *contract.Address)
+			if err != nil {
+				return fmt.Errorf("error getting version for contract %s: %w", string(contractName), err)
 			}
 		}
 		return nil
 	}, opts)
 	if err != nil {
 		return fmt.Errorf("error getting contract versions: %w", err)
+	}
+	for i, result := range results {
+		if !result {
+			contract := rp.contracts[contractNames[i]]
+			contract.Version = 1 // If the contract doesn't have a version() in its ABI then it's v1
+		}
 	}
 
 	return nil

@@ -57,9 +57,6 @@ const (
 	ContractName_RocketMerkleDistributorMainnet ContractName = "rocketMerkleDistributorMainnet"
 	ContractName_RocketRewardsPool              ContractName = "rocketRewardsPool"
 
-	// Storage
-	ContractName_RocketStorage ContractName = "rocketStorage"
-
 	// Tokens
 	ContractName_RocketTokenRETH           ContractName = "rocketTokenRETH"
 	ContractName_RocketTokenRPLFixedSupply ContractName = "rocketTokenRPLFixedSupply"
@@ -111,8 +108,6 @@ var ContractNames = []ContractName{
 
 	ContractName_RocketMerkleDistributorMainnet,
 	ContractName_RocketRewardsPool,
-
-	ContractName_RocketStorage,
 
 	ContractName_RocketTokenRETH,
 	ContractName_RocketTokenRPLFixedSupply,

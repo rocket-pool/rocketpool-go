@@ -44,11 +44,13 @@ type ProtocolDaoSettingsDetails struct {
 	} `json:"auction"`
 
 	Deposit struct {
-		IsDepositingEnabled          bool                   `json:"isDepositingEnabled"`
-		AreDepositAssignmentsEnabled bool                   `json:"areDepositAssignmentsEnabled"`
-		MinimumDeposit               *big.Int               `json:"minimumDeposit"`
-		MaximumDepositPoolSize       *big.Int               `json:"maximumDepositPoolSize"`
-		MaximumAssignmentsPerDeposit core.Parameter[uint64] `json:"maximumAssignmentsPerDeposit"`
+		IsDepositingEnabled                    bool                    `json:"isDepositingEnabled"`
+		AreDepositAssignmentsEnabled           bool                    `json:"areDepositAssignmentsEnabled"`
+		MinimumDeposit                         *big.Int                `json:"minimumDeposit"`
+		MaximumDepositPoolSize                 *big.Int                `json:"maximumDepositPoolSize"`
+		MaximumAssignmentsPerDeposit           core.Parameter[uint64]  `json:"maximumAssignmentsPerDeposit"`
+		MaximumSocialisedAssignmentsPerDeposit core.Parameter[uint64]  `json:"maximumSocialisedAssignmentsPerDeposit"`
+		DepositFee                             core.Parameter[float64] `json:"depositFee"`
 	} `json:"deposit"`
 
 	Inflation struct {
@@ -58,36 +60,42 @@ type ProtocolDaoSettingsDetails struct {
 
 	Minipool struct {
 		LaunchBalance               *big.Int                      `json:"launchBalance"`
-		FullDepositNodeAmount       *big.Int                      `json:"fullDepositNodeAmount"`
-		HalfDepositNodeAmount       *big.Int                      `json:"halfDepositNodeAmount"`
-		EmptyDepositNodeAmount      *big.Int                      `json:"emptyDepositNodeAmount"`
+		PrelaunchValue              *big.Int                      `json:"prelaunchValue"`
 		FullDepositUserAmount       *big.Int                      `json:"fullDepositUserAmount"`
 		HalfDepositUserAmount       *big.Int                      `json:"halfDepositUserAmount"`
-		EmptyDepositUserAmount      *big.Int                      `json:"emptyDepositUserAmount"`
+		VariableDepositAmount       *big.Int                      `json:"variableDepositAmount"`
 		IsSubmitWithdrawableEnabled bool                          `json:"isSubmitWithdrawableEnabled"`
 		LaunchTimeout               core.Parameter[time.Duration] `json:"launchTimeout"`
 		IsBondReductionEnabled      bool                          `json:"isBondReductionEnabled"`
+		MaximumCount                core.Parameter[uint64]        `json:"maximumCount"`
+		UserDistributeWindowStart   core.Parameter[time.Duration] `json:"userDistributeWindowStart"`
+		UserDistributeWindowLength  core.Parameter[time.Duration] `json:"userDistributeWindowLength"`
 	} `json:"minipool"`
 
 	Network struct {
-		OracleDaoConsensusThreshold core.Parameter[float64] `json:"oracleDaoConsensusThreshold"`
-		IsSubmitBalancesEnabled     bool                    `json:"isSubmitBalancesEnabled"`
-		SubmitBalancesFrequency     core.Parameter[uint64]  `json:"submitBalancesFrequency"`
-		IsSubmitPricesEnabled       bool                    `json:"isSubmitPricesEnabled"`
-		SubmitPricesFrequency       core.Parameter[uint64]  `json:"submitPricesFrequency"`
-		MinimumNodeFee              core.Parameter[float64] `json:"minimumNodeFee"`
-		TargetNodeFee               core.Parameter[float64] `json:"targetNodeFee"`
-		MaximumNodeFee              core.Parameter[float64] `json:"maximumNodeFee"`
-		NodeFeeDemandRange          *big.Int                `json:"nodeFeeDemandRange"`
-		TargetRethCollateralRate    core.Parameter[float64] `json:"targetRethCollateralRate"`
+		OracleDaoConsensusThreshold core.Parameter[float64]       `json:"oracleDaoConsensusThreshold"`
+		NodePenaltyThreshold        core.Parameter[float64]       `json:"nodePenaltyThreshold"`
+		PerPenaltyRate              core.Parameter[float64]       `json:"perPenaltyRate"`
+		IsSubmitBalancesEnabled     bool                          `json:"isSubmitBalancesEnabled"`
+		SubmitBalancesFrequency     core.Parameter[time.Duration] `json:"submitBalancesFrequency"`
+		IsSubmitPricesEnabled       bool                          `json:"isSubmitPricesEnabled"`
+		SubmitPricesFrequency       core.Parameter[time.Duration] `json:"submitPricesFrequency"`
+		MinimumNodeFee              core.Parameter[float64]       `json:"minimumNodeFee"`
+		TargetNodeFee               core.Parameter[float64]       `json:"targetNodeFee"`
+		MaximumNodeFee              core.Parameter[float64]       `json:"maximumNodeFee"`
+		NodeFeeDemandRange          *big.Int                      `json:"nodeFeeDemandRange"`
+		TargetRethCollateralRate    core.Parameter[float64]       `json:"targetRethCollateralRate"`
+		RethDepositDelay            core.Parameter[time.Duration] `json:"rethDepositDelay"`
+		IsSubmitRewardsEnabled      bool                          `json:"isSubmitRewardsEnabled"`
 	} `json:"network"`
 
 	Node struct {
-		IsRegistrationEnabled     bool                    `json:"isRegistrationEnabled"`
-		IsDepositingEnabled       bool                    `json:"isDepositingEnabled"`
-		AreVacantMinipoolsEnabled bool                    `json:"areVacantMinipoolsEnabled"`
-		MinimumPerMinipoolStake   core.Parameter[float64] `json:"minimumPerMinipoolStake"`
-		MaximumPerMinipoolStake   core.Parameter[float64] `json:"maximumPerMinipoolStake"`
+		IsRegistrationEnabled              bool                    `json:"isRegistrationEnabled"`
+		IsSmoothingPoolRegistrationEnabled bool                    `json:"isSmoothingPoolRegistrationEnabled"`
+		IsDepositingEnabled                bool                    `json:"isDepositingEnabled"`
+		AreVacantMinipoolsEnabled          bool                    `json:"areVacantMinipoolsEnabled"`
+		MinimumPerMinipoolStake            core.Parameter[float64] `json:"minimumPerMinipoolStake"`
+		MaximumPerMinipoolStake            core.Parameter[float64] `json:"maximumPerMinipoolStake"`
 	} `json:"node"`
 
 	Rewards struct {
@@ -199,9 +207,19 @@ func (c *ProtocolDaoSettings) GetMaximumDepositPoolSize(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumDepositPoolSize, "getMaximumDepositPoolSize")
 }
 
-// Get the maximum assignments per deposit transaction
+// Get the total maximum assignments per deposit transaction, including socialized deposits
 func (c *ProtocolDaoSettings) GetMaximumPoolDepositAssignments(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumAssignmentsPerDeposit.RawValue, "getMaximumDepositAssignments")
+}
+
+// Get the number of "socialized" assignments for a pool deposit - these are assignments that always occur if the pool has enough ETH to support them, regardless of deposit size
+func (c *ProtocolDaoSettings) GetMaximumPoolDepositSocialisedAssignments(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.MaximumSocialisedAssignmentsPerDeposit.RawValue, "getMaximumDepositSocialisedAssignments")
+}
+
+// Get the fee that is applied to new pool deposits, as a fraction
+func (c *ProtocolDaoSettings) GetDepositFee(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.DepositContract, &c.Details.Deposit.DepositFee.RawValue, "getDepositFee")
 }
 
 // === RocketDAOProtocolSettingsInflation ===
@@ -223,19 +241,9 @@ func (c *ProtocolDaoSettings) GetMinipoolLaunchBalance(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.LaunchBalance, "getLaunchBalance")
 }
 
-// Get the amount required from the node for a full deposit
-func (c *ProtocolDaoSettings) GetFullDepositNodeAmount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.FullDepositNodeAmount, "getFullDepositNodeAmount")
-}
-
-// Get the amount required from the node for a half deposit
-func (c *ProtocolDaoSettings) GetHalfDepositNodeAmount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositNodeAmount, "getHalfDepositNodeAmount")
-}
-
-// Get the amount required from the node for an empty deposit
-func (c *ProtocolDaoSettings) GetEmptyDepositNodeAmount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositNodeAmount, "getEmptyDepositNodeAmount")
+// Get the amount of ETH that must be deposited to the Beacon contract for a minipool's initial deposit (which takes it to prelaunch)
+func (c *ProtocolDaoSettings) GetPrelaunchValue(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.PrelaunchValue, "getPreLaunchValue")
 }
 
 // Get the amount required from the pool stakers for a full deposit
@@ -248,9 +256,9 @@ func (c *ProtocolDaoSettings) GetHalfDepositUserAmount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.HalfDepositUserAmount, "getHalfDepositUserAmount")
 }
 
-// Get the amount required from the pool stakers for an empty deposit
-func (c *ProtocolDaoSettings) GetEmptyDepositUserAmount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.EmptyDepositUserAmount, "getEmptyDepositUserAmount")
+// Get the amount of ETH that must be deposited to the Beacon contract for a minipool's second deposit (the stake transaction), which will complete the validator
+func (c *ProtocolDaoSettings) GetVariableDepositAmount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.VariableDepositAmount, "getVariableDepositAmount")
 }
 
 // Check if minipool withdrawable event submissions are currently enabled
@@ -268,11 +276,36 @@ func (c *ProtocolDaoSettings) GetBondReductionEnabled(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.IsBondReductionEnabled, "getBondReductionEnabled")
 }
 
+// Get the limit on the total number of active minipools (non-finalized)
+func (c *ProtocolDaoSettings) GetMaximumCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.MaximumCount.RawValue, "getMaximumCount")
+}
+
+// Gets the amount of time that must pass once someone calls beginUserDistribute() before the users can distribute a minipool
+func (c *ProtocolDaoSettings) GetUserDistributeWindowStart(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.UserDistributeWindowStart.RawValue, "getUserDistributeWindowStart")
+}
+
+// Gets the amount of time the users have once UserDistributeWindowStart has passed to distribute a minipool before it expires
+func (c *ProtocolDaoSettings) GetUserDistributeWindowLength(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipool.UserDistributeWindowLength.RawValue, "getUserDistributeWindowLength")
+}
+
 // === RocketDAOProtocolSettingsNetwork ===
 
 // Get the threshold of Oracle DAO nodes that must reach consensus on oracle data to commit it
 func (c *ProtocolDaoSettings) GetOracleDaoConsensusThreshold(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.NetworkContract, &c.Details.Network.OracleDaoConsensusThreshold.RawValue, "getNodeConsensusThreshold")
+}
+
+// Get the threshold of Oracle DAO nodes that must reach consensus on a penalty to apply it
+func (c *ProtocolDaoSettings) GetNodePenaltyThreshold(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.NodePenaltyThreshold.RawValue, "getNodePenaltyThreshold")
+}
+
+// Get the fraction of a minipool's total node bond to penalize for each penalty
+func (c *ProtocolDaoSettings) GetPerPenaltyRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.PerPenaltyRate.RawValue, "getPerPenaltyRate")
 }
 
 // Check if network balance submission is enabled
@@ -320,11 +353,26 @@ func (c *ProtocolDaoSettings) GetTargetRethCollateralRate(mc *batch.MultiCaller)
 	core.AddCall(mc, c.NetworkContract, &c.Details.Network.TargetRethCollateralRate.RawValue, "getTargetRethCollateralRate")
 }
 
+// Get the delay on pool deposits
+func (c *ProtocolDaoSettings) GetRethDepositDelay(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.RethDepositDelay.RawValue, "getRethDepositDelay")
+}
+
+// Check if rewards submissions are enabled
+func (c *ProtocolDaoSettings) GetSubmitRewardsEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NetworkContract, &c.Details.Network.IsSubmitRewardsEnabled, "getSubmitRewardsEnabled")
+}
+
 // === RocketDAOProtocolSettingsNode ===
 
 // Check if node registration is currently enabled
 func (c *ProtocolDaoSettings) GetNodeRegistrationEnabled(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.NodeContract, &c.Details.Node.IsRegistrationEnabled, "getRegistrationEnabled")
+}
+
+// Check if smoothing pool registration is currently enabled
+func (c *ProtocolDaoSettings) GetSmoothingPoolRegistrationEnabled(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.NodeContract, &c.Details.Node.IsSmoothingPoolRegistrationEnabled, "getSmoothingPoolRegistrationEnabled")
 }
 
 // Check if node deposits are currently enabled
@@ -378,6 +426,8 @@ func (c *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetMinimumPoolDeposit(mc)
 	c.GetMaximumDepositPoolSize(mc)
 	c.GetMaximumPoolDepositAssignments(mc)
+	c.GetMaximumPoolDepositSocialisedAssignments(mc)
+	c.GetDepositFee(mc)
 
 	// Inflation
 	c.GetInflationIntervalRate(mc)
@@ -385,18 +435,21 @@ func (c *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 
 	// Minipool
 	c.GetMinipoolLaunchBalance(mc)
-	c.GetFullDepositNodeAmount(mc)
-	c.GetHalfDepositNodeAmount(mc)
-	c.GetEmptyDepositNodeAmount(mc)
+	c.GetPrelaunchValue(mc)
 	c.GetFullDepositUserAmount(mc)
 	c.GetHalfDepositUserAmount(mc)
-	c.GetEmptyDepositUserAmount(mc)
+	c.GetVariableDepositAmount(mc)
 	c.GetSubmitWithdrawableEnabled(mc)
 	c.GetMinipoolLaunchTimeout(mc)
 	c.GetBondReductionEnabled(mc)
+	c.GetMaximumCount(mc)
+	c.GetUserDistributeWindowStart(mc)
+	c.GetUserDistributeWindowLength(mc)
 
 	// Network
 	c.GetOracleDaoConsensusThreshold(mc)
+	c.GetNodePenaltyThreshold(mc)
+	c.GetPerPenaltyRate(mc)
 	c.GetSubmitBalancesEnabled(mc)
 	c.GetSubmitBalancesFrequency(mc)
 	c.GetSubmitPricesEnabled(mc)
@@ -406,9 +459,12 @@ func (c *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetMaximumNodeFee(mc)
 	c.GetNodeFeeDemandRange(mc)
 	c.GetTargetRethCollateralRate(mc)
+	c.GetRethDepositDelay(mc)
+	c.GetSubmitRewardsEnabled(mc)
 
 	// Node
 	c.GetNodeRegistrationEnabled(mc)
+	c.GetSmoothingPoolRegistrationEnabled(mc)
 	c.GetNodeDepositEnabled(mc)
 	c.GetVacantMinipoolsEnabled(mc)
 	c.GetMinimumPerMinipoolStake(mc)

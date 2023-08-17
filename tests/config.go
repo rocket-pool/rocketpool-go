@@ -9,6 +9,7 @@ const (
 	multicallAddress      string = "0x8464135c8F25Da09e49BC8782676a84730C318bC"
 	balanceBatcherAddress string = "0x71C95911E9a5D330f4D621842EC243EE1343292e"
 	evmChainID            int    = 31337
+	startTime             int    = 12
 
 	ValidatorPubkey     = "968bcf4081af4a10d054c1cde1dadfd6e85a120a397174173ca869f66bdc72835f9918ea251930778e5ba67a7907e30e"
 	ValidatorPubkey2    = "968bcf4081af4a10d054c1cde1dadfd6e85a120a397174173ca869f66bdc72835f9918ea251930778e5ba67a7907e30d"

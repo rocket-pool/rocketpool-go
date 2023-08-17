@@ -1,4 +1,4 @@
-package bootstrap
+package settings_test
 
 import (
 	"fmt"
