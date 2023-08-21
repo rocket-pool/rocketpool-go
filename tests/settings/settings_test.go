@@ -44,7 +44,8 @@ func TestBoostrapFunctions(t *testing.T) {
 		t.Fatal(fmt.Errorf("error querying all initial details: %w", err))
 	}
 
-	// Verify pDAO details
+	// Verify details
+	CompareDetails(t, &odaoDefaults, &odao.Details)
 	CompareDetails(t, &pdaoDefaults, &pdao.Details)
 
 	/*

@@ -24,10 +24,12 @@ const (
 
 	// Minipools
 	scrubPeriodPath               = "minipool.scrub.period"
+	scrubQuorumPath               = "minipool.scrub.quorum"
 	promotionScrubPeriodPath      = "minipool.promotion.scrub.period"
 	scrubPenaltyEnabledPath       = "minipool.scrub.penalty.enabled"
 	bondReductionWindowStartPath  = "minipool.bond.reduction.window.start"
 	bondReductionWindowLengthPath = "minipool.bond.reduction.window.length"
+	bondReductionCancelQuorumPath = "minipool.cancel.bond.reduction.quorum"
 
 	// Proposals
 	proposalCooldownTimeSettingPath = "proposal.cooldown.time"
@@ -63,17 +65,19 @@ type OracleDaoSettingsDetails struct {
 		UnbondedMinipoolMax    core.Parameter[uint64]        `json:"unbondedMinipoolMax"`
 		UnbondedMinipoolMinFee core.Parameter[float64]       `json:"unbondedMinipoolMinFee"`
 		ChallengeCooldown      core.Parameter[time.Duration] `json:"challengeCooldown"`
-		ChallengeWindow        core.Parameter[uint64]        `json:"challengeWindow"`
+		ChallengeWindow        core.Parameter[time.Duration] `json:"challengeWindow"`
 		ChallengeCost          *big.Int                      `json:"challengeCost"`
 	} `json:"members"`
 
 	// Minipools
 	Minipools struct {
-		ScrubPeriod               core.Parameter[time.Duration] `json:"scrubPeriod"`
-		PromotionScrubPeriod      core.Parameter[time.Duration] `json:"promotionScrubPeriod"`
-		IsScrubPenaltyEnabled     bool                          `json:"isScrubPenaltyEnabled"`
-		BondReductionWindowStart  core.Parameter[time.Duration] `json:"bondReductionWindowStart"`
-		BondReductionWindowLength core.Parameter[time.Duration] `json:"bondReductionWindowLength"`
+		ScrubPeriod                     core.Parameter[time.Duration] `json:"scrubPeriod"`
+		ScrubQuorum                     core.Parameter[float64]       `json:"scrubQuorum"`
+		PromotionScrubPeriod            core.Parameter[time.Duration] `json:"promotionScrubPeriod"`
+		IsScrubPenaltyEnabled           bool                          `json:"isScrubPenaltyEnabled"`
+		BondReductionWindowStart        core.Parameter[time.Duration] `json:"bondReductionWindowStart"`
+		BondReductionWindowLength       core.Parameter[time.Duration] `json:"bondReductionWindowLength"`
+		BondReductionCancellationQuorum core.Parameter[float64]       `json:"bondReductionCancellationQuorum"`
 	} `json:"minipools"`
 
 	// Proposals
@@ -151,12 +155,12 @@ func (c *OracleDaoSettings) GetUnbondedMinipoolMinFee(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MembersContract, &c.Details.Members.UnbondedMinipoolMinFee.RawValue, "getMinipoolUnbondedMinFee")
 }
 
-// Get the period a member must wait for before submitting another challenge, in blocks
+// Get the period a member must wait for before submitting another challenge
 func (c *OracleDaoSettings) GetChallengeCooldown(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MembersContract, &c.Details.Members.ChallengeCooldown.RawValue, "getChallengeCooldown")
 }
 
-// Get the period during which a member can respond to a challenge, in blocks
+// Get the period during which a member can respond to a challenge
 func (c *OracleDaoSettings) GetChallengeWindow(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MembersContract, &c.Details.Members.ChallengeWindow.RawValue, "getChallengeWindow")
 }
@@ -171,6 +175,11 @@ func (c *OracleDaoSettings) GetChallengeCost(mc *batch.MultiCaller) {
 // Get the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
 func (c *OracleDaoSettings) GetScrubPeriod(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipools.ScrubPeriod.RawValue, "getScrubPeriod")
+}
+
+// Get the fraction of Oracle DAO nodes required for quorum to be reached for a minipool scrub
+func (c *OracleDaoSettings) GetScrubQuorum(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipools.ScrubQuorum.RawValue, "getScrubQuorum")
 }
 
 // Get the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
@@ -191,6 +200,11 @@ func (c *OracleDaoSettings) GetBondReductionWindowStart(mc *batch.MultiCaller) {
 // Get the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
 func (c *OracleDaoSettings) GetBondReductionWindowLength(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipools.BondReductionWindowLength.RawValue, "getBondReductionWindowLength")
+}
+
+// Get the fraction of Oracle DAO nodes required for quorum to be reached for a bond reduction cancellation
+func (c *OracleDaoSettings) GetBondReductionCancellationQuorum(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.MinipoolContract, &c.Details.Minipools.BondReductionCancellationQuorum.RawValue, "getCancelBondReductionQuorum")
 }
 
 // === RocketDAONodeTrustedSettingsProposals ===
@@ -242,10 +256,12 @@ func (c *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 
 	// Minipools
 	c.GetScrubPeriod(mc)
+	c.GetScrubQuorum(mc)
 	c.GetPromotionScrubPeriod(mc)
 	c.GetScrubPenaltyEnabled(mc)
 	c.GetBondReductionWindowStart(mc)
 	c.GetBondReductionWindowLength(mc)
+	c.GetBondReductionCancellationQuorum(mc)
 
 	// Proposals
 	c.GetProposalCooldownTime(mc)
@@ -338,6 +354,11 @@ func (c *OracleDaoSettings) BootstrapScrubPeriod(value uint64, opts *bind.Transa
 	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, value, opts)
 }
 
+// Get info for setting the fraction of Oracle DAO members that must vote to scrub a minipool before it passes
+func (c *OracleDaoSettings) BootstrapScrubQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubQuorumPath, value, opts)
+}
+
 // Get info for setting the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
 func (c *OracleDaoSettings) BootstrapPromotionScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, value, opts)
@@ -358,9 +379,19 @@ func (c *OracleDaoSettings) BootstrapBondReductionWindowLength(value uint64, opt
 	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, value, opts)
 }
 
+// Get info for setting the fraction of Oracle DAO members that must vote to cancel a bond reduction before it passes
+func (c *OracleDaoSettings) BootstrapBondReductionCancellationQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionCancelQuorumPath, value, opts)
+}
+
 // Get info for setting the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
 func (c *OracleDaoSettings) ProposeScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, value, opts)
+}
+
+// Get info for setting the fraction of Oracle DAO members that must vote to scrub a minipool before it passes
+func (c *OracleDaoSettings) ProposeScrubQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubQuorumPath, value, opts)
 }
 
 // Get info for setting the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
@@ -381,6 +412,11 @@ func (c *OracleDaoSettings) ProposeBondReductionWindowStart(value uint64, opts *
 // Get info for setting the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
 func (c *OracleDaoSettings) ProposeBondReductionWindowLength(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, value, opts)
+}
+
+// Get info for setting the fraction of Oracle DAO members that must vote to cancel a bond reduction before it passes
+func (c *OracleDaoSettings) ProposeBondReductionCancellationQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionCancelQuorumPath, value, opts)
 }
 
 // === RocketDAONodeTrustedSettingsProposals ===

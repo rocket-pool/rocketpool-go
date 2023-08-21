@@ -101,6 +101,32 @@ func createDefaults(mgr *tests.TestManager) error {
 		// ==================
 		// === Oracle DAO ===
 		// ==================
+		odaoDefaults = settings.OracleDaoSettingsDetails{}
+
+		// Members
+		odaoDefaults.Members.ChallengeCooldown.Set(7 * 24 * time.Hour) // 7 days
+		odaoDefaults.Members.ChallengeCost = eth.EthToWei(1)
+		odaoDefaults.Members.ChallengeWindow.Set(7 * 24 * time.Hour) // 7 days
+		odaoDefaults.Members.Quorum.Set(0.51)
+		odaoDefaults.Members.RplBond = eth.EthToWei(1750)
+		odaoDefaults.Members.UnbondedMinipoolMax.Set(30)
+		odaoDefaults.Members.UnbondedMinipoolMinFee.Set(0.8)
+
+		// Minipools
+		odaoDefaults.Minipools.BondReductionWindowStart.Set(12 * time.Hour)
+		odaoDefaults.Minipools.BondReductionWindowLength.Set(2 * 24 * time.Hour)
+		odaoDefaults.Minipools.IsScrubPenaltyEnabled = true
+		odaoDefaults.Minipools.ScrubPeriod.Set(12 * time.Hour)
+		odaoDefaults.Minipools.ScrubQuorum.Set(0.51)
+		odaoDefaults.Minipools.PromotionScrubPeriod.Set(3 * 24 * time.Hour) // 3 days
+		odaoDefaults.Minipools.BondReductionCancellationQuorum.Set(0.51)
+
+		// Proposals
+		odaoDefaults.Proposals.ActionTime.Set(4 * 7 * 24 * time.Hour)  // 4 weeks
+		odaoDefaults.Proposals.CooldownTime.Set(2 * 24 * time.Hour)    // 2 days
+		odaoDefaults.Proposals.ExecuteTime.Set(4 * 7 * 24 * time.Hour) // 4 weeks
+		odaoDefaults.Proposals.VoteTime.Set(2 * 7 * 24 * time.Hour)    // 2 weeks
+		odaoDefaults.Proposals.VoteDelayTime.Set(7 * 24 * time.Hour)   // 1 week
 	})
 
 	return err
