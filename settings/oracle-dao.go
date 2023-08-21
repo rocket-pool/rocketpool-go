@@ -278,195 +278,195 @@ func (c *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 // === RocketDAONodeTrustedSettingsMembers ===
 
 // Get info for setting the member proposal quorum threshold
-func (c *OracleDaoSettings) BootstrapQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, quorumSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapQuorum(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, quorumSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the RPL bond required for a member
 func (c *OracleDaoSettings) BootstrapRplBond(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, rplBondSettingPath, value, opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, rplBondSettingPath, value, opts)
 }
 
 // Get info for setting the maximum number of unbonded minipools a member can run
-func (c *OracleDaoSettings) BootstrapUnbondedMinipoolMax(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMaxSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapUnbondedMinipoolMax(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMaxSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the minimum commission rate before unbonded minipools are allowed
-func (c *OracleDaoSettings) BootstrapUnbondedMinipoolMinFee(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapUnbondedMinipoolMinFee(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period a member must wait for before submitting another challenge, in blocks
-func (c *OracleDaoSettings) BootstrapChallengeCooldown(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapChallengeCooldown(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period during which a member can respond to a challenge, in blocks
-func (c *OracleDaoSettings) BootstrapChallengeWindow(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapChallengeWindow(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the fee for a non-member to challenge a member, in wei
 func (c *OracleDaoSettings) BootstrapChallengeCost(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCostSettingPath, value, opts)
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCostSettingPath, value, opts)
 }
 
 // Get info for setting the member proposal quorum threshold
-func (c *OracleDaoSettings) ProposeQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, quorumSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeQuorum(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, quorumSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the RPL bond required for a member
 func (c *OracleDaoSettings) ProposeRplBond(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, rplBondSettingPath, value, opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, rplBondSettingPath, value, opts)
 }
 
 // Get info for setting the maximum number of unbonded minipools a member can run
-func (c *OracleDaoSettings) ProposeUnbondedMinipoolMax(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMaxSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeUnbondedMinipoolMax(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMaxSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the minimum commission rate before unbonded minipools are allowed
-func (c *OracleDaoSettings) ProposeUnbondedMinipoolMinFee(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeUnbondedMinipoolMinFee(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period a member must wait for before submitting another challenge, in blocks
-func (c *OracleDaoSettings) ProposeChallengeCooldown(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeChallengeCooldown(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period during which a member can respond to a challenge, in blocks
-func (c *OracleDaoSettings) ProposeChallengeWindow(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeChallengeWindow(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the fee for a non-member to challenge a member, in wei
 func (c *OracleDaoSettings) ProposeChallengeCost(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCostSettingPath, value, opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCostSettingPath, value, opts)
 }
 
 // === RocketDAONodeTrustedSettingsMinipool ===
 
 // Get info for setting the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
-func (c *OracleDaoSettings) BootstrapScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, value, opts)
+func (c *OracleDaoSettings) BootstrapScrubPeriod(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, value.RawValue, opts)
 }
 
 // Get info for setting the fraction of Oracle DAO members that must vote to scrub a minipool before it passes
-func (c *OracleDaoSettings) BootstrapScrubQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubQuorumPath, value, opts)
+func (c *OracleDaoSettings) BootstrapScrubQuorum(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubQuorumPath, value.RawValue, opts)
 }
 
 // Get info for setting the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
-func (c *OracleDaoSettings) BootstrapPromotionScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, value, opts)
+func (c *OracleDaoSettings) BootstrapPromotionScrubPeriod(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, value.RawValue, opts)
 }
 
 // Get info for setting the flag for the RPL slashing penalty on scrubbed minipools
 func (c *OracleDaoSettings) BootstrapScrubPenaltyEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPenaltyEnabledPath, value, opts)
+	return c.daoNodeTrustedContract.BootstrapBool(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPenaltyEnabledPath, value, opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool must wait after beginning a bond reduction before it can apply the bond reduction (how long the Oracle DAO has to cancel the reduction if required)
-func (c *OracleDaoSettings) BootstrapBondReductionWindowStart(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowStartPath, value, opts)
+func (c *OracleDaoSettings) BootstrapBondReductionWindowStart(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowStartPath, value.RawValue, opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
-func (c *OracleDaoSettings) BootstrapBondReductionWindowLength(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, value, opts)
+func (c *OracleDaoSettings) BootstrapBondReductionWindowLength(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, value.RawValue, opts)
 }
 
 // Get info for setting the fraction of Oracle DAO members that must vote to cancel a bond reduction before it passes
-func (c *OracleDaoSettings) BootstrapBondReductionCancellationQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionCancelQuorumPath, value, opts)
+func (c *OracleDaoSettings) BootstrapBondReductionCancellationQuorum(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionCancelQuorumPath, value.RawValue, opts)
 }
 
 // Get info for setting the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
-func (c *OracleDaoSettings) ProposeScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, value, opts)
+func (c *OracleDaoSettings) ProposeScrubPeriod(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPeriodPath, value.RawValue, opts)
 }
 
 // Get info for setting the fraction of Oracle DAO members that must vote to scrub a minipool before it passes
-func (c *OracleDaoSettings) ProposeScrubQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubQuorumPath, value, opts)
+func (c *OracleDaoSettings) ProposeScrubQuorum(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubQuorumPath, value.RawValue, opts)
 }
 
 // Get info for setting the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
-func (c *OracleDaoSettings) ProposePromotionScrubPeriod(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, value, opts)
+func (c *OracleDaoSettings) ProposePromotionScrubPeriod(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, promotionScrubPeriodPath, value.RawValue, opts)
 }
 
 // Get info for setting the flag for the RPL slashing penalty on scrubbed minipools
 func (c *OracleDaoSettings) ProposeScrubPenaltyEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPenaltyEnabledPath, value, opts)
+	return c.daoNodeTrustedProposalsContract.ProposeSetBool("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, scrubPenaltyEnabledPath, value, opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool must wait after beginning a bond reduction before it can apply the bond reduction (how long the Oracle DAO has to cancel the reduction if required)
-func (c *OracleDaoSettings) ProposeBondReductionWindowStart(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowStartPath, value, opts)
+func (c *OracleDaoSettings) ProposeBondReductionWindowStart(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowStartPath, value.RawValue, opts)
 }
 
 // Get info for setting the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
-func (c *OracleDaoSettings) ProposeBondReductionWindowLength(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, value, opts)
+func (c *OracleDaoSettings) ProposeBondReductionWindowLength(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionWindowLengthPath, value.RawValue, opts)
 }
 
 // Get info for setting the fraction of Oracle DAO members that must vote to cancel a bond reduction before it passes
-func (c *OracleDaoSettings) ProposeBondReductionCancellationQuorum(value float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionCancelQuorumPath, value, opts)
+func (c *OracleDaoSettings) ProposeBondReductionCancellationQuorum(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool, bondReductionCancelQuorumPath, value.RawValue, opts)
 }
 
 // === RocketDAONodeTrustedSettingsProposals ===
 
 // Get info for setting the cooldown period a member must wait, in seconds, after making a proposal before making another
-func (c *OracleDaoSettings) BootstrapProposalCooldownTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalCooldownTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapProposalCooldownTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalCooldownTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period, in seconds, a proposal can be voted on
-func (c *OracleDaoSettings) BootstrapVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapVoteTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the delay, in seconds, after creation before a proposal can be voted on
-func (c *OracleDaoSettings) BootstrapVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteDelayTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapVoteDelayTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteDelayTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period, in seconds, during which a passed proposal can be executed
-func (c *OracleDaoSettings) BootstrapProposalExecuteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalExecuteTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapProposalExecuteTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalExecuteTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period, in seconds, during which an action can be performed on an executed proposal
-func (c *OracleDaoSettings) BootstrapProposalActionTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return bootstrapValue(c.daoNodeTrustedContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalActionTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) BootstrapProposalActionTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedContract.BootstrapUint(rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalActionTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the cooldown period a member must wait, in seconds, after making a proposal before making another
-func (c *OracleDaoSettings) ProposeProposalCooldownTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalCooldownTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeProposalCooldownTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalCooldownTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period, in seconds, a proposal can be voted on
-func (c *OracleDaoSettings) ProposeVoteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeVoteTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the delay, in seconds, after creation before a proposal can be voted on
-func (c *OracleDaoSettings) ProposeVoteDelayTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteDelayTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeVoteDelayTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, voteDelayTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period, in seconds, during which a passed proposal can be executed
-func (c *OracleDaoSettings) ProposeProposalExecuteTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalExecuteTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeProposalExecuteTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalExecuteTimeSettingPath, value.RawValue, opts)
 }
 
 // Get info for setting the period, in seconds, during which an action can be performed on an executed proposal
-func (c *OracleDaoSettings) ProposeProposalActionTime(value uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return proposeSetValue(c.daoNodeTrustedProposalsContract, rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalActionTimeSettingPath, value, opts)
+func (c *OracleDaoSettings) ProposeProposalActionTime(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals, proposalActionTimeSettingPath, value.RawValue, opts)
 }

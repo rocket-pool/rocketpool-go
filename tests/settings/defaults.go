@@ -58,11 +58,6 @@ func createDefaults(mgr *tests.TestManager) error {
 		pdaoDefaults.Inflation.StartTime.Set(startTime.Add(24 * time.Hour))            // Set the default start date for inflation to begin as 1 day after deployment
 
 		// Minipool
-		pdaoDefaults.Minipool.LaunchBalance = eth.EthToWei(32)
-		pdaoDefaults.Minipool.PrelaunchValue = eth.EthToWei(1)
-		pdaoDefaults.Minipool.FullDepositUserAmount = eth.EthToWei(16)
-		pdaoDefaults.Minipool.HalfDepositUserAmount = eth.EthToWei(16)
-		pdaoDefaults.Minipool.VariableDepositAmount = eth.EthToWei(31)
 		pdaoDefaults.Minipool.IsSubmitWithdrawableEnabled = false
 		pdaoDefaults.Minipool.IsBondReductionEnabled = true
 		pdaoDefaults.Minipool.LaunchTimeout.Set(72 * time.Hour)
@@ -95,7 +90,6 @@ func createDefaults(mgr *tests.TestManager) error {
 		pdaoDefaults.Node.MaximumPerMinipoolStake.Set(1.5) // 150% of node ETH value (provided ETH)
 
 		// Rewards
-		pdaoDefaults.Rewards.PercentageTotal.Set(1)
 		pdaoDefaults.Rewards.IntervalTime.Set(28 * 24 * time.Hour) // 28 days
 
 		// ==================

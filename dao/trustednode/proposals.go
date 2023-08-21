@@ -47,6 +47,9 @@ func NewDaoNodeTrustedProposals(rp *rocketpool.RocketPool) (*DaoNodeTrustedPropo
 // Get info for proposing to invite a new member to the Oracle DAO
 func (c *DaoNodeTrustedProposals) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId, string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
+	if message == "" {
+		message = fmt.Sprintf("invite %s (%s)", newMemberId, newMemberAddress.Hex())
+	}
 	return c.submitProposal(opts, message, "proposalInvite", newMemberId, newMemberUrl, newMemberAddress)
 }
 
@@ -58,21 +61,33 @@ func (c *DaoNodeTrustedProposals) ProposeMemberLeave(message string, memberAddre
 // Get info for proposing to replace the address of an Oracle DAO member
 func (c *DaoNodeTrustedProposals) ProposeReplaceMember(message string, memberAddress common.Address, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
+	if message == "" {
+		message = fmt.Sprintf("replace %s with %s (%s)", memberAddress.Hex(), newMemberId, newMemberAddress.Hex())
+	}
 	return c.submitProposal(opts, message, "proposalReplace", memberAddress, newMemberId, newMemberUrl, newMemberAddress)
 }
 
 // Get info for proposing to kick a member from the Oracle DAO
 func (c *DaoNodeTrustedProposals) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	if message == "" {
+		message = fmt.Sprintf("kick %s", memberAddress.Hex())
+	}
 	return c.submitProposal(opts, message, "proposalKick", memberAddress, rplFineAmount)
 }
 
 // Get info for proposing a bool setting
 func (c *DaoNodeTrustedProposals) ProposeSetBool(message string, contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	if message == "" {
+		message = fmt.Sprintf("set %s", settingPath)
+	}
 	return c.submitProposal(opts, message, "proposalSettingBool", contractName, settingPath, value)
 }
 
 // Get info for proposing a uint setting
 func (c *DaoNodeTrustedProposals) ProposeSetUint(message string, contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	if message == "" {
+		message = fmt.Sprintf("set %s", settingPath)
+	}
 	return c.submitProposal(opts, message, "proposalSettingUint", contractName, settingPath, value)
 }
 

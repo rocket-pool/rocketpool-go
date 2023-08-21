@@ -27,7 +27,7 @@ const (
 type TransactionInfo struct {
 	Data     []byte         `json:"data"`
 	To       common.Address `json:"to"`
-	Nonce    uint64         `json:"nonce"`
+	Nonce    *big.Int       `json:"nonce"`
 	GasInfo  GasInfo        `json:"gasInfo"`
 	SimError string         `json:"simError"`
 }
@@ -47,10 +47,14 @@ func NewTransactionInfo(contract *Contract, method string, opts *bind.TransactOp
 	}
 
 	// Create the info wrapper
+	var nonce *big.Int
+	if opts != nil {
+		nonce = opts.Nonce
+	}
 	txInfo := &TransactionInfo{
 		Data:  input,
 		To:    *contract.Address,
-		Nonce: opts.Nonce.Uint64(),
+		Nonce: nonce,
 		GasInfo: GasInfo{
 			EstGasLimit:  estGasLimit,
 			SafeGasLimit: safeGasLimit,
@@ -76,11 +80,12 @@ func estimateGasLimit(client ExecutionClient, to common.Address, opts *bind.Tran
 
 	// Estimate gas limit
 	gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
-		From:     opts.From,
-		To:       &to,
-		GasPrice: big.NewInt(0), // use 0 gwei for simulation
-		Value:    opts.Value,
-		Data:     input,
+		From:      opts.From,
+		To:        &to,
+		GasFeeCap: big.NewInt(0),
+		GasTipCap: big.NewInt(0),
+		Value:     opts.Value,
+		Data:      input,
 	})
 
 	if err != nil {

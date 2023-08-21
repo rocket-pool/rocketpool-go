@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
 // An account containing an address and a transactor for it
@@ -37,6 +38,9 @@ func CreateAccountFromPrivateKey(privateKeyHex string, chainID *big.Int) (*Accou
 		return nil, fmt.Errorf("error creating transactor: %w", err)
 	}
 	opts.Context = context.Background()
+	opts.GasFeeCap = eth.GweiToWei(10)
+	opts.GasTipCap = eth.GweiToWei(2)
+	//opts.GasPrice = eth.GweiToWei(10)
 
 	// Return account
 	return &Account{
