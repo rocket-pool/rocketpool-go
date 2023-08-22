@@ -259,7 +259,7 @@ func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi 
 }
 
 // Signs and submits a transaction to the network
-func (rp *RocketPool) SubmitTransaction(txInfo core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+func (rp *RocketPool) SubmitTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
 	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
 }
 

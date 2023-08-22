@@ -18,11 +18,17 @@ type Parameter[fType FormattedType] struct {
 // Interface for all parameter types
 type IParameter interface {
 	GetRawValue() *big.Int
+	SetRawValue(*big.Int)
 }
 
 // Get the parameter's raw value
-func (p Parameter[fType]) GetRawValue() *big.Int {
+func (p *Parameter[fType]) GetRawValue() *big.Int {
 	return p.RawValue
+}
+
+// Set the parameter's raw value to a copy of the provided input
+func (p *Parameter[fType]) SetRawValue(value *big.Int) {
+	p.RawValue = big.NewInt(0).Set(value)
 }
 
 // Get the formatted value of the parameter
@@ -71,11 +77,17 @@ type Uint8Parameter[fType FormattedUint8Type] struct {
 // Interface for all uint8 parameter types
 type IUint8Parameter interface {
 	GetRawValue() uint8
+	SetRawValue(uint8)
 }
 
 // Get the parameter's raw value
-func (p Uint8Parameter[fType]) GetRawValue() uint8 {
+func (p *Uint8Parameter[fType]) GetRawValue() uint8 {
 	return p.RawValue
+}
+
+// Set the parameter's raw value
+func (p *Uint8Parameter[fType]) SetRawValue(value uint8) {
+	p.RawValue = value
 }
 
 // Get the formatted value of the parameter

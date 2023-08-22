@@ -96,7 +96,18 @@ func NewTestManager() (*TestManager, error) {
 
 // Reverts the EVM to the baseline snapshot
 func (m *TestManager) RevertToBaseline() error {
-	return m.revertToSnapshot(m.baselineSnapshotID)
+	err := m.revertToSnapshot(m.baselineSnapshotID)
+	if err != nil {
+		return fmt.Errorf("error reverting to baseline snapshot: %w", err)
+	}
+
+	// Regenerate the baseline snapshot since Hardhat can't revert to it multiple times
+	baselineSnapshotID, err := m.takeSnapshot()
+	if err != nil {
+		return fmt.Errorf("error creating baseline snapshot: %w", err)
+	}
+	m.baselineSnapshotID = baselineSnapshotID
+	return nil
 }
 
 // Creates a snapshot of the EVM's current state, returning the snapshot ID - this can be used in RevertToCustomSnapshot()
