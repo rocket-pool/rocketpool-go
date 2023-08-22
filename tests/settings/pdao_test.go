@@ -3,7 +3,6 @@ package settings_test
 import (
 	"fmt"
 	"math/big"
-	"reflect"
 	"testing"
 	"time"
 
@@ -55,7 +54,7 @@ func Test_BootstrapAuctionLotDuration(t *testing.T) {
 	newVal := core.Parameter[uint64]{}
 	newVal.Set(pdaoDefaults.Auction.LotDuration.Formatted() + 1)
 	testPdaoParameterBootstrap(t, func(newSettings *settings.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotDuration = newVal
+		newSettings.Auction.LotDuration.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
 		return pdao.BootstrapAuctionLotDuration(newVal, opts)
 	})
@@ -65,7 +64,7 @@ func Test_BootstrapAuctionLotStartingPriceRatio(t *testing.T) {
 	newVal := core.Parameter[float64]{}
 	newVal.Set(pdaoDefaults.Auction.LotStartingPriceRatio.Formatted() - 0.2)
 	testPdaoParameterBootstrap(t, func(newSettings *settings.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotStartingPriceRatio = newVal
+		newSettings.Auction.LotStartingPriceRatio.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
 		return pdao.BootstrapAuctionLotStartingPriceRatio(newVal, opts)
 	})
@@ -75,7 +74,7 @@ func Test_BootstrapAuctionLotReservePriceRatio(t *testing.T) {
 	newVal := core.Parameter[float64]{}
 	newVal.Set(pdaoDefaults.Auction.LotReservePriceRatio.Formatted() - 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *settings.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotReservePriceRatio = newVal
+		newSettings.Auction.LotReservePriceRatio.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
 		return pdao.BootstrapAuctionLotReservePriceRatio(newVal, opts)
 	})
@@ -121,7 +120,7 @@ func Test_BootstrapMaximumPoolDepositAssignments(t *testing.T) {
 	newVal := core.Parameter[uint64]{}
 	newVal.Set(pdaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Formatted() + 10)
 	testPdaoParameterBootstrap(t, func(newSettings *settings.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.MaximumAssignmentsPerDeposit = newVal
+		newSettings.Deposit.MaximumAssignmentsPerDeposit.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
 		return pdao.BootstrapMaximumPoolDepositAssignments(newVal, opts)
 	})
@@ -131,7 +130,7 @@ func Test_BootstrapMaximumSocialisedPoolDepositAssignments(t *testing.T) {
 	newVal := core.Parameter[uint64]{}
 	newVal.Set(pdaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Formatted() + 5)
 	testPdaoParameterBootstrap(t, func(newSettings *settings.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit = newVal
+		newSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
 		return pdao.BootstrapMaximumSocialisedPoolDepositAssignments(newVal, opts)
 	})
@@ -427,7 +426,7 @@ func Test_BootstrapRewardsIntervalTime(t *testing.T) {
 	})
 }
 
-func Test_AllBoostrapFunctions(t *testing.T) {
+func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	// Revert to the baseline at the end of the test
 	t.Cleanup(func() {
 		err := mgr.RevertToBaseline()
@@ -666,27 +665,6 @@ func Test_AllBoostrapFunctions(t *testing.T) {
 	t.Log("New settings match expected settings")
 }
 
-// Compares two details structs to ensure their fields all have the same values
-func EnsureSameDetails[objType any](log func(string, ...any), expected *objType, actual *objType) bool {
-	expectedVal := reflect.ValueOf(expected).Elem()
-	actualVal := reflect.ValueOf(actual).Elem()
-	return compareImpl(log, expectedVal, actualVal, expectedVal.Type().Name(), true)
-}
-
-// Compares two details structs to ensure their fields all have different values
-func EnsureDifferentDetails[objType any](log func(string, ...any), expected *objType, actual *objType) bool {
-	expectedVal := reflect.ValueOf(expected).Elem()
-	actualVal := reflect.ValueOf(actual).Elem()
-	return compareImpl(log, expectedVal, actualVal, expectedVal.Type().Name(), false)
-}
-
-// Compares two details structs to ensure their fields all have the same values
-func Clone[objType any](t *testing.T, source *objType, dest *objType) {
-	sourceVal := reflect.ValueOf(source).Elem()
-	destVal := reflect.ValueOf(dest).Elem()
-	cloneImpl(t, sourceVal, destVal, sourceVal.Type().Name())
-}
-
 func testPdaoParameterBootstrap(t *testing.T, setter func(*settings.ProtocolDaoSettingsDetails), bootstrapper func() (*core.TransactionInfo, error)) {
 	// Revert to the baseline at the end of the test
 	t.Cleanup(func() {
@@ -746,145 +724,4 @@ func testPdaoParameterBootstrap(t *testing.T, setter func(*settings.ProtocolDaoS
 	}
 	EnsureSameDetails(t.Fatalf, &settings, &pdao.Details)
 	t.Log("New settings match expected settings")
-}
-
-// Detail comparison implementation
-func compareImpl(log func(string, ...any), expected reflect.Value, actual reflect.Value, header string, checkIfEqual bool) bool {
-	refType := expected.Type()
-	fieldCount := refType.NumField()
-
-	valid := true
-	for i := 0; i < fieldCount; i++ {
-		field := refType.Field(i)
-		childExpected := expected.Field(i)
-		childActual := actual.Field(i)
-
-		// Try casting to parameters first
-		expectedParam, isIParameter := childExpected.Addr().Interface().(core.IParameter)
-		expectedUint8Param, isIUint8Parameter := childExpected.Addr().Interface().(core.IUint8Parameter)
-
-		passedCheck := true
-		if isIParameter {
-			// Handle parameters
-			actualParam := childActual.Addr().Interface().(core.IParameter)
-			if expectedParam.GetRawValue() == nil {
-				logMessage(log, "field %s.%s of type %s - expected was nil", header, field.Name, field.Type.Name())
-			} else if actualParam.GetRawValue() == nil {
-				logMessage(log, "field %s.%s of type %s - actual was nil", header, field.Name, field.Type.Name())
-			} else {
-				if checkIfEqual {
-					passedCheck = expectedParam.GetRawValue().Cmp(actualParam.GetRawValue()) == 0
-				} else {
-					passedCheck = expectedParam.GetRawValue().Cmp(actualParam.GetRawValue()) != 0
-				}
-			}
-		} else if isIUint8Parameter {
-			// Handle uint8 parameters
-			actualUint8Param := childActual.Addr().Interface().(core.IUint8Parameter)
-			if checkIfEqual {
-				passedCheck = expectedUint8Param.GetRawValue() == actualUint8Param.GetRawValue()
-			} else {
-				passedCheck = expectedUint8Param.GetRawValue() != actualUint8Param.GetRawValue()
-			}
-		} else if field.Type.Kind() == reflect.Struct {
-			// Handle other nested structs
-			passedCheck = compareImpl(log, childExpected, childActual, fmt.Sprintf("%s.%s", header, field.Name), checkIfEqual)
-			if !passedCheck {
-				valid = false
-			}
-			continue
-		} else {
-			// Handle primitives
-			switch expectedVal := childExpected.Interface().(type) {
-			case *big.Int:
-				actualVal := childActual.Interface().(*big.Int)
-				if expectedVal == nil {
-					logMessage(log, "field %s.%s (big.Int) - expected was nil", header, field.Name)
-				} else if actualVal == nil {
-					logMessage(log, "field %s.%s (big.Int) - actual was nil", header, field.Name)
-				} else {
-					if checkIfEqual {
-						passedCheck = expectedVal.Cmp(actualVal) == 0
-					} else {
-						passedCheck = expectedVal.Cmp(actualVal) != 0
-					}
-				}
-			case bool:
-				if checkIfEqual {
-					passedCheck = expectedVal == childActual.Interface().(bool)
-				} else {
-					passedCheck = expectedVal != childActual.Interface().(bool)
-				}
-			default:
-				logMessage(log, "unexpected type %s in field %s.%s", field.Type.Name(), header, field.Name)
-			}
-		}
-
-		if !passedCheck {
-			valid = false
-			if checkIfEqual {
-				logMessage(log, "%s.%s differed; expected %v but got %v", header, field.Name, childExpected.Interface(), childActual.Interface())
-			} else {
-				logMessage(log, "%s.%s was the same; expected not %v but got %v", header, field.Name, childExpected.Interface(), childActual.Interface())
-			}
-		}
-	}
-
-	return valid
-}
-
-func logMessage(log func(string, ...any), format string, args ...any) {
-	if log != nil {
-		log(format, args...)
-	}
-}
-
-// Detail cloning implementation
-func cloneImpl(t *testing.T, source reflect.Value, dest reflect.Value, header string) {
-	refType := source.Type()
-	fieldCount := refType.NumField()
-
-	for i := 0; i < fieldCount; i++ {
-		field := refType.Field(i)
-		childSource := source.Field(i)
-		childDest := dest.Field(i)
-
-		// Try casting to parameters first
-		sourceParam, isIParameter := childSource.Addr().Interface().(core.IParameter)
-		sourceUint8Param, isIUint8Parameter := childSource.Addr().Interface().(core.IUint8Parameter)
-
-		if isIParameter {
-			// Handle parameters
-			destParam := childDest.Addr().Interface().(core.IParameter)
-			if sourceParam.GetRawValue() == nil {
-				t.Errorf("field %s.%s of type %s - source was nil", header, field.Name, field.Type.Name())
-			} else {
-				destParam.SetRawValue(sourceParam.GetRawValue())
-			}
-		} else if isIUint8Parameter {
-			// Handle uint8 parameters
-			destUint8Param := childDest.Addr().Interface().(core.IUint8Parameter)
-			destUint8Param.SetRawValue(sourceUint8Param.GetRawValue())
-		} else if field.Type.Kind() == reflect.Struct {
-			// Handle other nested structs
-			cloneImpl(t, childSource, childDest, fmt.Sprintf("%s.%s", header, field.Name))
-			continue
-		} else {
-			// Handle primitives
-			switch sourceVal := childSource.Interface().(type) {
-			case *big.Int:
-				destVal := childDest.Addr().Interface().(**big.Int)
-				if sourceVal == nil {
-					t.Errorf("field %s.%s (big.Int) - source was nil", header, field.Name)
-				} else {
-					*destVal = big.NewInt(0).Set(sourceVal)
-				}
-			case bool:
-				destVal := childDest.Addr().Interface().(*bool)
-				*destVal = sourceVal
-			default:
-				t.Fatalf("unexpected type %s in field %s.%s", field.Type.Name(), header, field.Name)
-			}
-		}
-	}
 }
