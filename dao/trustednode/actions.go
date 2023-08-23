@@ -18,8 +18,8 @@ import (
 
 // Binding for RocketDAONodeTrustedActions
 type DaoNodeTrustedActions struct {
+	Contract *core.Contract
 	rp       *rocketpool.RocketPool
-	contract *core.Contract
 }
 
 // ====================
@@ -35,8 +35,8 @@ func NewDaoNodeTrustedActions(rp *rocketpool.RocketPool) (*DaoNodeTrustedActions
 	}
 
 	return &DaoNodeTrustedActions{
+		Contract: contract,
 		rp:       rp,
-		contract: contract,
 	}, nil
 }
 
@@ -46,22 +46,22 @@ func NewDaoNodeTrustedActions(rp *rocketpool.RocketPool) (*DaoNodeTrustedActions
 
 // Get info for joining the Oracle DAO
 func (c *DaoNodeTrustedActions) Join(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "actionJoin", opts)
+	return core.NewTransactionInfo(c.Contract, "actionJoin", opts)
 }
 
 // Get info for leaving the Oracle DAO
 func (c *DaoNodeTrustedActions) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "actionLeave", opts, rplBondRefundAddress)
+	return core.NewTransactionInfo(c.Contract, "actionLeave", opts, rplBondRefundAddress)
 }
 
 // Get info for making a challenge to an Oracle DAO member
 func (c *DaoNodeTrustedActions) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "actionChallengeMake", opts, memberAddress)
+	return core.NewTransactionInfo(c.Contract, "actionChallengeMake", opts, memberAddress)
 }
 
 // Get info for deciding a challenge to an Oracle DAO member
 func (c *DaoNodeTrustedActions) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "actionChallengeDecide", opts, memberAddress)
+	return core.NewTransactionInfo(c.Contract, "actionChallengeDecide", opts, memberAddress)
 }
 
 // =============
@@ -71,12 +71,12 @@ func (c *DaoNodeTrustedActions) DecideChallenge(memberAddress common.Address, op
 // Returns the most recent block number that the number of trusted nodes changed since fromBlock
 func (c *DaoNodeTrustedActions) GetLatestMemberCountChangedBlock(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (uint64, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.contract.Address}
+	addressFilter := []common.Address{*c.Contract.Address}
 	topicFilter := [][]common.Hash{{
-		c.contract.ABI.Events["ActionJoined"].ID,
-		c.contract.ABI.Events["ActionLeave"].ID,
-		c.contract.ABI.Events["ActionKick"].ID,
-		c.contract.ABI.Events["ActionChallengeDecided"].ID,
+		c.Contract.ABI.Events["ActionJoined"].ID,
+		c.Contract.ABI.Events["ActionLeave"].ID,
+		c.Contract.ABI.Events["ActionKick"].ID,
+		c.Contract.ABI.Events["ActionChallengeDecided"].ID,
 	}}
 
 	// Get the event logs
@@ -87,10 +87,10 @@ func (c *DaoNodeTrustedActions) GetLatestMemberCountChangedBlock(fromBlock uint6
 
 	for i := range logs {
 		log := logs[len(logs)-i-1]
-		if log.Topics[0] == c.contract.ABI.Events["ActionChallengeDecided"].ID {
+		if log.Topics[0] == c.Contract.ABI.Events["ActionChallengeDecided"].ID {
 			values := make(map[string]interface{})
 			// Decode the event
-			if c.contract.ABI.Events["ActionChallengeDecided"].Inputs.UnpackIntoMap(values, log.Data) != nil {
+			if c.Contract.ABI.Events["ActionChallengeDecided"].Inputs.UnpackIntoMap(values, log.Data) != nil {
 				return 0, err
 			}
 			if values["success"].(bool) {

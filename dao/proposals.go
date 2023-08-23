@@ -55,6 +55,7 @@ func NewDaoProposal(rp *rocketpool.RocketPool) (*DaoProposal, error) {
 // =============
 
 // Get the total number of DAO proposals
+// NOTE: Proposals are 1-indexed
 func (c *DaoProposal) GetProposalCount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
 }
@@ -65,16 +66,17 @@ func (c *DaoProposal) GetProposalCount(mc *batch.MultiCaller) {
 
 // Get all of the Protocol DAO proposals
 // Returns: Protocol DAO proposals, Oracle DAO proposals, error
+// NOTE: Proposals are 1-indexed
 func (c *DaoProposal) GetProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts, proposalCount uint64) ([]*Proposal, []*Proposal, error) {
 	props := make([]*Proposal, proposalCount)
 
 	err := rp.Query(func(mc *batch.MultiCaller) error {
-		for i := uint64(0); i < proposalCount; i++ {
+		for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
 			prop, err := NewProposal(rp, i)
 			if err != nil {
 				return fmt.Errorf("error creating DAO proposal %d", i)
 			}
-			props[i] = prop
+			props[i-1] = prop
 			prop.GetAllDetails(mc)
 		}
 		return nil

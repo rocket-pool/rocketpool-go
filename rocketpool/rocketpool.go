@@ -1,8 +1,10 @@
 package rocketpool
 
 import (
+	"context"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -258,31 +260,6 @@ func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi 
 	}, nil
 }
 
-// Signs and submits a transaction to the network
-func (rp *RocketPool) SubmitTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
-	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
-}
-
-// Signs and submits a bundle of transactions to the network.
-// NOTE: this assumes the bundle is meant to be submitted sequentially.
-// If the nonce has been set in opts, this will use it for the first transaction and automatically increment it for each subsequent transaction.
-func (rp *RocketPool) SubmitTransactions(txInfos []*core.TransactionInfo, opts *bind.TransactOpts) ([]*types.Transaction, error) {
-	txs := make([]*types.Transaction, len(txInfos))
-	one := big.NewInt(1)
-	for i, txInfo := range txInfos {
-		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
-		if err != nil {
-			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
-		}
-		txs[i] = tx
-		if opts.Nonce != nil {
-			// Increment the nonce for the next TX if it's explicitly set
-			opts.Nonce.Add(opts.Nonce, one)
-		}
-	}
-	return txs, nil
-}
-
 // =========================
 // === Multicall Helpers ===
 // =========================
@@ -420,4 +397,216 @@ func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch
 
 	// Return
 	return nil
+}
+
+// ===========================
+// === Transaction Helpers ===
+// ===========================
+
+// Signs and submits a transaction to the network
+func (rp *RocketPool) ExecuteTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
+}
+
+// Creates, signs, and submits a transaction to the network.
+// Use this if you don't care about the estimated gas cost and just want to run it as quickly as possible.
+// If failOnSimErrors is true, it will treat a simualtion / gas estimation error as a failure and stop before the transaction is submitted to the network.
+func (rp *RocketPool) CreateAndExecuteTransaction(creator func() (*core.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) (*types.Transaction, error) {
+
+	txInfo, err := creator()
+	if err != nil {
+		return nil, fmt.Errorf("error creating TX info: %w", err)
+	}
+	if failOnSimError && txInfo.SimError != "" {
+		return nil, fmt.Errorf("error simulating TX: %s", txInfo.SimError)
+	}
+
+	return rp.ExecuteTransaction(txInfo, opts)
+}
+
+// Creates, signs, submits, and waits for the transaction to be included in a block.
+// Use this if you don't care about the estimated gas cost and just want to run it as quickly as possible.
+// If failOnSimErrors is true, it will treat a simualtion / gas estimation error as a failure and stop before the transaction is submitted to the network.
+func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) error {
+	// Create the TX
+	txInfo, err := creator()
+	if err != nil {
+		return fmt.Errorf("error creating TX info: %w", err)
+	}
+	if failOnSimError && txInfo.SimError != "" {
+		return fmt.Errorf("error simulating TX: %s", txInfo.SimError)
+	}
+
+	// Execute the TX
+	tx, err := rp.ExecuteTransaction(txInfo, opts)
+	if err != nil {
+		return fmt.Errorf("error executing TX: %w", err)
+	}
+
+	// Wait for the TX
+	err = rp.WaitForTransaction(tx)
+	if err != nil {
+		return fmt.Errorf("error waiting for TX: %w", err)
+	}
+
+	return nil
+}
+
+// Signs and submits a bundle of transactions to the network that are all sent from the same address.
+// NOTE: this assumes the bundle is meant to be submitted sequentially.
+// If the nonce has been set in opts, this will use it for the first transaction and automatically increment it for each subsequent transaction.
+func (rp *RocketPool) BatchExecuteTransactions(txInfos []*core.TransactionInfo, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+	txs := make([]*types.Transaction, len(txInfos))
+	one := big.NewInt(1)
+	for i, txInfo := range txInfos {
+		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
+		}
+		txs[i] = tx
+		if opts.Nonce != nil {
+			// Increment the nonce for the next TX if it's explicitly set
+			opts.Nonce.Add(opts.Nonce, one)
+		}
+	}
+	return txs, nil
+}
+
+// Creates, signs, and submits a collection of transactions to the network that are all sent from the same address.
+// Use this if you don't care about the estimated gas costs and just want to run them as quickly as possible.
+// If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
+func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core.TransactionInfo, error), failOnSimErrors bool, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+	// Create the TXs
+	txInfos := make([]*core.TransactionInfo, len(creators))
+	for i, creator := range creators {
+		txInfo, err := creator()
+		if err != nil {
+			return nil, fmt.Errorf("error creating TX info for TX %d: %w", i, err)
+		}
+		if failOnSimErrors && txInfo.SimError != "" {
+			return nil, fmt.Errorf("error simulating TX %d: %s", i, txInfo.SimError)
+		}
+		txInfos[i] = txInfo
+	}
+
+	// Run the TXs
+	return rp.BatchExecuteTransactions(txInfos, opts)
+}
+
+// Creates, signs, and submits a collection of transactions to the network that are all sent from the same address.
+// Use this if you don't care about the estimated gas costs and just want to run them as quickly as possible.
+// If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
+func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*core.TransactionInfo, error), failOnSimErrors bool, opts *bind.TransactOpts) error {
+	// Create the TXs
+	txInfos := make([]*core.TransactionInfo, len(creators))
+	for i, creator := range creators {
+		txInfo, err := creator()
+		if err != nil {
+			return fmt.Errorf("error creating TX info for TX %d: %w", i, err)
+		}
+		if failOnSimErrors && txInfo.SimError != "" {
+			return fmt.Errorf("error simulating TX %d: %s", i, txInfo.SimError)
+		}
+		txInfos[i] = txInfo
+	}
+
+	// Run the TXs
+	txs, err := rp.BatchExecuteTransactions(txInfos, opts)
+	if err != nil {
+		return fmt.Errorf("error running TXs: %w", err)
+	}
+
+	// Wait for the TXs
+	err = rp.WaitForTransactions(txs)
+	if err != nil {
+		return fmt.Errorf("error waiting for TXs: %w", err)
+	}
+
+	return nil
+}
+
+// Wait for a transaction to get included in blocks
+func (rp *RocketPool) WaitForTransaction(tx *types.Transaction) error {
+	// Wait for transaction to be included
+	txReceipt, err := bind.WaitMined(context.Background(), rp.Client, tx)
+	if err != nil {
+		return fmt.Errorf("error running transaction %s: %w", tx.Hash().Hex(), err)
+	}
+
+	// Check transaction status
+	if txReceipt.Status == 0 {
+		return fmt.Errorf("transaction %s failed with status 0", tx.Hash().Hex())
+	}
+
+	// Return
+	return nil
+}
+
+// Wait for a set of transactions to get included in blocks
+func (rp *RocketPool) WaitForTransactions(txs []*types.Transaction) error {
+	var wg errgroup.Group
+	for _, tx := range txs {
+		tx := tx
+		wg.Go(func() error {
+			return rp.WaitForTransaction(tx)
+		})
+	}
+
+	err := wg.Wait()
+	if err != nil {
+		return fmt.Errorf("error waiting for transactions: %w", err)
+	}
+
+	return nil
+}
+
+// Wait for a transaction to get included in blocks
+func (rp *RocketPool) WaitForTransactionByHash(hash common.Hash) error {
+	// Get the TX
+	tx, err := rp.getTransactionFromHash(hash)
+	if err != nil {
+		return fmt.Errorf("error getting transaction %s: %w", hash.Hex(), err)
+	}
+
+	// Wait for transaction to be included
+	return rp.WaitForTransaction(tx)
+}
+
+// Wait for a set of transactions to get included in blocks
+func (rp *RocketPool) WaitForTransactionsByHash(hashes []common.Hash) error {
+	var wg errgroup.Group
+
+	// Get the TXs from the hashes
+	for _, hash := range hashes {
+		hash := hash
+		wg.Go(func() error {
+			return rp.WaitForTransactionByHash(hash)
+		})
+	}
+	err := wg.Wait()
+	if err != nil {
+		return fmt.Errorf("error waiting for transactions: %w", err)
+	}
+
+	// Wait for the TXs
+	return nil
+}
+
+// Get a TX from its hash
+func (rp *RocketPool) getTransactionFromHash(hash common.Hash) (*types.Transaction, error) {
+	// Retry for 30 sec if the TX wasn't found
+	for i := 0; i < 30; i++ {
+		tx, _, err := rp.Client.TransactionByHash(context.Background(), hash)
+		if err != nil {
+			if err.Error() == "not found" {
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			return nil, err
+		}
+
+		return tx, nil
+	}
+
+	return nil, fmt.Errorf("transaction not found after 30 seconds")
 }

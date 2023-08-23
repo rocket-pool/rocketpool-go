@@ -1,4 +1,4 @@
-package settings_test
+package bootstrap_test
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
+	settings_test "github.com/rocket-pool/rocketpool-go/tests/settings"
 )
 
 var (
@@ -41,7 +42,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Create the default values for the pDAO / oDAO settings as a reference
-	err = createDefaults(mgr)
+	err = tests.CreateDefaults(mgr)
 	if err != nil {
 		log.Fatal("error creating defaults: %w", err)
 	}
@@ -60,8 +61,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// Verify details
-	EnsureSameDetails(log.Fatalf, &odaoDefaults, &odao.Details)
-	EnsureSameDetails(log.Fatalf, &pdaoDefaults, &pdao.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, &odao.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, &pdao.Details)
 
 	// Run tests
 	os.Exit(m.Run())

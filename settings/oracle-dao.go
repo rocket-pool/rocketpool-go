@@ -332,13 +332,13 @@ func (c *OracleDaoSettings) ProposeUnbondedMinipoolMinFee(value core.Parameter[f
 	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, minipoolUnbondedMinFeeSettingPath, value.RawValue, opts)
 }
 
-// Get info for setting the period a member must wait for before submitting another challenge, in blocks
-func (c *OracleDaoSettings) ProposeChallengeCooldown(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+// Get info for setting the period a member must wait for before submitting another challenge
+func (c *OracleDaoSettings) ProposeChallengeCooldown(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeCooldownSettingPath, value.RawValue, opts)
 }
 
-// Get info for setting the period during which a member can respond to a challenge, in blocks
-func (c *OracleDaoSettings) ProposeChallengeWindow(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+// Get info for setting the period during which a member can respond to a challenge
+func (c *OracleDaoSettings) ProposeChallengeWindow(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return c.daoNodeTrustedProposalsContract.ProposeSetUint("", rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers, challengeWindowSettingPath, value.RawValue, opts)
 }
 
