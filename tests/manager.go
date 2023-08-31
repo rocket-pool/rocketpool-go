@@ -11,10 +11,8 @@ import (
 	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
-	"github.com/rocket-pool/rocketpool-go/node"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
-	"github.com/rocket-pool/rocketpool-go/tokens"
 )
 
 // TestManager wraps the EVM client binding and everything needed to interact with it for the Rocket Pool unit tests
@@ -109,15 +107,10 @@ func (m *TestManager) InitializeDeployment() error {
 	if err != nil {
 		return fmt.Errorf("error creating DNT binding: %w", err)
 	}
-	oSettings, err := settings.NewOracleDaoSettings(rp)
-	if err != nil {
-		return fmt.Errorf("error getting oDAO settings binding: %w", err)
-	}
 
-	// Get some settings / contract state
+	// Get some contract state
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
 		dnt.GetMemberCount(mc)
-		oSettings.GetRplBond(mc)
 		return nil
 	}, nil)
 	if err != nil {
@@ -126,7 +119,7 @@ func (m *TestManager) InitializeDeployment() error {
 
 	// If there aren't members, bootstrap the protocol
 	if dnt.Details.MemberCount.Formatted() == 0 {
-		err = m.initializeImpl(dnt, oSettings.Details.Members.RplBond)
+		err = m.initializeImpl(dnt)
 		if err != nil {
 			return fmt.Errorf("error initializing network: %w", err)
 		}
@@ -230,28 +223,8 @@ func (m *TestManager) revertToSnapshot(snapshotID string) error {
 	return nil
 }
 
-func (m *TestManager) registerNode(account *Account, timezone string) (*node.Node, error) {
-	rp := m.RocketPool
-
-	// Create the node
-	node, err := node.NewNode(rp, account.Address)
-	if err != nil {
-		return nil, fmt.Errorf("error creating node %s: %w", account.Address.Hex(), err)
-	}
-
-	// Register the node
-	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return node.Register(timezone, account.Transactor)
-	}, true, account.Transactor)
-	if err != nil {
-		return nil, fmt.Errorf("error registering node %s: %w", account.Address.Hex(), err)
-	}
-
-	return node, nil
-}
-
 // Implementation for initialization
-func (m *TestManager) initializeImpl(dnt *trustednode.DaoNodeTrusted, rplBond *big.Int) error {
+func (m *TestManager) initializeImpl(dnt *trustednode.DaoNodeTrusted) error {
 	rp := m.RocketPool
 
 	// Prep the accounts
@@ -277,15 +250,15 @@ func (m *TestManager) initializeImpl(dnt *trustednode.DaoNodeTrusted, rplBond *b
 	}
 
 	// Bootstrap the nodes onto the oDAO
-	_, err = m.bootstrapNodeToOdao(odao1, "Etc/UTC", "Node 1", "node1.com", rplBond)
+	_, err = BootstrapNodeToOdao(m.RocketPool, m.OwnerAccount, odao1, "Etc/UTC", "Node 1", "node1.com")
 	if err != nil {
 		return fmt.Errorf("error bootstrapping node1: %w", err)
 	}
-	_, err = m.bootstrapNodeToOdao(odao2, "Australia/Brisbane", "Node 2", "node2.com", rplBond)
+	_, err = BootstrapNodeToOdao(m.RocketPool, m.OwnerAccount, odao2, "Australia/Brisbane", "Node 2", "node2.com")
 	if err != nil {
 		return fmt.Errorf("error bootstrapping node2: %w", err)
 	}
-	_, err = m.bootstrapNodeToOdao(odao3, "America/New_York", "Node 3", "node3.com", rplBond)
+	_, err = BootstrapNodeToOdao(m.RocketPool, m.OwnerAccount, odao3, "America/New_York", "Node 3", "node3.com")
 	if err != nil {
 		return fmt.Errorf("error bootstrapping node3: %w", err)
 	}
@@ -317,67 +290,4 @@ func (m *TestManager) initializeImpl(dnt *trustednode.DaoNodeTrusted, rplBond *b
 	}
 
 	return nil
-}
-
-func (m *TestManager) bootstrapNodeToOdao(nodeAccount *Account, timezone string, id string, url string, rplBond *big.Int) (*node.Node, error) {
-	rp := m.RocketPool
-	owner := m.OwnerAccount
-
-	// Get some contract bindings
-	dnt, err := trustednode.NewDaoNodeTrusted(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting DNT binding: %w", err)
-	}
-	dnta, err := trustednode.NewDaoNodeTrustedActions(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting DNTA binding: %w", err)
-	}
-	fsrpl, err := tokens.NewTokenRplFixedSupply(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting FSRPL binding: %w", err)
-	}
-	rpl, err := tokens.NewTokenRpl(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting RPL binding: %w", err)
-	}
-
-	// Register the node
-	node, err := m.registerNode(nodeAccount, timezone)
-	if err != nil {
-		return nil, fmt.Errorf("error registering node: %w", err)
-	}
-
-	// Bootstrap it and mint RPL for it
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return dnt.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor)
-		},
-		func() (*core.TransactionInfo, error) {
-			return MintLegacyRpl(rp, owner, nodeAccount, rplBond)
-		},
-	}, true, owner.Transactor)
-	if err != nil {
-		return nil, fmt.Errorf("error bootstrapping node and minting RPL: %w", err)
-	}
-
-	// Swap RPL and Join the oDAO
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return fsrpl.Approve(*rpl.Contract.Address, rplBond, nodeAccount.Transactor)
-		},
-		func() (*core.TransactionInfo, error) {
-			return rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor)
-		},
-		func() (*core.TransactionInfo, error) {
-			return rpl.Approve(*dnta.Contract.Address, rplBond, nodeAccount.Transactor)
-		},
-		func() (*core.TransactionInfo, error) {
-			return dnta.Join(nodeAccount.Transactor)
-		},
-	}, false, nodeAccount.Transactor)
-	if err != nil {
-		return nil, fmt.Errorf("error joining oDAO: %w", err)
-	}
-
-	return node, nil
 }
