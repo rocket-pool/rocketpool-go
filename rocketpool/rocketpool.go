@@ -403,12 +403,14 @@ func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch
 // === Transaction Helpers ===
 // ===========================
 
-// Signs and submits a transaction to the network
+// Signs and submits a transaction to the network.
+// The nonce and gas fee info in the provided opts will be used.
+// The value will come from the provided txInfo. It will *not* use the value in the provided opts.
 func (rp *RocketPool) ExecuteTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
-	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
+	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
 }
 
-// Creates, signs, and submits a transaction to the network.
+// Creates, signs, and submits a transaction to the network using the nonce and value from the original TX info.
 // Use this if you don't care about the estimated gas cost and just want to run it as quickly as possible.
 // If failOnSimErrors is true, it will treat a simualtion / gas estimation error as a failure and stop before the transaction is submitted to the network.
 func (rp *RocketPool) CreateAndExecuteTransaction(creator func() (*core.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) (*types.Transaction, error) {
@@ -425,6 +427,8 @@ func (rp *RocketPool) CreateAndExecuteTransaction(creator func() (*core.Transact
 }
 
 // Creates, signs, submits, and waits for the transaction to be included in a block.
+// The nonce and gas fee info in the provided opts will be used.
+// The value will come from the provided txInfo. It will *not* use the value in the provided opts.
 // Use this if you don't care about the estimated gas cost and just want to run it as quickly as possible.
 // If failOnSimErrors is true, it will treat a simualtion / gas estimation error as a failure and stop before the transaction is submitted to the network.
 func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) error {
@@ -453,13 +457,15 @@ func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.Transact
 }
 
 // Signs and submits a bundle of transactions to the network that are all sent from the same address.
+// The values for each TX will be in each TX info; the value specified in the opts argument is not used.
 // NOTE: this assumes the bundle is meant to be submitted sequentially.
-// If the nonce has been set in opts, this will use it for the first transaction and automatically increment it for each subsequent transaction.
+// If you want to specify a nonce for the first transaction, add it to the opts argument.
+// Each subsequent transaction will then use the next nonce.
 func (rp *RocketPool) BatchExecuteTransactions(txInfos []*core.TransactionInfo, opts *bind.TransactOpts) ([]*types.Transaction, error) {
 	txs := make([]*types.Transaction, len(txInfos))
 	one := big.NewInt(1)
 	for i, txInfo := range txInfos {
-		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, opts)
+		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
 		if err != nil {
 			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
 		}
@@ -475,6 +481,9 @@ func (rp *RocketPool) BatchExecuteTransactions(txInfos []*core.TransactionInfo, 
 // Creates, signs, and submits a collection of transactions to the network that are all sent from the same address.
 // Use this if you don't care about the estimated gas costs and just want to run them as quickly as possible.
 // If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
+// NOTE: this assumes the bundle is meant to be submitted sequentially.
+// If you want to specify a nonce for the first transaction, add it to the opts argument.
+// Each subsequent transaction will then use the next nonce.
 func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core.TransactionInfo, error), failOnSimErrors bool, opts *bind.TransactOpts) ([]*types.Transaction, error) {
 	// Create the TXs
 	txInfos := make([]*core.TransactionInfo, len(creators))
@@ -496,6 +505,9 @@ func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core
 // Creates, signs, and submits a collection of transactions to the network that are all sent from the same address.
 // Use this if you don't care about the estimated gas costs and just want to run them as quickly as possible.
 // If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
+// NOTE: this assumes the bundle is meant to be submitted sequentially.
+// If you want to specify a nonce for the first transaction, add it to the opts argument.
+// Each subsequent transaction will then use the next nonce.
 func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*core.TransactionInfo, error), failOnSimErrors bool, opts *bind.TransactOpts) error {
 	// Create the TXs
 	txInfos := make([]*core.TransactionInfo, len(creators))

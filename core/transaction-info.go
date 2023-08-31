@@ -27,7 +27,7 @@ const (
 type TransactionInfo struct {
 	Data     []byte         `json:"data"`
 	To       common.Address `json:"to"`
-	Nonce    *big.Int       `json:"nonce"`
+	Value    *big.Int       `json:"value"`
 	GasInfo  GasInfo        `json:"gasInfo"`
 	SimError string         `json:"simError"`
 }
@@ -47,14 +47,14 @@ func NewTransactionInfo(contract *Contract, method string, opts *bind.TransactOp
 	}
 
 	// Create the info wrapper
-	var nonce *big.Int
+	var value *big.Int
 	if opts != nil {
-		nonce = opts.Nonce
+		value = opts.Value
 	}
 	txInfo := &TransactionInfo{
 		Data:  input,
 		To:    *contract.Address,
-		Nonce: nonce,
+		Value: value,
 		GasInfo: GasInfo{
 			EstGasLimit:  estGasLimit,
 			SafeGasLimit: safeGasLimit,
@@ -68,11 +68,29 @@ func NewTransactionInfo(contract *Contract, method string, opts *bind.TransactOp
 	return txInfo, nil
 }
 
-// Create a transaction from serialized info, signs it, and submits it to the network if requested in opts
-func ExecuteTransaction(client ExecutionClient, data []byte, to common.Address, opts *bind.TransactOpts) (*types.Transaction, error) {
+// Create a transaction from serialized info, signs it, and submits it to the network if requested in opts.
+// Note the value in opts is not used; set it in the value argument instead.
+func ExecuteTransaction(client ExecutionClient, data []byte, to common.Address, value *big.Int, opts *bind.TransactOpts) (*types.Transaction, error) {
 	// Create a "dummy" contract for the Geth API with no ABI since we don't need it for this
 	contract := bind.NewBoundContract(to, abi.ABI{}, client, client, client)
-	return contract.RawTransact(opts, data)
+
+	newOpts := &bind.TransactOpts{
+		// Copy the original fields
+		From:      opts.From,
+		Nonce:     opts.Nonce,
+		Signer:    opts.Signer,
+		GasPrice:  opts.GasPrice,
+		GasFeeCap: opts.GasFeeCap,
+		GasTipCap: opts.GasTipCap,
+		GasLimit:  opts.GasLimit,
+		Context:   opts.Context,
+		NoSend:    opts.NoSend,
+
+		// Overwrite the value
+		Value: value,
+	}
+
+	return contract.RawTransact(newOpts, data)
 }
 
 // Estimate the expected and safe gas limits for a contract transaction
