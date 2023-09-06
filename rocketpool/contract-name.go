@@ -33,6 +33,8 @@ const (
 	ContractName_RocketDepositPool ContractName = "rocketDepositPool"
 
 	// Minipools
+	ContractName_RocketMinipool            ContractName = "rocketMinipool"
+	ContractName_RocketMinipoolBase        ContractName = "rocketMinipoolBase"
 	ContractName_RocketMinipoolBondReducer ContractName = "rocketMinipoolBondReducer"
 	ContractName_RocketMinipoolDelegate    ContractName = "rocketMinipoolDelegate"
 	ContractName_RocketMinipoolManager     ContractName = "rocketMinipoolManager"
@@ -89,6 +91,7 @@ var ContractNames = []ContractName{
 
 	ContractName_RocketDepositPool,
 
+	ContractName_RocketMinipoolBase,
 	ContractName_RocketMinipoolBondReducer,
 	ContractName_RocketMinipoolDelegate,
 	ContractName_RocketMinipoolManager,
@@ -116,5 +119,6 @@ var ContractNames = []ContractName{
 
 // List of all instanceable contract names
 var InstanceContractNames = []ContractName{
+	ContractName_RocketMinipool,
 	ContractName_RocketNodeDistributorDelegate,
 }
