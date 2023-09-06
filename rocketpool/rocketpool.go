@@ -214,9 +214,9 @@ func (rp *RocketPool) GetContracts(contractNames ...ContractName) ([]*core.Contr
 
 // Create a binding for a network contract instance
 func (rp *RocketPool) MakeContract(contractName ContractName, address common.Address) (*core.Contract, error) {
-	abi, exists := rp.instanceAbis[contractName]
-	if !exists {
-		return nil, fmt.Errorf("ABI for contract %s has not been loaded yet", string(contractName))
+	abi, err := rp.GetAbi(contractName)
+	if err != nil {
+		return nil, err
 	}
 
 	// Create and return
@@ -226,6 +226,15 @@ func (rp *RocketPool) MakeContract(contractName ContractName, address common.Add
 		ABI:      abi,
 		Client:   rp.Client,
 	}, nil
+}
+
+// Get the ABI for a network contract (typically used for instances like minipools or fee distributors)
+func (rp *RocketPool) GetAbi(contractName ContractName) (*abi.ABI, error) {
+	abi, exists := rp.instanceAbis[contractName]
+	if !exists {
+		return nil, fmt.Errorf("ABI for contract %s has not been loaded yet", string(contractName))
+	}
+	return abi, nil
 }
 
 // =============
