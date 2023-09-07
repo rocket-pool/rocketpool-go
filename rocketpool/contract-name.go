@@ -3,6 +3,9 @@ package rocketpool
 type ContractName string
 
 const (
+	// Beacon Deposit Contract
+	ContractName_CasperDeposit ContractName = "casperDeposit"
+
 	// Auctions
 	ContractName_RocketAuctionManager ContractName = "rocketAuctionManager"
 
@@ -67,6 +70,8 @@ const (
 
 // List of all singleton contract names
 var ContractNames = []ContractName{
+	ContractName_CasperDeposit,
+
 	ContractName_RocketAuctionManager,
 
 	ContractName_RocketDAOProposal,
