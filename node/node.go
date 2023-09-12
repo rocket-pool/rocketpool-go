@@ -20,6 +20,7 @@ import (
 type Node struct {
 	Details     NodeDetails
 	rp          *rocketpool.RocketPool
+	distFactory *core.Contract
 	nodeMgr     *core.Contract
 	nodeStaking *core.Contract
 	mpFactory   *core.Contract
@@ -29,6 +30,9 @@ type Node struct {
 
 // Details for a Rocket Pool Node
 type NodeDetails struct {
+	// DistributorFactory
+	DistributorAddress common.Address `json:"distributorAddress"`
+
 	// NodeManager
 	Address                          common.Address            `json:"address"`
 	Exists                           bool                      `json:"exists"`
@@ -66,6 +70,10 @@ type NodeDetails struct {
 
 // Creates a new Node instance
 func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
+	distFactory, err := rp.GetContract(rocketpool.ContractName_RocketNodeDistributorFactory)
+	if err != nil {
+		return nil, fmt.Errorf("error getting distributor factory binding: %w", err)
+	}
 	nodeManager, err := rp.GetContract(rocketpool.ContractName_RocketNodeManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node staking binding: %w", err)
@@ -88,6 +96,7 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 			Address: address,
 		},
 		rp:          rp,
+		distFactory: distFactory,
 		nodeMgr:     nodeManager,
 		nodeStaking: nodeStaking,
 		mpFactory:   minipoolFactory,
@@ -99,6 +108,13 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 // =============
 // === Calls ===
 // =============
+
+// === DistributorFactory ===
+
+// Get the node's fee distributor address
+func (c *Node) GetDistributorAddress(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.distFactory, &c.Details.DistributorAddress, "getProxyAddress", c.Details.Address)
+}
 
 // === NodeManager ===
 
@@ -296,6 +312,31 @@ func (c *Node) ConfirmWithdrawalAddress(opts *bind.TransactOpts) (*core.Transact
 // ===================
 // === Sub-Getters ===
 // ===================
+
+// === DistributorFactory ===
+
+// Get a node's distributor with details
+func (c *Node) GetNodeDistributor(distributorAddress common.Address, includeDetails bool, opts *bind.CallOpts) (*NodeDistributor, error) {
+	// Create the distributor
+	distributor, err := NewNodeDistributor(c.rp, c.Details.Address, distributorAddress)
+	if err != nil {
+		return nil, fmt.Errorf("error creating node distributor binding for node %s at %s: %w", c.Details.Address, distributorAddress.Hex(), err)
+	}
+
+	// Get details via a multicall query
+	if includeDetails {
+		err = c.rp.Query(func(mc *batch.MultiCaller) error {
+			distributor.GetAllDetails(mc)
+			return nil
+		}, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error getting node distributor for node %s at %s: %w", c.Details.Address, distributorAddress.Hex(), err)
+		}
+	}
+
+	// Return
+	return distributor, nil
+}
 
 // === MinipoolManager ===
 

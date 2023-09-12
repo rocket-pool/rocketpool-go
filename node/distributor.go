@@ -78,6 +78,6 @@ func (c *NodeDistributor) GetAllDetails(mc *batch.MultiCaller) {
 // ====================
 
 // Get info for distributing the contract's balance to the rETH contract and the user
-func (c *NodeDistributor) PlaceBid(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *NodeDistributor) Distribute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "distribute", opts)
 }
