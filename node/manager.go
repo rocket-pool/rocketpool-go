@@ -16,6 +16,7 @@ import (
 const (
 	nodeTimezoneBatchSize       int = 1000
 	smoothingPoolCountBatchSize int = 1000
+	effectiveStakeBatchSize     int = 250
 )
 
 // ===============
@@ -150,5 +151,40 @@ func (c *NodeManager) GetSmoothingPoolRegisteredNodeCount(nodeCount uint64, opts
 		total += (*count).Uint64()
 	}
 
+	return total, nil
+}
+
+// Get the total effective RPL stake of the network
+func (c *NodeManager) GetTotalEffectiveRplStake(rp *rocketpool.RocketPool, nodeCount uint64, opts *bind.CallOpts) (*big.Int, error) {
+	// Get the list of all node addresses to query
+	addresses, err := c.GetNodeAddresses(nodeCount, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node addresses: %w", err)
+	}
+
+	// Query the effective stake of each node
+	total := big.NewInt(0)
+	nodes := make([]*Node, len(addresses))
+	err = rp.BatchQuery(int(nodeCount), effectiveStakeBatchSize, func(mc *batch.MultiCaller, i int) error {
+		// Create the node binding
+		address := addresses[i]
+		node, err := NewNode(rp, address)
+		if err != nil {
+			return fmt.Errorf("error creating node %s binding: %w", address.Hex(), err)
+		}
+		nodes[i] = node
+
+		// Get the effective RPL stake
+		node.GetEffectiveRplStake(mc)
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error querying effective stakes: %w", err)
+	}
+
+	// Sum up the total
+	for _, node := range nodes {
+		total.Add(total, node.Details.EffectiveRplStake)
+	}
 	return total, nil
 }
