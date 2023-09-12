@@ -9,7 +9,7 @@ const (
 	// Auctions
 	ContractName_RocketAuctionManager ContractName = "rocketAuctionManager"
 
-	// Proposals
+	// DAO Proposals
 	ContractName_RocketDAOProposal ContractName = "rocketDAOProposal"
 
 	// Protocol DAO
@@ -61,6 +61,9 @@ const (
 	// Rewards
 	ContractName_RocketMerkleDistributorMainnet ContractName = "rocketMerkleDistributorMainnet"
 	ContractName_RocketRewardsPool              ContractName = "rocketRewardsPool"
+
+	// Smoothing Pool
+	ContractName_RocketSmoothingPool ContractName = "rocketSmoothingPool"
 
 	// Tokens
 	ContractName_RocketTokenRETH           ContractName = "rocketTokenRETH"
@@ -116,6 +119,8 @@ var ContractNames = []ContractName{
 
 	ContractName_RocketMerkleDistributorMainnet,
 	ContractName_RocketRewardsPool,
+
+	ContractName_RocketSmoothingPool,
 
 	ContractName_RocketTokenRETH,
 	ContractName_RocketTokenRPLFixedSupply,
