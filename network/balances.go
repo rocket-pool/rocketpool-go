@@ -30,7 +30,7 @@ type NetworkBalancesDetails struct {
 	TotalETHBalance               *big.Int                `json:"totalEthBalance"`
 	StakingETHBalance             *big.Int                `json:"stakingEthBalance"`
 	TotalRETHSupply               *big.Int                `json:"totalRethSupply"`
-	ETHUtilizationRate            core.Parameter[float64] `json:"ethUtilizationRate"`
+	EthUtilizationRate            core.Parameter[float64] `json:"ethUtilizationRate"`
 	LatestReportableBalancesBlock core.Parameter[uint64]  `json:"latestReportableBalancesBlock"`
 }
 
@@ -78,8 +78,8 @@ func (c *NetworkBalances) GetTotalRETHSupply(mc *batch.MultiCaller) {
 }
 
 // Get the current network ETH utilization rate
-func (c *NetworkBalances) GetETHUtilizationRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.ETHUtilizationRate.RawValue, "getETHUtilizationRate")
+func (c *NetworkBalances) GetEthUtilizationRate(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.EthUtilizationRate.RawValue, "getETHUtilizationRate")
 }
 
 // Returns the latest block number that oracles should be reporting balances for
@@ -93,7 +93,7 @@ func (c *NetworkBalances) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetTotalETHBalance(mc)
 	c.GetStakingETHBalance(mc)
 	c.GetTotalRETHSupply(mc)
-	c.GetETHUtilizationRate(mc)
+	c.GetEthUtilizationRate(mc)
 	c.GetLatestReportableBalancesBlock(mc)
 }
 
