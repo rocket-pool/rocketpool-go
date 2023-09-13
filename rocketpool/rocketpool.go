@@ -412,6 +412,13 @@ func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch
 // === Transaction Helpers ===
 // ===========================
 
+// Signs a transaction but does not submit it to the network. Use this if you want to sign something offline and submit it later,
+// or submit it as part of a bundle.
+func (rp *RocketPool) SignTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	opts.NoSend = true
+	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
+}
+
 // Signs and submits a transaction to the network.
 // The nonce and gas fee info in the provided opts will be used.
 // The value will come from the provided txInfo. It will *not* use the value in the provided opts.
