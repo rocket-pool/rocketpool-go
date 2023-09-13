@@ -202,25 +202,28 @@ func (c *MinipoolManager) GetMinipoolCountPerStatus(minipoolCount uint64, opts *
 		offset := big.NewInt(int64(i))
 		newMinipoolCounts := new(MinipoolCountsPerStatus)
 		if err := c.Contract.Call(opts, newMinipoolCounts, "getMinipoolCountPerStatus", offset, limit); err != nil {
-			return MinipoolCountsPerStatus{}, fmt.Errorf("Could not get minipool counts: %w", err)
+			return MinipoolCountsPerStatus{}, fmt.Errorf("error getting minipool counts: %w", err)
 		}
-		if newMinipoolCounts != nil {
-			if newMinipoolCounts.Initialized != nil {
-				minipoolCounts.Initialized.Add(minipoolCounts.Initialized, newMinipoolCounts.Initialized)
-			}
-			if newMinipoolCounts.Prelaunch != nil {
-				minipoolCounts.Prelaunch.Add(minipoolCounts.Prelaunch, newMinipoolCounts.Prelaunch)
-			}
-			if newMinipoolCounts.Staking != nil {
-				minipoolCounts.Staking.Add(minipoolCounts.Staking, newMinipoolCounts.Staking)
-			}
-			if newMinipoolCounts.Dissolved != nil {
-				minipoolCounts.Dissolved.Add(minipoolCounts.Dissolved, newMinipoolCounts.Dissolved)
-			}
-			if newMinipoolCounts.Withdrawable != nil {
-				minipoolCounts.Withdrawable.Add(minipoolCounts.Withdrawable, newMinipoolCounts.Withdrawable)
-			}
+		if newMinipoolCounts.Initialized != nil {
+			minipoolCounts.Initialized.Add(minipoolCounts.Initialized, newMinipoolCounts.Initialized)
+		}
+		if newMinipoolCounts.Prelaunch != nil {
+			minipoolCounts.Prelaunch.Add(minipoolCounts.Prelaunch, newMinipoolCounts.Prelaunch)
+		}
+		if newMinipoolCounts.Staking != nil {
+			minipoolCounts.Staking.Add(minipoolCounts.Staking, newMinipoolCounts.Staking)
+		}
+		if newMinipoolCounts.Dissolved != nil {
+			minipoolCounts.Dissolved.Add(minipoolCounts.Dissolved, newMinipoolCounts.Dissolved)
+		}
+		if newMinipoolCounts.Withdrawable != nil {
+			minipoolCounts.Withdrawable.Add(minipoolCounts.Withdrawable, newMinipoolCounts.Withdrawable)
 		}
 	}
 	return minipoolCounts, nil
+}
+
+// Get the 0x01-based withdrawal credentials for a minipool address (even if it doesn't exist yet)
+func (c *MinipoolManager) GetMinipoolWithdrawalCredentials(mc *batch.MultiCaller, credentials_Out *common.Hash, address common.Address) {
+	core.AddCall(mc, c.Contract, credentials_Out, "getMinipoolWithdrawalCredentials", address)
 }

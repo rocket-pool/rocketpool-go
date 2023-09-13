@@ -14,7 +14,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
-	rptypes "github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils"
 )
 
@@ -302,7 +301,7 @@ func (c *MinipoolCommon) Refund(opts *bind.TransactOpts) (*core.TransactionInfo,
 }
 
 // Get info for progressing the prelaunch minipool to staking
-func (c *MinipoolCommon) Stake(validatorSignature rptypes.ValidatorSignature, depositDataRoot common.Hash, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *MinipoolCommon) Stake(validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.Contract, "stake", opts, validatorSignature[:], depositDataRoot)
 }
 
@@ -376,7 +375,7 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 	// Grab the latest block number
 	currentBlock, err := c.rp.Client.BlockNumber(context.Background())
 	if err != nil {
-		return PrestakeData{}, fmt.Errorf("Error getting current block %s: %w", c.Details.Address.Hex(), err)
+		return PrestakeData{}, fmt.Errorf("error getting current block %s: %w", c.Details.Address.Hex(), err)
 	}
 
 	// Grab the lowest block number worth querying from (should never have to go back this far in practice)
@@ -387,7 +386,7 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 		return nil
 	}, opts)
 	if err != nil {
-		return PrestakeData{}, fmt.Errorf("Error getting deploy block %s: %w", c.Details.Address.Hex(), err)
+		return PrestakeData{}, fmt.Errorf("error getting deploy block %s: %w", c.Details.Address.Hex(), err)
 	}
 
 	fromBlock := fromBlockBig.Uint64()
@@ -406,7 +405,7 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 
 		logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, fromBig, toBig, nil)
 		if err != nil {
-			return PrestakeData{}, fmt.Errorf("Error getting prestake logs for minipool %s: %w", c.Details.Address.Hex(), err)
+			return PrestakeData{}, fmt.Errorf("error getting prestake logs for minipool %s: %w", c.Details.Address.Hex(), err)
 		}
 
 		if len(logs) > 0 {
@@ -418,22 +417,22 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 
 	if !found {
 		// This should never happen
-		return PrestakeData{}, fmt.Errorf("Error finding prestake log for minipool %s", c.Details.Address.Hex())
+		return PrestakeData{}, fmt.Errorf("error finding prestake log for minipool %s", c.Details.Address.Hex())
 	}
 
 	// Decode the event
 	prestakeEvent := new(MinipoolPrestakeEvent)
 	c.Contract.Contract.UnpackLog(prestakeEvent, "MinipoolPrestaked", log)
 	if err != nil {
-		return PrestakeData{}, fmt.Errorf("Error unpacking prestake data: %w", err)
+		return PrestakeData{}, fmt.Errorf("error unpacking prestake data: %w", err)
 	}
 
 	// Convert the event to a more useable struct
 	prestakeData := PrestakeData{
-		Pubkey:                rptypes.BytesToValidatorPubkey(prestakeEvent.Pubkey),
+		Pubkey:                types.BytesToValidatorPubkey(prestakeEvent.Pubkey),
 		WithdrawalCredentials: common.BytesToHash(prestakeEvent.WithdrawalCredentials),
 		Amount:                prestakeEvent.Amount,
-		Signature:             rptypes.BytesToValidatorSignature(prestakeEvent.Signature),
+		Signature:             types.BytesToValidatorSignature(prestakeEvent.Signature),
 		DepositDataRoot:       prestakeEvent.DepositDataRoot,
 		Time:                  time.Unix(prestakeEvent.Time.Int64(), 0),
 	}
