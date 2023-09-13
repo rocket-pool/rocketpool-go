@@ -10,6 +10,8 @@ import (
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/types"
+	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
 // ===============
@@ -21,6 +23,7 @@ type Node struct {
 	Details     NodeDetails
 	rp          *rocketpool.RocketPool
 	distFactory *core.Contract
+	nodeDeposit *core.Contract
 	nodeMgr     *core.Contract
 	nodeStaking *core.Contract
 	mpFactory   *core.Contract
@@ -43,6 +46,9 @@ type NodeDetails struct {
 	AverageFee                       core.Parameter[float64]   `json:"averageFee"`
 	SmoothingPoolRegistrationState   bool                      `json:"smoothingPoolRegistrationState"`
 	SmoothingPoolRegistrationChanged core.Parameter[time.Time] `json:"smoothingPoolRegistrationChanged"`
+
+	// NodeDeposit
+	Credit *big.Int `json:"credit"`
 
 	// NodeStaking
 	RplStake          *big.Int                  `json:"rplStake"`
@@ -74,6 +80,10 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting distributor factory binding: %w", err)
 	}
+	nodeDeposit, err := rp.GetContract(rocketpool.ContractName_RocketNodeDeposit)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node deposit binding: %w", err)
+	}
 	nodeManager, err := rp.GetContract(rocketpool.ContractName_RocketNodeManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node staking binding: %w", err)
@@ -97,6 +107,7 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		},
 		rp:          rp,
 		distFactory: distFactory,
+		nodeDeposit: nodeDeposit,
 		nodeMgr:     nodeManager,
 		nodeStaking: nodeStaking,
 		mpFactory:   minipoolFactory,
@@ -114,6 +125,13 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 // Get the node's fee distributor address
 func (c *Node) GetDistributorAddress(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.distFactory, &c.Details.DistributorAddress, "getProxyAddress", c.Details.Address)
+}
+
+// === NodeDeposit ===
+
+// Get the amount of ETH in the node's deposit credit bank
+func (c *Node) GetNodeDepositCredit(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.nodeDeposit, &c.Details.Credit, "getNodeDepositCredit", c.Details.Address)
 }
 
 // === NodeManager ===
@@ -229,28 +247,26 @@ func (c *Node) GetPendingWithdrawalAddress(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.storage, &c.Details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", c.Details.Address)
 }
 
-// Get all basic details
-func (c *Node) GetBasicDetails(mc *batch.MultiCaller) {
-	c.GetExists(mc)
-	c.GetRegistrationTime(mc)
-	c.GetTimezoneLocation(mc)
-	c.GetRewardNetwork(mc)
-	c.GetFeeDistributorInitialized(mc)
-	c.GetAverageFee(mc)
-	c.GetSmoothingPoolRegistrationState(mc)
-	c.GetSmoothingPoolRegistrationChanged(mc)
-	c.GetRplStake(mc)
-	c.GetEffectiveRplStake(mc)
-	c.GetMinimumRplStake(mc)
-	c.GetMaximumRplStake(mc)
-	c.GetRplStakedTime(mc)
-	c.GetEthMatched(mc)
-	c.GetEthMatchedLimit(mc)
-}
-
 // ====================
 // === Transactions ===
 // ====================
+
+// === NodeDeposit ===
+
+// Get info for making a node deposit and creating a new minipool
+func (c *Node) Deposit(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeDeposit, "deposit", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], validatorSignature[:], depositDataRoot, salt, expectedMinipoolAddress)
+}
+
+// Get info for making a node deposit and creating a new minipool by using the credit balance
+func (c *Node) DepositWithCredit(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeDeposit, "depositWithCredit", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], validatorSignature[:], depositDataRoot, salt, expectedMinipoolAddress)
+}
+
+// Get info for making a vacant minipool for solo staker migration
+func (c *Node) CreateVacantMinipool(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, salt *big.Int, expectedMinipoolAddress common.Address, currentBalance *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeDeposit, "createVacantMinipool", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], salt, expectedMinipoolAddress, currentBalance)
+}
 
 // === NodeManager ===
 
