@@ -34,16 +34,16 @@ type TransactionInfo struct {
 
 // Create a new serializable TransactionInfo wrapper
 func NewTransactionInfo(contract *Contract, method string, opts *bind.TransactOpts, parameters ...interface{}) (*TransactionInfo, error) {
-	// Create the input data
-	input, err := contract.ABI.Pack(method, parameters...)
+	// Create the data data
+	data, err := contract.ABI.Pack(method, parameters...)
 	if err != nil {
 		return nil, fmt.Errorf("error packing input data: %w", err)
 	}
 
 	// Get the gas estimate
-	estGasLimit, safeGasLimit, simErr := estimateGasLimit(contract.Client, *contract.Address, opts, input)
+	estGasLimit, safeGasLimit, simErr := estimateGasLimit(contract.Client, *contract.Address, opts, data)
 	if simErr != nil && !strings.HasPrefix(simErr.Error(), gasSimErrorPrefix) {
-		return nil, err
+		return nil, simErr
 	}
 
 	// Create the info wrapper
@@ -52,8 +52,38 @@ func NewTransactionInfo(contract *Contract, method string, opts *bind.TransactOp
 		value = opts.Value
 	}
 	txInfo := &TransactionInfo{
-		Data:  input,
+		Data:  data,
 		To:    *contract.Address,
+		Value: value,
+		GasInfo: GasInfo{
+			EstGasLimit:  estGasLimit,
+			SafeGasLimit: safeGasLimit,
+		},
+		SimError: "",
+	}
+	if simErr != nil {
+		txInfo.SimError = simErr.Error()
+	}
+
+	return txInfo, nil
+}
+
+// Create a new serializable TransactionInfo from raw data
+func NewTransactionInfoRaw(ec ExecutionClient, to common.Address, data []byte, opts *bind.TransactOpts) (*TransactionInfo, error) {
+	// Get the gas estimate
+	estGasLimit, safeGasLimit, simErr := estimateGasLimit(ec, to, opts, data)
+	if simErr != nil && !strings.HasPrefix(simErr.Error(), gasSimErrorPrefix) {
+		return nil, simErr
+	}
+
+	// Create the info wrapper
+	var value *big.Int
+	if opts != nil {
+		value = opts.Value
+	}
+	txInfo := &TransactionInfo{
+		Data:  data,
+		To:    to,
 		Value: value,
 		GasInfo: GasInfo{
 			EstGasLimit:  estGasLimit,
