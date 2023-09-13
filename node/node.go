@@ -130,7 +130,7 @@ func (c *Node) GetDistributorAddress(mc *batch.MultiCaller) {
 // === NodeDeposit ===
 
 // Get the amount of ETH in the node's deposit credit bank
-func (c *Node) GetNodeDepositCredit(mc *batch.MultiCaller) {
+func (c *Node) GetDepositCredit(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.nodeDeposit, &c.Details.Credit, "getNodeDepositCredit", c.Details.Address)
 }
 
