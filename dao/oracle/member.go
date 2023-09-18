@@ -1,4 +1,4 @@
-package trustednode
+package oracle
 
 import (
 	"fmt"

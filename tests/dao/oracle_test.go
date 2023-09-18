@@ -6,7 +6,7 @@ import (
 
 	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/tests"
 )
 
@@ -110,7 +110,7 @@ func Test_ChallengeResolve(t *testing.T) {
 	t.Logf("Challenge resolved!")
 }
 
-func prepChallenge(t *testing.T) (*tests.Account, *trustednode.OracleDaoMember) {
+func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	// Revert to the initialized state at the end of the test
 	t.Cleanup(func() {
 		err := mgr.RevertToInitialized()
@@ -125,7 +125,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *trustednode.OracleDaoMember) 
 	if err != nil {
 		t.Fatalf("error bootstrapping node %s to the oDAO: %s", account.Address.Hex(), err.Error())
 	}
-	member, err := trustednode.NewOracleDaoMember(rp, account.Address)
+	member, err := oracle.NewOracleDaoMember(rp, account.Address)
 	if err != nil {
 		t.Fatalf("error creating oDAO member binding for node %s: %s", account.Address.Hex(), err.Error())
 	}

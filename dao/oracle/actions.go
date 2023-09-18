@@ -1,4 +1,4 @@
-package trustednode
+package oracle
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 // ===============
 
 // Binding for RocketDAONodeTrustedActions
-type DaoNodeTrustedActions struct {
+type OracleDaoMemberActions struct {
 	Contract *core.Contract
 	rp       *rocketpool.RocketPool
 }
@@ -26,15 +26,15 @@ type DaoNodeTrustedActions struct {
 // === Constructors ===
 // ====================
 
-// Creates a new DaoNodeTrustedActions contract binding
-func NewDaoNodeTrustedActions(rp *rocketpool.RocketPool) (*DaoNodeTrustedActions, error) {
+// Creates a new OracleDaoMemberActions contract binding
+func NewOracleDaoMemberActions(rp *rocketpool.RocketPool) (*OracleDaoMemberActions, error) {
 	// Create the contract
 	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedActions)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DAO node trusted actions contract: %w", err)
+		return nil, fmt.Errorf("error getting Oracle DAO member actions contract: %w", err)
 	}
 
-	return &DaoNodeTrustedActions{
+	return &OracleDaoMemberActions{
 		Contract: contract,
 		rp:       rp,
 	}, nil
@@ -45,22 +45,22 @@ func NewDaoNodeTrustedActions(rp *rocketpool.RocketPool) (*DaoNodeTrustedActions
 // ====================
 
 // Get info for joining the Oracle DAO
-func (c *DaoNodeTrustedActions) Join(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoMemberActions) Join(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.Contract, "actionJoin", opts)
 }
 
 // Get info for leaving the Oracle DAO
-func (c *DaoNodeTrustedActions) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoMemberActions) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.Contract, "actionLeave", opts, rplBondRefundAddress)
 }
 
 // Get info for making a challenge to an Oracle DAO member
-func (c *DaoNodeTrustedActions) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoMemberActions) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.Contract, "actionChallengeMake", opts, memberAddress)
 }
 
 // Get info for deciding a challenge to an Oracle DAO member
-func (c *DaoNodeTrustedActions) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoMemberActions) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.Contract, "actionChallengeDecide", opts, memberAddress)
 }
 
@@ -69,7 +69,7 @@ func (c *DaoNodeTrustedActions) DecideChallenge(memberAddress common.Address, op
 // =============
 
 // Returns the most recent block number that the number of trusted nodes changed since fromBlock
-func (c *DaoNodeTrustedActions) GetLatestMemberCountChangedBlock(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (uint64, error) {
+func (c *OracleDaoMemberActions) GetLatestMemberCountChangedBlock(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (uint64, error) {
 	// Construct a filter query for relevant logs
 	addressFilter := []common.Address{*c.Contract.Address}
 	topicFilter := [][]common.Hash{{

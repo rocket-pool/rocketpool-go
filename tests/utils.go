@@ -6,7 +6,7 @@ import (
 
 	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/node"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
@@ -45,11 +45,11 @@ func RegisterNode(rp *rocketpool.RocketPool, account *Account, timezone string) 
 // Bootstraps a node into the Oracle DAO, taking care of all of the details involved
 func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount *Account, timezone string, id string, url string) (*node.Node, error) {
 	// Get some contract bindings
-	dnt, err := trustednode.NewDaoNodeTrusted(rp)
+	dnt, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DNT binding: %w", err)
 	}
-	dnta, err := trustednode.NewDaoNodeTrustedActions(rp)
+	dnta, err := oracle.NewOracleDaoMemberActions(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DNTA binding: %w", err)
 	}

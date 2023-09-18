@@ -1,4 +1,4 @@
-package trustednode
+package oracle
 
 import (
 	"fmt"
@@ -17,14 +17,14 @@ import (
 // ===============
 
 // Binding for RocketDAONodeTrusted
-type DaoNodeTrusted struct {
-	Details  DaoNodeTrustedDetails
+type OracleDaoManager struct {
+	Details  OracleDaoManagerDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
 
-// Details for DaoNodeTrusted
-type DaoNodeTrustedDetails struct {
+// Details for OracleDaoManager
+type OracleDaoManagerDetails struct {
 	MemberCount        core.Parameter[uint64] `json:"memberCount"`
 	MinimumMemberCount core.Parameter[uint64] `json:"minimumMemberCount"`
 }
@@ -33,16 +33,16 @@ type DaoNodeTrustedDetails struct {
 // === Constructors ===
 // ====================
 
-// Creates a new DaoNodeTrusted contract binding
-func NewDaoNodeTrusted(rp *rocketpool.RocketPool) (*DaoNodeTrusted, error) {
+// Creates a new OracleDaoManager contract binding
+func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 	// Create the contract
 	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrusted)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DAO node trusted contract: %w", err)
+		return nil, fmt.Errorf("error getting Oracle DAO manager contract: %w", err)
 	}
 
-	return &DaoNodeTrusted{
-		Details:  DaoNodeTrustedDetails{},
+	return &OracleDaoManager{
+		Details:  OracleDaoManagerDetails{},
 		rp:       rp,
 		contract: contract,
 	}, nil
@@ -53,17 +53,17 @@ func NewDaoNodeTrusted(rp *rocketpool.RocketPool) (*DaoNodeTrusted, error) {
 // =============
 
 // Get the member count
-func (c *DaoNodeTrusted) GetMemberCount(mc *batch.MultiCaller) {
+func (c *OracleDaoManager) GetMemberCount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.MemberCount.RawValue, "getMemberCount")
 }
 
 // Get the minimum member count
-func (c *DaoNodeTrusted) GetMinimumMemberCount(mc *batch.MultiCaller) {
+func (c *OracleDaoManager) GetMinimumMemberCount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.MinimumMemberCount.RawValue, "getMemberMinRequired")
 }
 
 // Get all basic details
-func (c *DaoNodeTrusted) GetAllDetails(mc *batch.MultiCaller) {
+func (c *OracleDaoManager) GetAllDetails(mc *batch.MultiCaller) {
 	c.GetMemberCount(mc)
 	c.GetMinimumMemberCount(mc)
 }
@@ -73,22 +73,22 @@ func (c *DaoNodeTrusted) GetAllDetails(mc *batch.MultiCaller) {
 // ====================
 
 // Bootstrap a bool setting
-func (c *DaoNodeTrusted) BootstrapBool(contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) BootstrapBool(contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
 }
 
 // Bootstrap a uint setting
-func (c *DaoNodeTrusted) BootstrapUint(contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) BootstrapUint(contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
 }
 
 // Bootstrap a member into the Oracle DAO
-func (c *DaoNodeTrusted) BootstrapMember(id string, url string, nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) BootstrapMember(id string, url string, nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.contract, "bootstrapMember", opts, id, url, nodeAddress)
 }
 
 // Bootstrap a contract upgrade
-func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) BootstrapUpgrade(upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)
@@ -101,13 +101,13 @@ func (c *DaoNodeTrusted) BootstrapUpgrade(upgradeType string, contractName rocke
 // =================
 
 // Get an Oracle DAO member address by index
-func (c *DaoNodeTrusted) GetMemberAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
+func (c *OracleDaoManager) GetMemberAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
 	core.AddCall(mc, c.contract, address_Out, "getMemberAt", big.NewInt(int64(index)))
 }
 
 // Get the list of Oracle DAO member addresses.
 // Use GetMemberCount() for the memberCount parameter.
-func (c *DaoNodeTrusted) GetMemberAddresses(memberCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
+func (c *OracleDaoManager) GetMemberAddresses(memberCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
 	addresses := make([]common.Address, memberCount)
 
 	// Run the multicall query for each address

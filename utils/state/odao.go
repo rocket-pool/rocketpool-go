@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 
 	"golang.org/x/sync/errgroup"
@@ -77,7 +77,7 @@ func GetAllOracleDaoMemberDetails(rp *rocketpool.RocketPool, contracts *NetworkC
 
 // Get all Oracle DAO addresses
 func getOdaoAddresses(rp *rocketpool.RocketPool, contracts *NetworkContracts, opts *bind.CallOpts) ([]common.Address, error) {
-	mgr, err := trustednode.NewDaoNodeTrusted(rp)
+	mgr, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		return nil, err
 	}

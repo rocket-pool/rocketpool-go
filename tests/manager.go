@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
 )
@@ -103,7 +103,7 @@ func (m *TestManager) InitializeDeployment() error {
 	rp := m.RocketPool
 
 	// Get the contract bindings
-	dnt, err := trustednode.NewDaoNodeTrusted(rp)
+	dnt, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		return fmt.Errorf("error creating DNT binding: %w", err)
 	}
@@ -224,7 +224,7 @@ func (m *TestManager) revertToSnapshot(snapshotID string) error {
 }
 
 // Implementation for initialization
-func (m *TestManager) initializeImpl(dnt *trustednode.DaoNodeTrusted) error {
+func (m *TestManager) initializeImpl(dnt *oracle.OracleDaoManager) error {
 	rp := m.RocketPool
 
 	// Prep the accounts

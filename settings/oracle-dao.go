@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -52,8 +52,8 @@ type OracleDaoSettings struct {
 	RewardsContract   *core.Contract
 
 	rp                              *rocketpool.RocketPool
-	daoNodeTrustedContract          *trustednode.DaoNodeTrusted
-	daoNodeTrustedProposalsContract *trustednode.DaoNodeTrustedProposals
+	daoNodeTrustedContract          *oracle.OracleDaoManager
+	daoNodeTrustedProposalsContract *oracle.OracleDaoProposals
 }
 
 // Details for Oracle DAO settings
@@ -96,11 +96,11 @@ type OracleDaoSettingsDetails struct {
 
 // Creates a new Oracle DAO settings binding
 func NewOracleDaoSettings(rp *rocketpool.RocketPool) (*OracleDaoSettings, error) {
-	daoNodeTrustedContract, err := trustednode.NewDaoNodeTrusted(rp)
+	daoNodeTrustedContract, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO node trusted binding: %w", err)
 	}
-	daoNodeTrustedProposalsContract, err := trustednode.NewDaoNodeTrustedProposals(rp)
+	daoNodeTrustedProposalsContract, err := oracle.NewOracleDaoProposals(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO node trusted proposals binding: %w", err)
 	}

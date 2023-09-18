@@ -22,40 +22,40 @@ const (
 
 type NetworkDetails struct {
 	// Redstone
-	RplPrice                          *big.Int
-	MinCollateralFraction             *big.Int
-	MaxCollateralFraction             *big.Int
-	IntervalDuration                  time.Duration
-	IntervalStart                     time.Time
-	NodeOperatorRewardsPercent        *big.Int
-	TrustedNodeOperatorRewardsPercent *big.Int
-	ProtocolDaoRewardsPercent         *big.Int
-	PendingRPLRewards                 *big.Int
-	RewardIndex                       uint64
-	ScrubPeriod                       time.Duration
-	SmoothingPoolAddress              common.Address
-	DepositPoolBalance                *big.Int
-	DepositPoolExcess                 *big.Int
-	QueueCapacity                     minipool.QueueCapacity
-	QueueLength                       *big.Int
-	RPLInflationIntervalRate          *big.Int
-	RPLTotalSupply                    *big.Int
-	PricesBlock                       uint64
-	LatestReportablePricesBlock       uint64
-	ETHUtilizationRate                float64
-	StakingETHBalance                 *big.Int
-	RETHExchangeRate                  float64
-	TotalETHBalance                   *big.Int
-	RETHBalance                       *big.Int
-	TotalRETHSupply                   *big.Int
-	TotalRPLStake                     *big.Int
-	SmoothingPoolBalance              *big.Int
-	NodeFee                           float64
-	BalancesBlock                     *big.Int
-	LatestReportableBalancesBlock     *big.Int
-	SubmitBalancesEnabled             bool
-	SubmitPricesEnabled               bool
-	MinipoolLaunchTimeout             *big.Int
+	RplPrice                      *big.Int
+	MinCollateralFraction         *big.Int
+	MaxCollateralFraction         *big.Int
+	IntervalDuration              time.Duration
+	IntervalStart                 time.Time
+	NodeOperatorRewardsPercent    *big.Int
+	OracleDaoRewardsPercent       *big.Int
+	ProtocolDaoRewardsPercent     *big.Int
+	PendingRPLRewards             *big.Int
+	RewardIndex                   uint64
+	ScrubPeriod                   time.Duration
+	SmoothingPoolAddress          common.Address
+	DepositPoolBalance            *big.Int
+	DepositPoolExcess             *big.Int
+	QueueCapacity                 minipool.QueueCapacity
+	QueueLength                   *big.Int
+	RPLInflationIntervalRate      *big.Int
+	RPLTotalSupply                *big.Int
+	PricesBlock                   uint64
+	LatestReportablePricesBlock   uint64
+	ETHUtilizationRate            float64
+	StakingETHBalance             *big.Int
+	RETHExchangeRate              float64
+	TotalETHBalance               *big.Int
+	RETHBalance                   *big.Int
+	TotalRETHSupply               *big.Int
+	TotalRPLStake                 *big.Int
+	SmoothingPoolBalance          *big.Int
+	NodeFee                       float64
+	BalancesBlock                 *big.Int
+	LatestReportableBalancesBlock *big.Int
+	SubmitBalancesEnabled         bool
+	SubmitPricesEnabled           bool
+	MinipoolLaunchTimeout         *big.Int
 
 	// Atlas
 	PromotionScrubPeriod      time.Duration
@@ -104,7 +104,7 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	core.AddCall(mc, contracts.RocketRewardsPool, &intervalStart, "getClaimIntervalTimeStart")
 	core.AddCall(mc, contracts.RocketRewardsPool, &intervalDuration, "getClaimIntervalTime")
 	core.AddCall(mc, contracts.RocketRewardsPool, &details.NodeOperatorRewardsPercent, "getClaimingContractPerc", "rocketClaimNode")
-	core.AddCall(mc, contracts.RocketRewardsPool, &details.TrustedNodeOperatorRewardsPercent, "getClaimingContractPerc", "rocketClaimTrustedNode")
+	core.AddCall(mc, contracts.RocketRewardsPool, &details.OracleDaoRewardsPercent, "getClaimingContractPerc", "rocketClaimTrustedNode")
 	core.AddCall(mc, contracts.RocketRewardsPool, &details.ProtocolDaoRewardsPercent, "getClaimingContractPerc", "rocketClaimDAO")
 	core.AddCall(mc, contracts.RocketRewardsPool, &details.PendingRPLRewards, "getPendingRPLRewards")
 	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &scrubPeriodSeconds, "getScrubPeriod")

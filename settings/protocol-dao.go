@@ -28,7 +28,7 @@ type ProtocolDaoSettings struct {
 	RewardsContract   *core.Contract
 
 	rp          *rocketpool.RocketPool
-	daoProtocol *protocol.DaoProtocol
+	daoProtocol *protocol.ProtocolDaoManager
 }
 
 // Details for Protocol DAO settings
@@ -104,7 +104,7 @@ type ProtocolDaoSettingsDetails struct {
 
 // Creates a new ProtocolDaoSettings binding
 func NewProtocolDaoSettings(rp *rocketpool.RocketPool) (*ProtocolDaoSettings, error) {
-	daoProtocol, err := protocol.NewDaoProtocol(rp)
+	daoProtocol, err := protocol.NewProtocolDaoManager(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO protocol binding: %w", err)
 	}

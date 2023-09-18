@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/rocket-pool/rocketpool-go/dao"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
@@ -18,9 +18,9 @@ var (
 	pdao *settings.ProtocolDaoSettings
 	odao *settings.OracleDaoSettings
 	dp   *dao.DaoProposal
-	dnt  *trustednode.DaoNodeTrusted
-	dnta *trustednode.DaoNodeTrustedActions
-	dntp *trustednode.DaoNodeTrustedProposals
+	dnt  *oracle.OracleDaoManager
+	dnta *oracle.OracleDaoMemberActions
+	dntp *oracle.OracleDaoProposals
 
 	odao1 *tests.Account
 	odao2 *tests.Account
@@ -49,15 +49,15 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fail("error creating DP: %s", err.Error())
 	}
-	dnt, err = trustednode.NewDaoNodeTrusted(rp)
+	dnt, err = oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		fail("error creating DNT: %s", err.Error())
 	}
-	dnta, err = trustednode.NewDaoNodeTrustedActions(rp)
+	dnta, err = oracle.NewOracleDaoMemberActions(rp)
 	if err != nil {
 		fail("error creating DNTA: %s", err.Error())
 	}
-	dntp, err = trustednode.NewDaoNodeTrustedProposals(rp)
+	dntp, err = oracle.NewOracleDaoProposals(rp)
 	if err != nil {
 		fail("error creating DNTP: %s", err.Error())
 	}

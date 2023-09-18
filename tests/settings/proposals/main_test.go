@@ -7,7 +7,7 @@ import (
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/dao"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
@@ -20,7 +20,7 @@ var (
 	pdao *settings.ProtocolDaoSettings
 	odao *settings.OracleDaoSettings
 	dp   *dao.DaoProposal
-	dntp *trustednode.DaoNodeTrustedProposals
+	dntp *oracle.OracleDaoProposals
 
 	odao1 *tests.Account
 	odao2 *tests.Account
@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fail("error creating DP: %s", err.Error())
 	}
-	dntp, err = trustednode.NewDaoNodeTrustedProposals(rp)
+	dntp, err = oracle.NewOracleDaoProposals(rp)
 	if err != nil {
 		fail("error creating DNTP: %s", err.Error())
 	}

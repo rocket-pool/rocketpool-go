@@ -1,4 +1,4 @@
-package trustednode
+package oracle
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
-	"github.com/rocket-pool/rocketpool-go/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/network"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
@@ -22,8 +22,8 @@ import (
 
 type TrustedNodeParticipationCalculator struct {
 	rp   *rocketpool.RocketPool
-	dnt  *trustednode.DaoNodeTrusted
-	dnta *trustednode.DaoNodeTrustedActions
+	dnt  *oracle.OracleDaoManager
+	dnta *oracle.OracleDaoMemberActions
 	pds  *settings.ProtocolDaoSettings
 	nb   *network.NetworkBalances
 	np   *network.NetworkPrices
@@ -46,12 +46,12 @@ type TrustedNodeParticipation struct {
 
 // Creates a new TrustedNodeParticipationCalculator
 func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedNodeParticipationCalculator, error) {
-	dnt, err := trustednode.NewDaoNodeTrusted(rp)
+	dnt, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DaoNodeTrusted binding: %w", err)
 	}
 
-	dnta, err := trustednode.NewDaoNodeTrustedActions(rp)
+	dnta, err := oracle.NewOracleDaoMemberActions(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DaoNodeTrustedActions binding: %w", err)
 	}
