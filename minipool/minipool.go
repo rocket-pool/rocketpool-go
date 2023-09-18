@@ -1,13 +1,13 @@
 package minipool
 
 import (
-	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/types"
 )
 
 // ==================
@@ -15,104 +15,117 @@ import (
 // ==================
 
 type IMinipool interface {
+	// Get all of the minipool's details
 	QueryAllDetails(mc *batch.MultiCaller)
-	GetMinipoolCommon() *MinipoolCommon
+
+	// Gets the underlying minipool's contract
 	GetContract() *core.Contract
-}
 
-// ====================
-// === Constructors ===
-// ====================
+	// Get the minipool's penalty count
+	GetPenaltyCount(mc *batch.MultiCaller)
 
-// Create a minipool binding from an explicit version number
-func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, version uint8) (IMinipool, error) {
-	switch version {
-	case 1, 2:
-		return newMinipool_v2(rp, address)
-	case 3:
-		return newMinipool_v3(rp, address)
-	default:
-		return nil, fmt.Errorf("unexpected minipool contract version [%d]", version)
-	}
-}
+	// Get the minipool's status
+	GetStatus(mc *batch.MultiCaller)
 
-// Create a minipool binding from its address
-func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address, includeDetails bool, opts *bind.CallOpts) (IMinipool, error) {
-	// Get the minipool version
-	var version uint8
-	results, err := rp.FlexQuery(func(mc *batch.MultiCaller) error {
-		return rocketpool.GetContractVersion(mc, &version, address)
-	}, opts)
-	if err != nil {
-		return nil, fmt.Errorf("error querying minipool version: %w", err)
-	}
-	if !results[0] {
-		// If it failed, this is a contract on Prater from before version() existed so it's v1
-		version = 1
-	}
+	// Get the block that the minipool's status last changed
+	GetStatusBlock(mc *batch.MultiCaller)
 
-	// Get the minipool
-	minipool, err := NewMinipoolFromVersion(rp, address, version)
-	if err != nil {
-		return nil, fmt.Errorf("error creating minipool: %w", err)
-	}
+	// Get the time that the minipool's status last changed
+	GetStatusTime(mc *batch.MultiCaller)
 
-	// Include the details if requested
-	if includeDetails {
-		err := rp.Query(func(mc *batch.MultiCaller) error {
-			minipool.QueryAllDetails(mc)
-			return nil
-		}, opts)
-		if err != nil {
-			return nil, fmt.Errorf("error getting minipool %s details: %w", address.Hex(), err)
-		}
-	}
+	// Check if the minipool has been finalised
+	GetFinalised(mc *batch.MultiCaller)
 
-	return minipool, nil
-}
+	// Get the minipool's node address
+	GetNodeAddress(mc *batch.MultiCaller)
 
-// Create bindings for all minipools from the provided addresses in a standalone call.
-// This will use an internal batched multicall invocation to build all of them quickly.
-func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.Address, includeDetails bool, opts *bind.CallOpts) ([]IMinipool, error) {
-	minipoolCount := len(addresses)
+	// Get the minipool's commission rate
+	GetNodeFee(mc *batch.MultiCaller)
 
-	// Get the minipool versions
-	versions := make([]uint8, minipoolCount)
-	err := rp.FlexBatchQuery(int(minipoolCount), rp.ContractVersionBatchSize,
-		func(mc *batch.MultiCaller, index int) error {
-			return rocketpool.GetContractVersion(mc, &versions[index], addresses[index])
-		},
-		func(result bool, index int) error {
-			if !result {
-				// If it failed, this is a contract on Prater from before version() existed so it's v1
-				versions[index] = 1
-			}
-			return nil
-		}, opts)
-	if err != nil {
-		return nil, fmt.Errorf("error getting minipool versions: %w", err)
-	}
+	// Get the balance the node has deposited to the minipool
+	GetNodeDepositBalance(mc *batch.MultiCaller)
 
-	// Create the minipools
-	minipools := make([]IMinipool, minipoolCount)
-	for i := 0; i < int(minipoolCount); i++ {
-		minipool, err := NewMinipoolFromVersion(rp, addresses[i], versions[i])
-		if err != nil {
-			return nil, fmt.Errorf("error creating minipool %d (%s): %w", i, addresses[i].Hex(), err)
-		}
-		minipools[i] = minipool
-	}
+	// Get the amount of ETH ready to be refunded to the node
+	GetNodeRefundBalance(mc *batch.MultiCaller)
 
-	// Include the details if requested
-	if includeDetails {
-		err := rp.BatchQuery(int(minipoolCount), minipoolBatchSize, func(mc *batch.MultiCaller, index int) error {
-			minipools[index].QueryAllDetails(mc)
-			return nil
-		}, opts)
-		if err != nil {
-			return nil, fmt.Errorf("error getting minipool details: %w", err)
-		}
-	}
+	// Check if the node deposit has been assigned to the minipool
+	GetNodeDepositAssigned(mc *batch.MultiCaller)
 
-	return minipools, nil
+	// Get the balance the pool stakers have deposited to the minipool
+	GetUserDepositBalance(mc *batch.MultiCaller)
+
+	// Check if the pool staker deposits has been assigned to the minipool
+	GetUserDepositAssigned(mc *batch.MultiCaller)
+
+	// Get the time at which the pool stakers were assigned to the minipool
+	GetUserDepositAssignedTime(mc *batch.MultiCaller)
+
+	// Check if the "use latest delegate" flag is enabled
+	GetUseLatestDelegate(mc *batch.MultiCaller)
+
+	// Get the address of the current delegate the minipool has recorded
+	GetDelegate(mc *batch.MultiCaller)
+
+	// Get the address of the previous delegate the minipool will use after a rollback
+	GetPreviousDelegate(mc *batch.MultiCaller)
+
+	// Get the address of the delegate the minipool will use (may be different than DelegateAddress if UseLatestDelegate is enabled)
+	GetEffectiveDelegate(mc *batch.MultiCaller)
+
+	// Check if a minipool exists
+	GetExists(mc *batch.MultiCaller)
+
+	// Get the minipool's pubkey
+	GetPubkey(mc *batch.MultiCaller)
+
+	// Get the minipool's 0x01-based withdrawal credentials
+	GetWithdrawalCredentials(mc *batch.MultiCaller)
+
+	// Check if the minipool's RPL has been slashed
+	GetRplSlashed(mc *batch.MultiCaller)
+
+	// Get the minipool's deposit type
+	GetDepositType(mc *batch.MultiCaller)
+
+	// Get queue position of the minipool (-1 means not in the queue, otherwise 0-indexed).
+	GetQueuePosition(mc *batch.MultiCaller)
+
+	// Get info for refunding node ETH from the minipool
+	Refund(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for progressing the prelaunch minipool to staking
+	Stake(validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for dissolving the initialized or prelaunch minipool
+	Dissolve(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for withdrawing node balances from the dissolved minipool and closing it
+	Close(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for finalising a minipool to get the RPL stake back
+	Finalise(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for upgrading this minipool to the latest network delegate contract
+	DelegateUpgrade(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for rolling back to the previous delegate contract
+	DelegateRollback(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for setting the UseLatestDelegate flag (if set to true, will automatically use the latest delegate contract)
+	SetUseLatestDelegate(setting bool, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for voting to scrub a minipool
+	VoteScrub(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Get info for submitting a minipool withdrawable event
+	SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*core.TransactionInfo, error)
+
+	// Given a validator balance, calculates how much belongs to the node (taking into consideration rewards and penalties)
+	CalculateNodeShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int)
+
+	// Given a validator balance, calculates how much belongs to rETH pool stakers (taking into consideration rewards and penalties)
+	CalculateUserShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int)
+
+	// Get the data from this minipool's MinipoolPrestaked event
+	GetPrestakeEvent(intervalSize *big.Int, opts *bind.CallOpts) (PrestakeData, error)
 }

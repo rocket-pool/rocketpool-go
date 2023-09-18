@@ -51,10 +51,6 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*P
 // === Calls ===
 // =============
 
-func (c *ProtocolDaoProposal) GetProposalCommon() *ProposalCommon {
-	return c.ProposalCommon
-}
-
 // Get the basic details
 func (c *ProtocolDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
 	c.ProposalCommon.QueryAllDetails(mc)

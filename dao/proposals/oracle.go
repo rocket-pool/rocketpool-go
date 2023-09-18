@@ -52,10 +52,6 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*Ora
 // === Calls ===
 // =============
 
-func (c *OracleDaoProposal) GetProposalCommon() *ProposalCommon {
-	return c.ProposalCommon
-}
-
 // Get the basic details
 func (c *OracleDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
 	c.ProposalCommon.QueryAllDetails(mc)

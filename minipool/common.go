@@ -135,6 +135,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 // === Calls ===
 // =============
 
+// Gets the underlying minipool's contract
 func (c *MinipoolCommon) GetContract() *core.Contract {
 	return c.Contract
 }
@@ -350,11 +351,6 @@ func (c *MinipoolCommon) SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*c
 // =============
 // === Utils ===
 // =============
-
-// Get the common (version-agnostic) details of the minipool
-func (c *MinipoolCommon) GetCommonDetails() *MinipoolCommonDetails {
-	return &c.Details
-}
 
 // Given a validator balance, calculates how much belongs to the node (taking into consideration rewards and penalties)
 func (c *MinipoolCommon) CalculateNodeShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int) {

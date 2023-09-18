@@ -81,11 +81,16 @@ func GetNativeMinipoolDetails(rp *rocketpool.RocketPool, contracts *NetworkContr
 		BlockNumber: contracts.ElBlockNumber,
 	}
 
+	mpMgr, err := minipool.NewMinipoolManager(rp)
+	if err != nil {
+		return NativeMinipoolDetails{}, fmt.Errorf("error creating minipool manager: %w", err)
+	}
+
 	details := NativeMinipoolDetails{}
 	details.MinipoolAddress = minipoolAddress
 
 	var version uint8
-	err := rp.Query(func(mc *batch.MultiCaller) error {
+	err = rp.Query(func(mc *batch.MultiCaller) error {
 		rocketpool.GetContractVersion(mc, &version, minipoolAddress)
 		return nil
 	}, opts)
@@ -98,7 +103,7 @@ func GetNativeMinipoolDetails(rp *rocketpool.RocketPool, contracts *NetworkContr
 	if err != nil {
 		return NativeMinipoolDetails{}, fmt.Errorf("error creating multicaller: %w", err)
 	}
-	addMinipoolDetailsCalls(rp, contracts, mc, &details, opts)
+	addMinipoolDetailsCalls(rp, mpMgr, contracts, mc, &details, opts)
 
 	_, err = mc.FlexibleCall(true, opts)
 	if err != nil {
@@ -160,6 +165,11 @@ func CalculateCompleteMinipoolShares(rp *rocketpool.RocketPool, contracts *Netwo
 		BlockNumber: contracts.ElBlockNumber,
 	}
 
+	mpMgr, err := minipool.NewMinipoolManager(rp)
+	if err != nil {
+		return fmt.Errorf("error creating minipool manager: %w", err)
+	}
+
 	var wg errgroup.Group
 	wg.SetLimit(threadLimit)
 	count := len(minipoolDetails)
@@ -180,7 +190,7 @@ func CalculateCompleteMinipoolShares(rp *rocketpool.RocketPool, contracts *Netwo
 
 				// Make the minipool contract
 				details := minipoolDetails[j]
-				mp, err := minipool.NewMinipoolFromVersion(rp, details.MinipoolAddress, details.Version)
+				mp, err := mpMgr.NewMinipoolFromVersion(details.MinipoolAddress, details.Version)
 				if err != nil {
 					return err
 				}
@@ -188,8 +198,8 @@ func CalculateCompleteMinipoolShares(rp *rocketpool.RocketPool, contracts *Netwo
 				// Calculate the Beacon shares
 				beaconBalance := big.NewInt(0).Set(beaconBalances[j])
 				if beaconBalance.Cmp(zero) > 0 {
-					mp.GetMinipoolCommon().CalculateNodeShare(mc, &details.NodeShareOfBeaconBalance, beaconBalance)
-					mp.GetMinipoolCommon().CalculateUserShare(mc, &details.UserShareOfBeaconBalance, beaconBalance)
+					mp.CalculateNodeShare(mc, &details.NodeShareOfBeaconBalance, beaconBalance)
+					mp.CalculateUserShare(mc, &details.UserShareOfBeaconBalance, beaconBalance)
 				} else {
 					details.NodeShareOfBeaconBalance = big.NewInt(0)
 					details.UserShareOfBeaconBalance = big.NewInt(0)
@@ -202,8 +212,8 @@ func CalculateCompleteMinipoolShares(rp *rocketpool.RocketPool, contracts *Netwo
 
 				// Calculate the node and user shares
 				if totalBalance.Cmp(zero) > 0 {
-					mp.GetMinipoolCommon().CalculateNodeShare(mc, &details.NodeShareOfBalanceIncludingBeacon, totalBalance)
-					mp.GetMinipoolCommon().CalculateUserShare(mc, &details.UserShareOfBalanceIncludingBeacon, totalBalance)
+					mp.CalculateNodeShare(mc, &details.NodeShareOfBalanceIncludingBeacon, totalBalance)
+					mp.CalculateUserShare(mc, &details.UserShareOfBalanceIncludingBeacon, totalBalance)
 				} else {
 					details.NodeShareOfBalanceIncludingBeacon = big.NewInt(0)
 					details.UserShareOfBalanceIncludingBeacon = big.NewInt(0)
@@ -390,6 +400,11 @@ func getMinipoolVersionsFast(rp *rocketpool.RocketPool, contracts *NetworkContra
 func getBulkMinipoolDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts, addresses []common.Address, versions []uint8, opts *bind.CallOpts) ([]NativeMinipoolDetails, error) {
 	minipoolDetails := make([]NativeMinipoolDetails, len(addresses))
 
+	mpMgr, err := minipool.NewMinipoolManager(rp)
+	if err != nil {
+		return nil, fmt.Errorf("error creating minipool manager: %w", err)
+	}
+
 	// Get the balances of the minipools
 	balances, err := contracts.BalanceBatcher.GetEthBalances(addresses, opts)
 	if err != nil {
@@ -423,7 +438,7 @@ func getBulkMinipoolDetails(rp *rocketpool.RocketPool, contracts *NetworkContrac
 				details.MinipoolAddress = address
 				details.Version = versions[j]
 
-				addMinipoolDetailsCalls(rp, contracts, mc, details, opts)
+				addMinipoolDetailsCalls(rp, mpMgr, contracts, mc, details, opts)
 			}
 			_, err = mc.FlexibleCall(true, opts)
 			if err != nil {
@@ -457,7 +472,7 @@ func getBulkMinipoolDetails(rp *rocketpool.RocketPool, contracts *NetworkContrac
 			for j := i; j < max; j++ {
 				details := &minipoolDetails[j]
 				details.Version = versions[j]
-				addMinipoolShareCalls(rp, contracts, mc, details, opts)
+				addMinipoolShareCalls(rp, mpMgr, contracts, mc, details, opts)
 			}
 			_, err = mc.FlexibleCall(true, opts)
 			if err != nil {
@@ -481,10 +496,10 @@ func getBulkMinipoolDetails(rp *rocketpool.RocketPool, contracts *NetworkContrac
 }
 
 // Add all of the calls for the minipool details to the multicaller
-func addMinipoolDetailsCalls(rp *rocketpool.RocketPool, contracts *NetworkContracts, mc *batch.MultiCaller, details *NativeMinipoolDetails, opts *bind.CallOpts) error {
+func addMinipoolDetailsCalls(rp *rocketpool.RocketPool, mpMgr *minipool.MinipoolManager, contracts *NetworkContracts, mc *batch.MultiCaller, details *NativeMinipoolDetails, opts *bind.CallOpts) error {
 	// Create the minipool contract binding
 	address := details.MinipoolAddress
-	mp, err := minipool.NewMinipoolFromVersion(rp, address, details.Version)
+	mp, err := mpMgr.NewMinipoolFromVersion(address, details.Version)
 	if err != nil {
 		return err
 	}
@@ -549,10 +564,10 @@ func addMinipoolDetailsCalls(rp *rocketpool.RocketPool, contracts *NetworkContra
 }
 
 // Add the calls for the minipool node and user share to the multicaller
-func addMinipoolShareCalls(rp *rocketpool.RocketPool, contracts *NetworkContracts, mc *batch.MultiCaller, details *NativeMinipoolDetails, opts *bind.CallOpts) error {
+func addMinipoolShareCalls(rp *rocketpool.RocketPool, mpMgr *minipool.MinipoolManager, contracts *NetworkContracts, mc *batch.MultiCaller, details *NativeMinipoolDetails, opts *bind.CallOpts) error {
 	// Create the minipool contract binding
 	address := details.MinipoolAddress
-	mp, err := minipool.NewMinipoolFromVersion(rp, address, details.Version)
+	mp, err := mpMgr.NewMinipoolFromVersion(address, details.Version)
 	if err != nil {
 		return err
 	}

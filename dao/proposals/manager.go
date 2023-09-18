@@ -19,15 +19,6 @@ const (
 	proposalBatchSize int = 100
 )
 
-// ==================
-// === Interfaces ===
-// ==================
-
-type IProposal interface {
-	QueryAllDetails(mc *batch.MultiCaller)
-	GetProposalCommon() *ProposalCommon
-}
-
 // ===============
 // === Structs ===
 // ===============

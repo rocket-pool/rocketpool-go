@@ -32,6 +32,7 @@ type MinipoolV3 struct {
 }
 
 type MinipoolV3Details struct {
+	*MinipoolCommonDetails
 	IsVacant                     bool                      `json:"isVacant"`
 	PreMigrationBalance          *big.Int                  `json:"preMigrationBalance"`
 	HasUserDistributed           bool                      `json:"hasUserDistributed"`
@@ -78,8 +79,10 @@ func newMinipool_v3(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 	// Create and return
 	return &MinipoolV3{
 		MinipoolCommon: base,
-		Details:        MinipoolV3Details{},
-		br:             br,
+		Details: MinipoolV3Details{
+			MinipoolCommonDetails: &base.Details,
+		},
+		br: br,
 	}, nil
 }
 
@@ -95,10 +98,6 @@ func GetMinipoolAsV3(mp IMinipool) (*MinipoolV3, bool) {
 // =============
 // === Calls ===
 // =============
-
-func (c *MinipoolV3) GetMinipoolCommon() *MinipoolCommon {
-	return c.MinipoolCommon
-}
 
 // Get the basic details
 func (c *MinipoolV3) QueryAllDetails(mc *batch.MultiCaller) {
