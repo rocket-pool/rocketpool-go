@@ -35,7 +35,7 @@ type DaoProposalManagerDetails struct {
 // ====================
 
 // Creates a new DaoProposalManager contract binding
-func NewDaoProposalDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, error) {
+func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, error) {
 	// Create the contract
 	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
 	if err != nil {

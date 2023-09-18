@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fail("error creating odao settings binding: %s", err.Error())
 	}
-	dpm, err = dao.NewDaoProposalDaoProposalManager(rp)
+	dpm, err = dao.NewDaoProposalManager(rp)
 	if err != nil {
 		fail("error creating DPM: %s", err.Error())
 	}
