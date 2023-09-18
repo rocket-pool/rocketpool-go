@@ -52,12 +52,6 @@ type MinipoolCountsPerStatus struct {
 	Dissolved    *big.Int `abi:"dissolvedCount"`
 }
 
-// Minipool queue capacity
-type QueueCapacity struct {
-	Total     *big.Int
-	Effective *big.Int
-}
-
 // Minipools queue status details
 type QueueDetails struct {
 	Position int64
@@ -121,17 +115,17 @@ func (c *MinipoolManager) GetVacantMinipoolCount(mc *batch.MultiCaller) {
 // === MinipoolQueue ===
 
 // Get the total length of the minipool queue
-func (c *MinipoolManager) GetTotalLength(mc *batch.MultiCaller) {
+func (c *MinipoolManager) GetTotalQueueLength(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.mq, &c.TotalQueueLength.RawValue, "getTotalLength")
 }
 
 // Get the total capacity of the minipool queue
-func (c *MinipoolManager) GetTotalCapacity(mc *batch.MultiCaller) {
+func (c *MinipoolManager) GetTotalQueueCapacity(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.mq, &c.TotalQueueCapacity, "getTotalCapacity")
 }
 
 // Get the total effective capacity of the minipool queue (used in node demand calculation)
-func (c *MinipoolManager) GetEffectiveCapacity(mc *batch.MultiCaller) {
+func (c *MinipoolManager) GetEffectiveQueueCapacity(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.mq, &c.EffectiveQueueCapacity, "getEffectiveCapacity")
 }
 
