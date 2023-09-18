@@ -15,7 +15,7 @@ import (
 
 // Binding for Oracle DAO proposals
 type OracleDaoProposal struct {
-	*ProposalCommon
+	*proposalCommon
 	Details OracleDaoProposalDetails
 	rp      *rocketpool.RocketPool
 	dntp    *core.Contract
@@ -23,7 +23,7 @@ type OracleDaoProposal struct {
 
 // Details for proposals
 type OracleDaoProposalDetails struct {
-	*ProposalCommonDetails
+	*proposalCommonDetails
 }
 
 // ====================
@@ -31,7 +31,7 @@ type OracleDaoProposalDetails struct {
 // ====================
 
 // Creates a new OracleDaoProposal contract binding
-func newOracleDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*OracleDaoProposal, error) {
+func newOracleDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*OracleDaoProposal, error) {
 	// Create the dntp
 	dntp, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedProposals)
 	if err != nil {
@@ -39,9 +39,9 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*Ora
 	}
 
 	return &OracleDaoProposal{
-		ProposalCommon: base,
+		proposalCommon: base,
 		Details: OracleDaoProposalDetails{
-			ProposalCommonDetails: &base.Details,
+			proposalCommonDetails: &base.Details,
 		},
 		rp:   rp,
 		dntp: dntp,
@@ -54,7 +54,7 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*Ora
 
 // Get the basic details
 func (c *OracleDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
-	c.ProposalCommon.QueryAllDetails(mc)
+	c.proposalCommon.QueryAllDetails(mc)
 }
 
 // ====================

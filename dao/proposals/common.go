@@ -17,14 +17,14 @@ import (
 // ===============
 
 // Binding for proposals
-type ProposalCommon struct {
-	Details  ProposalCommonDetails
+type proposalCommon struct {
+	Details  proposalCommonDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
 
 // Details for proposals
-type ProposalCommonDetails struct {
+type proposalCommonDetails struct {
 	ID              core.Parameter[uint64]                   `json:"id"`
 	ProposerAddress common.Address                           `json:"proposerAddress"`
 	Message         string                                   `json:"message"`
@@ -48,15 +48,15 @@ type ProposalCommonDetails struct {
 // ====================
 
 // Creates a new ProposalCommon contract binding
-func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*ProposalCommon, error) {
+func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*proposalCommon, error) {
 	// Create the contract
 	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO proposal contract: %w", err)
 	}
 
-	return &ProposalCommon{
-		Details: ProposalCommonDetails{
+	return &proposalCommon{
+		Details: proposalCommonDetails{
 			ID: core.Parameter[uint64]{
 				RawValue: big.NewInt(0).SetUint64(id),
 			},
@@ -71,72 +71,72 @@ func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*ProposalCommon, e
 // =============
 
 // Get the address of the node that created the proposal
-func (c *ProposalCommon) GetProposerAddress(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetProposerAddress(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.ProposerAddress, "getProposer", c.Details.ID.RawValue)
 }
 
 // Get the message provided with the proposal
-func (c *ProposalCommon) GetMessage(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetMessage(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.Message, "getMessage", c.Details.ID.RawValue)
 }
 
 // Get the time the proposal was created
-func (c *ProposalCommon) GetCreatedTime(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetCreatedTime(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.CreatedTime.RawValue, "getCreated", c.Details.ID.RawValue)
 }
 
 // Get the time the voting window on the proposal started
-func (c *ProposalCommon) GetStartTime(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetStartTime(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.StartTime.RawValue, "getStart", c.Details.ID.RawValue)
 }
 
 // Get the time the voting window on the proposal ended
-func (c *ProposalCommon) GetEndTime(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetEndTime(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.EndTime.RawValue, "getEnd", c.Details.ID.RawValue)
 }
 
 // Get the time the proposal expires
-func (c *ProposalCommon) GetExpiryTime(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetExpiryTime(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.ExpiryTime.RawValue, "getExpires", c.Details.ID.RawValue)
 }
 
 // Get the number of votes required for the proposal to pass
-func (c *ProposalCommon) GetVotesRequired(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetVotesRequired(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.VotesRequired.RawValue, "getVotesRequired", c.Details.ID.RawValue)
 }
 
 // Get the number of votes in favor of the proposal
-func (c *ProposalCommon) GetVotesFor(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetVotesFor(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.VotesFor.RawValue, "getVotesFor", c.Details.ID.RawValue)
 }
 
 // Get the number of votes against the proposal
-func (c *ProposalCommon) GetVotesAgainst(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetVotesAgainst(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.VotesAgainst.RawValue, "getVotesAgainst", c.Details.ID.RawValue)
 }
 
 // Check if the proposal has been cancelled
-func (c *ProposalCommon) GetIsCancelled(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetIsCancelled(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.IsCancelled, "getCancelled", c.Details.ID.RawValue)
 }
 
 // Check if the proposal has been executed
-func (c *ProposalCommon) GetIsExecuted(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetIsExecuted(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.IsExecuted, "getExecuted", c.Details.ID.RawValue)
 }
 
 // Get the proposal's payload
-func (c *ProposalCommon) GetPayload(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetPayload(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.Payload, "getPayload", c.Details.ID.RawValue)
 }
 
 // Get the proposal's state
-func (c *ProposalCommon) GetState(mc *batch.MultiCaller) {
+func (c *proposalCommon) GetState(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.State.RawValue, "getState", c.Details.ID.RawValue)
 }
 
 // Get all of the proposal's details
-func (c *ProposalCommon) QueryAllDetails(mc *batch.MultiCaller) {
+func (c *proposalCommon) QueryAllDetails(mc *batch.MultiCaller) {
 	c.GetProposerAddress(mc)
 	c.GetMessage(mc)
 	c.GetCreatedTime(mc)
@@ -153,16 +153,16 @@ func (c *ProposalCommon) QueryAllDetails(mc *batch.MultiCaller) {
 }
 
 // Check if a node has voted on the proposal
-func (c *ProposalCommon) GetMemberHasVoted(mc *batch.MultiCaller, out *bool, address common.Address) {
+func (c *proposalCommon) GetMemberHasVoted(mc *batch.MultiCaller, out *bool, address common.Address) {
 	core.AddCall(mc, c.contract, out, "getReceiptHasVoted", c.Details.ID.RawValue, address)
 }
 
 // Check if a node has voted in favor of the proposal
-func (c *ProposalCommon) GetMemberSupported(mc *batch.MultiCaller, out *bool, address common.Address) {
+func (c *proposalCommon) GetMemberSupported(mc *batch.MultiCaller, out *bool, address common.Address) {
 	core.AddCall(mc, c.contract, out, "getReceiptSupported", c.Details.ID.RawValue, address)
 }
 
 // Get which DAO the proposal is for - reserved for internal use
-func (c *ProposalCommon) getDAO(mc *batch.MultiCaller, dao_Out *string) {
+func (c *proposalCommon) getDAO(mc *batch.MultiCaller, dao_Out *string) {
 	core.AddCall(mc, c.contract, dao_Out, "getDAO", c.Details.ID.RawValue)
 }

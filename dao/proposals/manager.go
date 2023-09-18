@@ -68,7 +68,7 @@ func (c *DaoProposalManager) GetProposalCount(mc *batch.MultiCaller) {
 // === Utils ===
 // =============
 
-// Create a minipool binding from an explicit version number
+// Create a proposal binding from an explicit DAO ID if you already know what it is
 func (c *DaoProposalManager) NewProposalFromDao(id uint64, dao rocketpool.ContractName) (IProposal, error) {
 	base, err := newProposalCommon(c.rp, id)
 	if err != nil {
@@ -85,15 +85,41 @@ func (c *DaoProposalManager) NewProposalFromDao(id uint64, dao rocketpool.Contra
 	}
 }
 
+// Create a proposal binding by ID
+func (c *DaoProposalManager) CreateProposalFromID(id uint64, opts *bind.CallOpts) (IProposal, error) {
+	prop, err := newProposalCommon(c.rp, id)
+	if err != nil {
+		return nil, fmt.Errorf("error creating DAO proposal: %w", err)
+	}
+
+	var dao string
+	err = c.rp.Query(func(mc *batch.MultiCaller) error {
+		prop.getDAO(mc, &dao)
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting proposal DAO: %w", err)
+	}
+
+	switch dao {
+	case string(rocketpool.ContractName_RocketDAOProtocolProposals):
+		return newProtocolDaoProposal(c.rp, prop)
+	case string(rocketpool.ContractName_RocketDAONodeTrustedProposals):
+		return newOracleDaoProposal(c.rp, prop)
+	default:
+		return nil, fmt.Errorf("unexpected proposal DAO [%s]", dao)
+	}
+}
+
 // Get all of the Protocol DAO proposals
 // NOTE: Proposals are 1-indexed
 func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*ProtocolDaoProposal, []*OracleDaoProposal, error) {
 	// Create prop commons for each one
-	props := make([]*ProposalCommon, proposalCount)
+	props := make([]*proposalCommon, proposalCount)
 	for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
 		prop, err := newProposalCommon(c.rp, i)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error creating DAO proposal %d", i)
+			return nil, nil, fmt.Errorf("error creating DAO proposal %d: %w", i, err)
 		}
 		props[i-1] = prop
 	}
