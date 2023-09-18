@@ -81,7 +81,7 @@ func (c *NodeManager) GetNodeCount(mc *batch.MultiCaller) {
 // === NodeStaking ===
 
 // Get the total RPL staked in the network
-func (c *NodeManager) GetTotalRPLStake(mc *batch.MultiCaller) {
+func (c *NodeManager) GetTotalRplStake(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.ns, &c.TotalRplStake, "getTotalRPLStake")
 }
 
