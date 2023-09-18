@@ -52,8 +52,8 @@ type NetworkManagerDetails struct {
 // === Constructors ===
 // ====================
 
-// Creates a new NetworkBalances contract binding
-func NewNetworkBalances(rp *rocketpool.RocketPool) (*NetworkManager, error) {
+// Creates a new NetworkManager
+func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 	// Create the contracts
 	networkBalances, err := rp.GetContract(rocketpool.ContractName_RocketNetworkBalances)
 	if err != nil {
