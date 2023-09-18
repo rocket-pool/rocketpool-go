@@ -91,7 +91,7 @@ func (c *MinipoolV2) QueryAllDetails(mc *batch.MultiCaller) {
 // DO NOT CALL THIS until the minipool's validator has exited from the Beacon Chain
 // and the balance has been deposited into the minipool!
 func (c *MinipoolV2) DistributeBalance(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "distributeBalance", opts)
+	return core.NewTransactionInfo(c.contract, "distributeBalance", opts)
 }
 
 // Get info for distributing the minipool's ETH balance to the node operator and rETH staking pool,
@@ -100,5 +100,5 @@ func (c *MinipoolV2) DistributeBalance(opts *bind.TransactOpts) (*core.Transacti
 // DO NOT CALL THIS until the minipool's validator has exited from the Beacon Chain
 // and the balance has been deposited into the minipool!
 func (c *MinipoolV2) DistributeBalanceAndFinalise(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "distributeBalanceAndFinalise", opts)
+	return core.NewTransactionInfo(c.contract, "distributeBalanceAndFinalise", opts)
 }

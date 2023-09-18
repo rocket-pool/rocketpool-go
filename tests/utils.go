@@ -60,6 +60,10 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	if err != nil {
 		return nil, fmt.Errorf("error getting RPL binding: %w", err)
 	}
+	rplContract, err := rp.GetContract(rocketpool.ContractName_RocketTokenRPL)
+	if err != nil {
+		return nil, fmt.Errorf("error getting RPL contract: %w", err)
+	}
 
 	// Register the node
 	node, err := RegisterNode(rp, nodeAccount, timezone)
@@ -95,7 +99,7 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	// Swap RPL and Join the oDAO
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
 		func() (*core.TransactionInfo, error) {
-			return fsrpl.Approve(*rpl.Contract.Address, rplBond, nodeAccount.Transactor)
+			return fsrpl.Approve(*rplContract.Address, rplBond, nodeAccount.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
 			return rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor)

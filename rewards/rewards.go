@@ -28,8 +28,8 @@ const (
 // Binding for RocketRewardsPool
 type RewardsPool struct {
 	*RewardsPoolDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp          *rocketpool.RocketPool
+	rewardsPool *core.Contract
 }
 
 // Details for RocketRewardsPool
@@ -84,7 +84,7 @@ type RewardSubmission struct {
 // Creates a new RewardsPool contract binding
 func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketRewardsPool)
+	rewardsPool, err := rp.GetContract(rocketpool.ContractName_RocketRewardsPool)
 	if err != nil {
 		return nil, fmt.Errorf("error getting rewards pool contract: %w", err)
 	}
@@ -92,7 +92,7 @@ func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 	return &RewardsPool{
 		RewardsPoolDetails: &RewardsPoolDetails{},
 		rp:                 rp,
-		contract:           contract,
+		rewardsPool:        rewardsPool,
 	}, nil
 }
 
@@ -102,48 +102,48 @@ func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 
 // Get the index of the active rewards period
 func (c *RewardsPool) GetRewardIndex(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.RewardIndex.RawValue, "getRewardIndex")
+	core.AddCall(mc, c.rewardsPool, &c.RewardIndex.RawValue, "getRewardIndex")
 }
 
 // Get the timestamp that the current rewards interval started
 func (c *RewardsPool) GetIntervalStart(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.IntervalStart.RawValue, "getClaimIntervalTimeStart")
+	core.AddCall(mc, c.rewardsPool, &c.IntervalStart.RawValue, "getClaimIntervalTimeStart")
 }
 
 // Get the number of seconds in a claim interval
 func (c *RewardsPool) GetIntervalDuration(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.IntervalDuration.RawValue, "getClaimIntervalTime")
+	core.AddCall(mc, c.rewardsPool, &c.IntervalDuration.RawValue, "getClaimIntervalTime")
 }
 
 // Get the percent of checkpoint rewards that goes to node operators
 func (c *RewardsPool) GetNodeOperatorRewardsPercent(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeOperatorRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimNode")
+	core.AddCall(mc, c.rewardsPool, &c.NodeOperatorRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimNode")
 }
 
 // Get the percent of checkpoint rewards that goes to Ooracle DAO members
 func (c *RewardsPool) GetOracleDaoRewardsPercent(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.OracleDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimTrustedNode")
+	core.AddCall(mc, c.rewardsPool, &c.OracleDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimTrustedNode")
 }
 
 // Get the percent of checkpoint rewards that goes to the Protocol DAO
 func (c *RewardsPool) GetProtocolDaoRewardsPercent(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.ProtocolDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimDAO")
+	core.AddCall(mc, c.rewardsPool, &c.ProtocolDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimDAO")
 }
 
 // Get the amount of RPL rewards that are currently pending distribution
 func (c *RewardsPool) GetPendingRplRewards(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.PendingRplRewards, "getPendingRPLRewards")
+	core.AddCall(mc, c.rewardsPool, &c.PendingRplRewards, "getPendingRPLRewards")
 }
 
 // Get the amount of ETH rewards that are currently pending distribution
 func (c *RewardsPool) GetPendingEthRewards(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.PendingRplRewards, "getPendingETHRewards")
+	core.AddCall(mc, c.rewardsPool, &c.PendingRplRewards, "getPendingETHRewards")
 }
 
 // Check whether or not the given address has submitted for the given rewards interval
 func (c *RewardsPool) GetTrustedNodeSubmitted(mc *batch.MultiCaller, nodeAddress common.Address, rewardsIndex uint64, hasSubmitted_Out *bool, opts *bind.CallOpts) {
 	indexBig := big.NewInt(0).SetUint64(rewardsIndex)
-	core.AddCall(mc, c.contract, hasSubmitted_Out, "getTrustedNodeSubmitted", nodeAddress, indexBig)
+	core.AddCall(mc, c.rewardsPool, hasSubmitted_Out, "getTrustedNodeSubmitted", nodeAddress, indexBig)
 }
 
 // Check whether or not the given address has submitted specific rewards info
@@ -188,7 +188,7 @@ func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *batch.MultiCall
 
 // Get info for submitting a Merkle Tree-based snapshot for a rewards interval
 func (c *RewardsPool) SubmitRewardSnapshot(submission RewardSubmission, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "submitRewardSnapshot", opts, submission)
+	return core.NewTransactionInfo(c.rewardsPool, "submitRewardSnapshot", opts, submission)
 }
 
 // =============
@@ -200,13 +200,13 @@ func (c *RewardsPool) GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, r
 	// Get the block that the event was emitted on
 	indexBig := big.NewInt(0).SetUint64(index)
 	blockWrapper := new(*big.Int)
-	if err := c.contract.Call(opts, blockWrapper, "getClaimIntervalExecutionBlock", indexBig); err != nil {
+	if err := c.rewardsPool.Call(opts, blockWrapper, "getClaimIntervalExecutionBlock", indexBig); err != nil {
 		return false, RewardsEvent{}, fmt.Errorf("error getting the event block for interval %d: %w", index, err)
 	}
 	block := *blockWrapper
 
 	// Create the list of addresses to check
-	currentAddress := *c.contract.Address
+	currentAddress := *c.rewardsPool.Address
 	if rocketRewardsPoolAddresses == nil {
 		rocketRewardsPoolAddresses = []common.Address{currentAddress}
 	} else {
@@ -226,7 +226,7 @@ func (c *RewardsPool) GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, r
 	indexBytes := [32]byte{}
 	indexBig.FillBytes(indexBytes[:])
 	addressFilter := rocketRewardsPoolAddresses
-	topicFilter := [][]common.Hash{{c.contract.ABI.Events["RewardSnapshot"].ID}, {indexBytes}}
+	topicFilter := [][]common.Hash{{c.rewardsPool.ABI.Events["RewardSnapshot"].ID}, {indexBytes}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(rp, addressFilter, topicFilter, big.NewInt(1), block, block, nil)
@@ -239,7 +239,7 @@ func (c *RewardsPool) GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, r
 	if len(logs) == 0 {
 		return false, RewardsEvent{}, nil
 	}
-	err = c.contract.ABI.Events["RewardSnapshot"].Inputs.UnpackIntoMap(values, logs[0].Data)
+	err = c.rewardsPool.ABI.Events["RewardSnapshot"].Inputs.UnpackIntoMap(values, logs[0].Data)
 	if err != nil {
 		return false, RewardsEvent{}, err
 	}

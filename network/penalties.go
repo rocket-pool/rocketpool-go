@@ -17,8 +17,8 @@ import (
 
 // Binding for RocketNetworkPenalties
 type NetworkPenalties struct {
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	np *core.Contract
 }
 
 // ====================
@@ -28,14 +28,14 @@ type NetworkPenalties struct {
 // Creates a new NetworkPenalties contract binding
 func NewNetworkPenalties(rp *rocketpool.RocketPool) (*NetworkPenalties, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkPenalties)
+	np, err := rp.GetContract(rocketpool.ContractName_RocketNetworkPenalties)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network penalties contract: %w", err)
 	}
 
 	return &NetworkPenalties{
-		rp:       rp,
-		contract: contract,
+		rp: rp,
+		np: np,
 	}, nil
 }
 
@@ -45,5 +45,5 @@ func NewNetworkPenalties(rp *rocketpool.RocketPool) (*NetworkPenalties, error) {
 
 // Get info for minipool penalty submission
 func (c *NetworkPenalties) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "submitPenalty", opts, minipoolAddress, block)
+	return core.NewTransactionInfo(c.np, "submitPenalty", opts, minipoolAddress, block)
 }

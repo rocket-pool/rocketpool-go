@@ -20,8 +20,8 @@ import (
 // Binding for RocketNetworkPrices
 type NetworkPrices struct {
 	*NetworkPricesDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	np *core.Contract
 }
 
 // Details for network prices
@@ -38,7 +38,7 @@ type NetworkPricesDetails struct {
 // Creates a new NetworkPrices contract binding
 func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkPrices)
+	np, err := rp.GetContract(rocketpool.ContractName_RocketNetworkPrices)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network prices contract: %w", err)
 	}
@@ -46,7 +46,7 @@ func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 	return &NetworkPrices{
 		NetworkPricesDetails: &NetworkPricesDetails{},
 		rp:                   rp,
-		contract:             contract,
+		np:                   np,
 	}, nil
 }
 
@@ -56,17 +56,17 @@ func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 
 // Get the block number which network prices are current for
 func (c *NetworkPrices) GetPricesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.PricesBlock.RawValue, "getPricesBlock")
+	core.AddCall(mc, c.np, &c.PricesBlock.RawValue, "getPricesBlock")
 }
 
 // Get the current network RPL price in ETH
 func (c *NetworkPrices) GetRplPrice(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.RplPrice.RawValue, "getRPLPrice")
+	core.AddCall(mc, c.np, &c.RplPrice.RawValue, "getRPLPrice")
 }
 
 // Returns the latest block number that oracles should be reporting prices for
 func (c *NetworkPrices) GetLatestReportablePricesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
+	core.AddCall(mc, c.np, &c.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
 }
 
 // Get all basic details
@@ -82,7 +82,7 @@ func (c *NetworkPrices) GetAllDetails(mc *batch.MultiCaller) {
 
 // Get info for network price submission
 func (c *NetworkPrices) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "submitPrices", opts, big.NewInt(int64(block)), rplPrice)
+	return core.NewTransactionInfo(c.np, "submitPrices", opts, big.NewInt(int64(block)), rplPrice)
 }
 
 // =============
@@ -92,8 +92,8 @@ func (c *NetworkPrices) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind
 // Returns an array of block numbers for prices submissions the given trusted node has submitted since fromBlock
 func (c *NetworkPrices) GetPricesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.contract.Address}
-	topicFilter := [][]common.Hash{{c.contract.ABI.Events["PricesSubmitted"].ID}, {nodeAddress.Hash()}}
+	addressFilter := []common.Address{*c.np.Address}
+	topicFilter := [][]common.Hash{{c.np.ABI.Events["PricesSubmitted"].ID}, {nodeAddress.Hash()}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)
@@ -104,7 +104,7 @@ func (c *NetworkPrices) GetPricesSubmissions(nodeAddress common.Address, fromBlo
 	for i, log := range logs {
 		values := make(map[string]interface{})
 		// Decode the event
-		if c.contract.ABI.Events["PricesSubmitted"].Inputs.UnpackIntoMap(values, log.Data) != nil {
+		if c.np.ABI.Events["PricesSubmitted"].Inputs.UnpackIntoMap(values, log.Data) != nil {
 			return nil, err
 		}
 		timestamps[i] = values["block"].(*big.Int).Uint64()
@@ -115,8 +115,8 @@ func (c *NetworkPrices) GetPricesSubmissions(nodeAddress common.Address, fromBlo
 // Returns an array of members who submitted prices since fromBlock
 func (c *NetworkPrices) GetLatestPricesSubmissions(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) ([]common.Address, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.contract.Address}
-	topicFilter := [][]common.Hash{{c.contract.ABI.Events["PricesSubmitted"].ID}}
+	addressFilter := []common.Address{*c.np.Address}
+	topicFilter := [][]common.Hash{{c.np.ABI.Events["PricesSubmitted"].ID}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)

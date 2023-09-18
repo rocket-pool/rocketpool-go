@@ -18,8 +18,8 @@ import (
 // Binding for RocketNodeStaking
 type NodeStaking struct {
 	*NodeStakingDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	ns *core.Contract
 }
 
 // Details for RocketNodeStaking
@@ -35,7 +35,7 @@ type NodeStakingDetails struct {
 // Creates a new NodeStaking contract binding
 func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketNodeStaking)
+	ns, err := rp.GetContract(rocketpool.ContractName_RocketNodeStaking)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node staking contract: %w", err)
 	}
@@ -43,7 +43,7 @@ func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 	return &NodeStaking{
 		NodeStakingDetails: &NodeStakingDetails{},
 		rp:                 rp,
-		contract:           contract,
+		ns:                 ns,
 	}, nil
 }
 
@@ -53,12 +53,12 @@ func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 
 // Get the version of the Node Staking contract
 func (c *NodeStaking) GetVersion(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Version, "version")
+	core.AddCall(mc, c.ns, &c.Version, "version")
 }
 
 // Get the total RPL staked in the network
 func (c *NodeStaking) GetTotalRPLStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalRplStake, "getTotalRPLStake")
+	core.AddCall(mc, c.ns, &c.TotalRplStake, "getTotalRPLStake")
 }
 
 // Get all basic details
@@ -75,5 +75,5 @@ func (c *NodeStaking) GetAllDetails(mc *batch.MultiCaller) {
 // NOTE: you will have to call this several times, iterating through subset ranges,
 // to get the complete result since a single call for the complete node set may run out of gas
 func (c *NodeStaking) CalculateTotalEffectiveRplStake(offset *big.Int, limit *big.Int, rplPrice *big.Int, opts *bind.CallOpts) (*big.Int, error) {
-	return core.Call[*big.Int](c.contract, opts, "calculateTotalEffectiveRPLStake", offset, limit, rplPrice)
+	return core.Call[*big.Int](c.ns, opts, "calculateTotalEffectiveRPLStake", offset, limit, rplPrice)
 }

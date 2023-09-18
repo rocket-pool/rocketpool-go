@@ -28,7 +28,7 @@ const (
 // Basic binding for version-agnostic RocketMinipool contracts
 type minipoolCommon struct {
 	*minipoolCommonDetails
-	Contract *core.Contract
+	contract *core.Contract
 	rp       *rocketpool.RocketPool
 	mpMgr    *core.Contract
 	mpQueue  *core.Contract
@@ -103,7 +103,7 @@ type PrestakeData struct {
 
 // Create a minipool common binding from an explicit version number
 func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Contract, version uint8) (*minipoolCommon, error) {
-	mgr, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolManager)
+	mpMgr, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolManager)
 	if err != nil {
 		return nil, fmt.Errorf("error creating minipool manager: %w", err)
 	}
@@ -124,8 +124,8 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 			Version: version,
 		},
 		rp:       rp,
-		Contract: contract,
-		mpMgr:    mgr,
+		contract: contract,
+		mpMgr:    mpMgr,
 		mpQueue:  mpQueue,
 		mpStatus: mpStatus,
 	}, nil
@@ -137,7 +137,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 
 // Gets the underlying minipool's contract
 func (c *minipoolCommon) GetContract() *core.Contract {
-	return c.Contract
+	return c.contract
 }
 
 // === Minipool ===
@@ -151,82 +151,82 @@ func (c *minipoolCommon) GetPenaltyCount(mc *batch.MultiCaller) {
 
 // Get the minipool's status
 func (c *minipoolCommon) GetStatus(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Status.RawValue, "getStatus")
+	core.AddCall(mc, c.contract, &c.Status.RawValue, "getStatus")
 }
 
 // Get the block that the minipool's status last changed
 func (c *minipoolCommon) GetStatusBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.StatusBlock.RawValue, "getStatusBlock")
+	core.AddCall(mc, c.contract, &c.StatusBlock.RawValue, "getStatusBlock")
 }
 
 // Get the time that the minipool's status last changed
 func (c *minipoolCommon) GetStatusTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.StatusTime.RawValue, "getStatusTime")
+	core.AddCall(mc, c.contract, &c.StatusTime.RawValue, "getStatusTime")
 }
 
 // Check if the minipool has been finalised
 func (c *minipoolCommon) GetFinalised(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.IsFinalised, "getFinalised")
+	core.AddCall(mc, c.contract, &c.IsFinalised, "getFinalised")
 }
 
 // Get the minipool's node address
 func (c *minipoolCommon) GetNodeAddress(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.NodeAddress, "getNodeAddress")
+	core.AddCall(mc, c.contract, &c.NodeAddress, "getNodeAddress")
 }
 
 // Get the minipool's commission rate
 func (c *minipoolCommon) GetNodeFee(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.NodeFee.RawValue, "getNodeFee")
+	core.AddCall(mc, c.contract, &c.NodeFee.RawValue, "getNodeFee")
 }
 
 // Get the balance the node has deposited to the minipool
 func (c *minipoolCommon) GetNodeDepositBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.NodeDepositBalance, "getNodeDepositBalance")
+	core.AddCall(mc, c.contract, &c.NodeDepositBalance, "getNodeDepositBalance")
 }
 
 // Get the amount of ETH ready to be refunded to the node
 func (c *minipoolCommon) GetNodeRefundBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.NodeRefundBalance, "getNodeRefundBalance")
+	core.AddCall(mc, c.contract, &c.NodeRefundBalance, "getNodeRefundBalance")
 }
 
 // Check if the node deposit has been assigned to the minipool
 func (c *minipoolCommon) GetNodeDepositAssigned(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.NodeDepositAssigned, "getNodeDepositAssigned")
+	core.AddCall(mc, c.contract, &c.NodeDepositAssigned, "getNodeDepositAssigned")
 }
 
 // Get the balance the pool stakers have deposited to the minipool
 func (c *minipoolCommon) GetUserDepositBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.UserDepositBalance, "getUserDepositBalance")
+	core.AddCall(mc, c.contract, &c.UserDepositBalance, "getUserDepositBalance")
 }
 
 // Check if the pool staker deposits has been assigned to the minipool
 func (c *minipoolCommon) GetUserDepositAssigned(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.UserDepositAssigned, "getUserDepositAssigned")
+	core.AddCall(mc, c.contract, &c.UserDepositAssigned, "getUserDepositAssigned")
 }
 
 // Get the time at which the pool stakers were assigned to the minipool
 func (c *minipoolCommon) GetUserDepositAssignedTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.UserDepositAssignedTime.RawValue, "getUserDepositAssignedTime")
+	core.AddCall(mc, c.contract, &c.UserDepositAssignedTime.RawValue, "getUserDepositAssignedTime")
 }
 
 // Check if the "use latest delegate" flag is enabled
 func (c *minipoolCommon) GetUseLatestDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.IsUseLatestDelegateEnabled, "getUseLatestDelegate")
+	core.AddCall(mc, c.contract, &c.IsUseLatestDelegateEnabled, "getUseLatestDelegate")
 }
 
 // Get the address of the current delegate the minipool has recorded
 func (c *minipoolCommon) GetDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.DelegateAddress, "getDelegate")
+	core.AddCall(mc, c.contract, &c.DelegateAddress, "getDelegate")
 }
 
 // Get the address of the previous delegate the minipool will use after a rollback
 func (c *minipoolCommon) GetPreviousDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.PreviousDelegateAddress, "getPreviousDelegate")
+	core.AddCall(mc, c.contract, &c.PreviousDelegateAddress, "getPreviousDelegate")
 }
 
 // Get the address of the delegate the minipool will use (may be different than DelegateAddress if UseLatestDelegate is enabled)
 func (c *minipoolCommon) GetEffectiveDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.EffectiveDelegateAddress, "getEffectiveDelegate")
+	core.AddCall(mc, c.contract, &c.EffectiveDelegateAddress, "getEffectiveDelegate")
 }
 
 // === MinipoolManager ===
@@ -298,47 +298,47 @@ func (c *minipoolCommon) QueryAllDetails(mc *batch.MultiCaller) {
 
 // Get info for refunding node ETH from the minipool
 func (c *minipoolCommon) Refund(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "refund", opts)
+	return core.NewTransactionInfo(c.contract, "refund", opts)
 }
 
 // Get info for progressing the prelaunch minipool to staking
 func (c *minipoolCommon) Stake(validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "stake", opts, validatorSignature[:], depositDataRoot)
+	return core.NewTransactionInfo(c.contract, "stake", opts, validatorSignature[:], depositDataRoot)
 }
 
 // Get info for dissolving the initialized or prelaunch minipool
 func (c *minipoolCommon) Dissolve(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "dissolve", opts)
+	return core.NewTransactionInfo(c.contract, "dissolve", opts)
 }
 
 // Get info for withdrawing node balances from the dissolved minipool and closing it
 func (c *minipoolCommon) Close(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "close", opts)
+	return core.NewTransactionInfo(c.contract, "close", opts)
 }
 
 // Get info for finalising a minipool to get the RPL stake back
 func (c *minipoolCommon) Finalise(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "finalise", opts)
+	return core.NewTransactionInfo(c.contract, "finalise", opts)
 }
 
 // Get info for upgrading this minipool to the latest network delegate contract
 func (c *minipoolCommon) DelegateUpgrade(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "delegateUpgrade", opts)
+	return core.NewTransactionInfo(c.contract, "delegateUpgrade", opts)
 }
 
 // Get info for rolling back to the previous delegate contract
 func (c *minipoolCommon) DelegateRollback(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "delegateRollback", opts)
+	return core.NewTransactionInfo(c.contract, "delegateRollback", opts)
 }
 
 // Get info for setting the UseLatestDelegate flag (if set to true, will automatically use the latest delegate contract)
 func (c *minipoolCommon) SetUseLatestDelegate(setting bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "setUseLatestDelegate", opts, setting)
+	return core.NewTransactionInfo(c.contract, "setUseLatestDelegate", opts, setting)
 }
 
 // Get info for voting to scrub a minipool
 func (c *minipoolCommon) VoteScrub(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "voteScrub", opts)
+	return core.NewTransactionInfo(c.contract, "voteScrub", opts)
 }
 
 // === MinipoolStatus ===
@@ -354,19 +354,19 @@ func (c *minipoolCommon) SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*c
 
 // Given a validator balance, calculates how much belongs to the node (taking into consideration rewards and penalties)
 func (c *minipoolCommon) CalculateNodeShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int) {
-	core.AddCall(mc, c.Contract, share_Out, "calculateNodeShare", balance)
+	core.AddCall(mc, c.contract, share_Out, "calculateNodeShare", balance)
 }
 
 // Given a validator balance, calculates how much belongs to rETH pool stakers (taking into consideration rewards and penalties)
 func (c *minipoolCommon) CalculateUserShare(mc *batch.MultiCaller, share_Out **big.Int, balance *big.Int) {
-	core.AddCall(mc, c.Contract, share_Out, "calculateUserShare", balance)
+	core.AddCall(mc, c.contract, share_Out, "calculateUserShare", balance)
 }
 
 // Get the data from this minipool's MinipoolPrestaked event
 func (c *minipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.CallOpts) (PrestakeData, error) {
 
 	addressFilter := []common.Address{c.Address}
-	topicFilter := [][]common.Hash{{c.Contract.ABI.Events["MinipoolPrestaked"].ID}}
+	topicFilter := [][]common.Hash{{c.contract.ABI.Events["MinipoolPrestaked"].ID}}
 
 	// Grab the latest block number
 	currentBlock, err := c.rp.Client.BlockNumber(context.Background())
@@ -418,7 +418,7 @@ func (c *minipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 
 	// Decode the event
 	prestakeEvent := new(MinipoolPrestakeEvent)
-	c.Contract.Contract.UnpackLog(prestakeEvent, "MinipoolPrestaked", log)
+	c.contract.Contract.UnpackLog(prestakeEvent, "MinipoolPrestaked", log)
 	if err != nil {
 		return PrestakeData{}, fmt.Errorf("error unpacking prestake data: %w", err)
 	}

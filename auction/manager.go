@@ -11,11 +11,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
-const (
-	// Settings
-	lotDetailsBatchSize uint64 = 10
-)
-
 // ===============
 // === Structs ===
 // ===============
@@ -23,8 +18,8 @@ const (
 // Binding for RocketAuctionManager
 type AuctionManager struct {
 	*AuctionManagerDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	am *core.Contract
 }
 
 // Details for RocketAuctionManager
@@ -42,7 +37,7 @@ type AuctionManagerDetails struct {
 // Creates a new AuctionManager contract binding
 func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketAuctionManager)
+	am, err := rp.GetContract(rocketpool.ContractName_RocketAuctionManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting auction manager contract: %w", err)
 	}
@@ -50,7 +45,7 @@ func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 	return &AuctionManager{
 		AuctionManagerDetails: &AuctionManagerDetails{},
 		rp:                    rp,
-		contract:              contract,
+		am:                    am,
 	}, nil
 }
 
@@ -60,22 +55,22 @@ func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 
 // Get the total RPL balance of the auction contract
 func (c *AuctionManager) GetTotalRPLBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalRplBalance, "getTotalRPLBalance")
+	core.AddCall(mc, c.am, &c.TotalRplBalance, "getTotalRPLBalance")
 }
 
 // Get the allotted RPL balance of the auction contract
 func (c *AuctionManager) GetAllottedRPLBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.AllottedRplBalance, "getAllottedRPLBalance")
+	core.AddCall(mc, c.am, &c.AllottedRplBalance, "getAllottedRPLBalance")
 }
 
 // Get the remaining RPL balance of the auction contract
 func (c *AuctionManager) GetRemainingRPLBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.RemainingRplBalance, "getRemainingRPLBalance")
+	core.AddCall(mc, c.am, &c.RemainingRplBalance, "getRemainingRPLBalance")
 }
 
 // Get the number of lots for auction
 func (c *AuctionManager) GetLotCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.LotCount.RawValue, "getLotCount")
+	core.AddCall(mc, c.am, &c.LotCount.RawValue, "getLotCount")
 }
 
 // Get all basic details
@@ -92,5 +87,5 @@ func (c *AuctionManager) GetAllDetails(mc *batch.MultiCaller) {
 
 // Get info for creating a new lot
 func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "createLot", opts)
+	return core.NewTransactionInfo(c.am, "createLot", opts)
 }

@@ -19,8 +19,8 @@ import (
 // Binding for RocketTokenRPL
 type TokenRpl struct {
 	*TokenRplDetails
-	Contract *core.Contract
-	rp       *rocketpool.RocketPool
+	rpl *core.Contract
+	rp  *rocketpool.RocketPool
 }
 
 // Details for RocketTokenRPL
@@ -36,15 +36,15 @@ type TokenRplDetails struct {
 // Creates a new TokenRpl contract binding
 func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketTokenRPL)
+	rpl, err := rp.GetContract(rocketpool.ContractName_RocketTokenRPL)
 	if err != nil {
 		return nil, fmt.Errorf("error getting RPL contract: %w", err)
 	}
 
 	return &TokenRpl{
 		TokenRplDetails: &TokenRplDetails{},
-		Contract:        contract,
 		rp:              rp,
+		rpl:             rpl,
 	}, nil
 }
 
@@ -56,24 +56,24 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 
 // Get the RPL total supply
 func (c *TokenRpl) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.TotalSupply, "totalSupply")
+	core.AddCall(mc, c.rpl, &c.TotalSupply, "totalSupply")
 }
 
 // Get the RPL balance of an address
 func (c *TokenRpl) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
-	core.AddCall(mc, c.Contract, balance_Out, "balanceOf", address)
+	core.AddCall(mc, c.rpl, balance_Out, "balanceOf", address)
 }
 
 // Get the RPL spending allowance of an address and spender
 func (c *TokenRpl) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
-	core.AddCall(mc, c.Contract, allowance_Out, "allowance", owner, spender)
+	core.AddCall(mc, c.rpl, allowance_Out, "allowance", owner, spender)
 }
 
 // === RPL functions ===
 
 // Get the RPL inflation interval rate
 func (c *TokenRpl) GetInflationIntervalRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.InflationIntervalRate, "getInflationIntervalRate")
+	core.AddCall(mc, c.rpl, &c.InflationIntervalRate, "getInflationIntervalRate")
 }
 
 // ====================
@@ -84,27 +84,27 @@ func (c *TokenRpl) GetInflationIntervalRate(mc *batch.MultiCaller) {
 
 // Get info for approving RPL's usage by a spender
 func (c *TokenRpl) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "approve", opts, spender, amount)
+	return core.NewTransactionInfo(c.rpl, "approve", opts, spender, amount)
 }
 
 // Get info for transferring RPL
 func (c *TokenRpl) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "transfer", opts, to, amount)
+	return core.NewTransactionInfo(c.rpl, "transfer", opts, to, amount)
 }
 
 // Get info for transferring RPL from a sender
 func (c *TokenRpl) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "transferFrom", opts, from, to, amount)
+	return core.NewTransactionInfo(c.rpl, "transferFrom", opts, from, to, amount)
 }
 
 // === RPL functions ===
 
 // Get info for minting new RPL tokens from inflation
 func (c *TokenRpl) MintInflationRPL(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "inflationMintTokens", opts)
+	return core.NewTransactionInfo(c.rpl, "inflationMintTokens", opts)
 }
 
 // Get info for swapping fixed-supply RPL for new RPL tokens
 func (c *TokenRpl) SwapFixedSupplyRplForRpl(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "swapTokens", opts, amount)
+	return core.NewTransactionInfo(c.rpl, "swapTokens", opts, amount)
 }

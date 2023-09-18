@@ -25,8 +25,8 @@ const (
 // Binding for RocketMinipoolManager
 type MinipoolManager struct {
 	*MinipoolManagerDetails
-	rp       *rocketpool.RocketPool
-	Contract *core.Contract
+	rp    *rocketpool.RocketPool
+	mpMgr *core.Contract
 }
 
 // Details for RocketMinipoolManager
@@ -53,8 +53,8 @@ type MinipoolCountsPerStatus struct {
 
 // Creates a new MinipoolManager contract binding
 func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
-	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolManager)
+	// Create the mpMgr
+	mpMgr, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting minipool manager contract: %w", err)
 	}
@@ -62,7 +62,7 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 	return &MinipoolManager{
 		MinipoolManagerDetails: &MinipoolManagerDetails{},
 		rp:                     rp,
-		Contract:               contract,
+		mpMgr:                  mpMgr,
 	}, nil
 }
 
@@ -72,27 +72,27 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 
 // Get the minipool count
 func (c *MinipoolManager) GetMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.MinipoolCount.RawValue, "getMinipoolCount")
+	core.AddCall(mc, c.mpMgr, &c.MinipoolCount.RawValue, "getMinipoolCount")
 }
 
 // Get the number of staking minipools in the network
 func (c *MinipoolManager) GetStakingMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.StakingMinipoolCount.RawValue, "getStakingMinipoolCount")
+	core.AddCall(mc, c.mpMgr, &c.StakingMinipoolCount.RawValue, "getStakingMinipoolCount")
 }
 
 // Get the number of finalised minipools in the network
 func (c *MinipoolManager) GetFinalisedMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.FinalisedMinipoolCount.RawValue, "getFinalisedMinipoolCount")
+	core.AddCall(mc, c.mpMgr, &c.FinalisedMinipoolCount.RawValue, "getFinalisedMinipoolCount")
 }
 
 // Get the number of active minipools in the network
 func (c *MinipoolManager) GetActiveMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.ActiveMinipoolCount.RawValue, "getActiveMinipoolCount")
+	core.AddCall(mc, c.mpMgr, &c.ActiveMinipoolCount.RawValue, "getActiveMinipoolCount")
 }
 
 // Get the number of vacant minipools in the network
 func (c *MinipoolManager) GetVacantMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.VacantMinipoolCount.RawValue, "getVacantMinipoolCount")
+	core.AddCall(mc, c.mpMgr, &c.VacantMinipoolCount.RawValue, "getVacantMinipoolCount")
 }
 
 // Get all basic details
@@ -109,17 +109,17 @@ func (c *MinipoolManager) GetAllDetails(mc *batch.MultiCaller) {
 
 // Get a minipool address by index
 func (c *MinipoolManager) GetMinipoolAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
-	core.AddCall(mc, c.Contract, address_Out, "getMinipoolAt", big.NewInt(int64(index)))
+	core.AddCall(mc, c.mpMgr, address_Out, "getMinipoolAt", big.NewInt(int64(index)))
 }
 
 // Get a minipool address by pubkey
 func (c *MinipoolManager) GetMinipoolAddressByPubkey(mc *batch.MultiCaller, address_Out *common.Address, pubkey types.ValidatorPubkey) {
-	core.AddCall(mc, c.Contract, address_Out, "getMinipoolByPubkey", pubkey[:])
+	core.AddCall(mc, c.mpMgr, address_Out, "getMinipoolByPubkey", pubkey[:])
 }
 
 // Get a vacant minipool address by index
 func (c *MinipoolManager) GetVacantMinipoolAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
-	core.AddCall(mc, c.Contract, address_Out, "getVacantMinipoolAt", big.NewInt(int64(index)))
+	core.AddCall(mc, c.mpMgr, address_Out, "getVacantMinipoolAt", big.NewInt(int64(index)))
 }
 
 // Get all minipool addresses in a standalone call.
@@ -153,7 +153,7 @@ func (c *MinipoolManager) GetPrelaunchMinipoolAddresses(minipoolCount uint64, op
 		// Get a batch of addresses
 		offset := big.NewInt(int64(i))
 		newAddresses := new([]common.Address)
-		if err := c.Contract.Call(opts, newAddresses, "getPrelaunchMinipools", offset, limit); err != nil {
+		if err := c.mpMgr.Call(opts, newAddresses, "getPrelaunchMinipools", offset, limit); err != nil {
 			return []common.Address{}, fmt.Errorf("error getting prelaunch minipool addresses (offset %d, limit %d): %w", offset.Uint64(), limit.Uint64(), err)
 		}
 		addresses = append(addresses, *newAddresses...)
@@ -201,7 +201,7 @@ func (c *MinipoolManager) GetMinipoolCountPerStatus(minipoolCount uint64, opts *
 		// Get a batch of counts
 		offset := big.NewInt(int64(i))
 		newMinipoolCounts := new(MinipoolCountsPerStatus)
-		if err := c.Contract.Call(opts, newMinipoolCounts, "getMinipoolCountPerStatus", offset, limit); err != nil {
+		if err := c.mpMgr.Call(opts, newMinipoolCounts, "getMinipoolCountPerStatus", offset, limit); err != nil {
 			return MinipoolCountsPerStatus{}, fmt.Errorf("error getting minipool counts: %w", err)
 		}
 		if newMinipoolCounts.Initialized != nil {
@@ -225,7 +225,7 @@ func (c *MinipoolManager) GetMinipoolCountPerStatus(minipoolCount uint64, opts *
 
 // Get the 0x01-based withdrawal credentials for a minipool address (even if it doesn't exist yet)
 func (c *MinipoolManager) GetMinipoolWithdrawalCredentials(mc *batch.MultiCaller, credentials_Out *common.Hash, address common.Address) {
-	core.AddCall(mc, c.Contract, credentials_Out, "getMinipoolWithdrawalCredentials", address)
+	core.AddCall(mc, c.mpMgr, credentials_Out, "getMinipoolWithdrawalCredentials", address)
 }
 
 // Create a minipool binding from an explicit version number

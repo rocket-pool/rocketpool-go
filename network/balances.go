@@ -20,8 +20,8 @@ import (
 // Binding for RocketNetworkBalances
 type NetworkBalances struct {
 	*NetworkBalancesDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	nb *core.Contract
 }
 
 // Details for network balances
@@ -41,7 +41,7 @@ type NetworkBalancesDetails struct {
 // Creates a new NetworkBalances contract binding
 func NewNetworkBalances(rp *rocketpool.RocketPool) (*NetworkBalances, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketNetworkBalances)
+	nb, err := rp.GetContract(rocketpool.ContractName_RocketNetworkBalances)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network balances contract: %w", err)
 	}
@@ -49,7 +49,7 @@ func NewNetworkBalances(rp *rocketpool.RocketPool) (*NetworkBalances, error) {
 	return &NetworkBalances{
 		NetworkBalancesDetails: &NetworkBalancesDetails{},
 		rp:                     rp,
-		contract:               contract,
+		nb:                     nb,
 	}, nil
 }
 
@@ -59,32 +59,32 @@ func NewNetworkBalances(rp *rocketpool.RocketPool) (*NetworkBalances, error) {
 
 // Get the block number which network balances are current for
 func (c *NetworkBalances) GetBalancesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.BalancesBlock.RawValue, "getBalancesBlock")
+	core.AddCall(mc, c.nb, &c.BalancesBlock.RawValue, "getBalancesBlock")
 }
 
 // Get the current network total ETH balance
 func (c *NetworkBalances) GetTotalETHBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalETHBalance, "getTotalETHBalance")
+	core.AddCall(mc, c.nb, &c.TotalETHBalance, "getTotalETHBalance")
 }
 
 // Get the current network staking ETH balance
 func (c *NetworkBalances) GetStakingETHBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.StakingETHBalance, "getStakingETHBalance")
+	core.AddCall(mc, c.nb, &c.StakingETHBalance, "getStakingETHBalance")
 }
 
 // Get the current network total rETH supply
 func (c *NetworkBalances) GetTotalRETHSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalRETHSupply, "getTotalRETHSupply")
+	core.AddCall(mc, c.nb, &c.TotalRETHSupply, "getTotalRETHSupply")
 }
 
 // Get the current network ETH utilization rate
 func (c *NetworkBalances) GetEthUtilizationRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.EthUtilizationRate.RawValue, "getETHUtilizationRate")
+	core.AddCall(mc, c.nb, &c.EthUtilizationRate.RawValue, "getETHUtilizationRate")
 }
 
 // Returns the latest block number that oracles should be reporting balances for
 func (c *NetworkBalances) GetLatestReportableBalancesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.LatestReportableBalancesBlock.RawValue, "getLatestReportableBlock")
+	core.AddCall(mc, c.nb, &c.LatestReportableBalancesBlock.RawValue, "getLatestReportableBlock")
 }
 
 // Get all basic details
@@ -103,7 +103,7 @@ func (c *NetworkBalances) GetAllDetails(mc *batch.MultiCaller) {
 
 // Get info for network balance submission
 func (c *NetworkBalances) SubmitBalances(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "submitBalances", opts, block, totalEth, stakingEth, rethSupply)
+	return core.NewTransactionInfo(c.nb, "submitBalances", opts, block, totalEth, stakingEth, rethSupply)
 }
 
 // =============
@@ -113,8 +113,8 @@ func (c *NetworkBalances) SubmitBalances(block uint64, totalEth, stakingEth, ret
 // Returns an array of block numbers for balances submissions the given trusted node has submitted since fromBlock
 func (c *NetworkBalances) GetBalancesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.contract.Address}
-	topicFilter := [][]common.Hash{{c.contract.ABI.Events["BalancesSubmitted"].ID}, {nodeAddress.Hash()}}
+	addressFilter := []common.Address{*c.nb.Address}
+	topicFilter := [][]common.Hash{{c.nb.ABI.Events["BalancesSubmitted"].ID}, {nodeAddress.Hash()}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)
@@ -126,7 +126,7 @@ func (c *NetworkBalances) GetBalancesSubmissions(nodeAddress common.Address, fro
 	for i, log := range logs {
 		values := make(map[string]interface{})
 		// Decode the event
-		if c.contract.ABI.Events["BalancesSubmitted"].Inputs.UnpackIntoMap(values, log.Data) != nil {
+		if c.nb.ABI.Events["BalancesSubmitted"].Inputs.UnpackIntoMap(values, log.Data) != nil {
 			return nil, err
 		}
 		timestamps[i] = values["block"].(*big.Int).Uint64()
@@ -137,8 +137,8 @@ func (c *NetworkBalances) GetBalancesSubmissions(nodeAddress common.Address, fro
 // Returns an array of members who submitted a balance since fromBlock
 func (c *NetworkBalances) GetLatestBalancesSubmissions(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) ([]common.Address, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.contract.Address}
-	topicFilter := [][]common.Hash{{c.contract.ABI.Events["BalancesSubmitted"].ID}}
+	addressFilter := []common.Address{*c.nb.Address}
+	topicFilter := [][]common.Hash{{c.nb.ABI.Events["BalancesSubmitted"].ID}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)

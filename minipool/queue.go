@@ -29,8 +29,8 @@ type QueueDetails struct {
 // Binding for RocketMinipoolQueue
 type MinipoolQueue struct {
 	*MinipoolQueueDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	mq *core.Contract
 }
 
 // Details for RocketMinipoolQueue
@@ -47,7 +47,7 @@ type MinipoolQueueDetails struct {
 // Creates a new MinipoolQueue contract binding
 func NewMinipoolQueue(rp *rocketpool.RocketPool) (*MinipoolQueue, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolQueue)
+	mq, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolQueue)
 	if err != nil {
 		return nil, fmt.Errorf("error getting minipool queue contract: %w", err)
 	}
@@ -55,7 +55,7 @@ func NewMinipoolQueue(rp *rocketpool.RocketPool) (*MinipoolQueue, error) {
 	return &MinipoolQueue{
 		MinipoolQueueDetails: &MinipoolQueueDetails{},
 		rp:                   rp,
-		contract:             contract,
+		mq:                   mq,
 	}, nil
 }
 
@@ -65,17 +65,17 @@ func NewMinipoolQueue(rp *rocketpool.RocketPool) (*MinipoolQueue, error) {
 
 // Get the total length of the minipool queue
 func (c *MinipoolQueue) GetTotalLength(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalLength.RawValue, "getTotalLength")
+	core.AddCall(mc, c.mq, &c.TotalLength.RawValue, "getTotalLength")
 }
 
 // Get the total capacity of the minipool queue
 func (c *MinipoolQueue) GetTotalCapacity(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalCapacity, "getTotalCapacity")
+	core.AddCall(mc, c.mq, &c.TotalCapacity, "getTotalCapacity")
 }
 
 // Get the total effective capacity of the minipool queue (used in node demand calculation)
 func (c *MinipoolQueue) GetEffectiveCapacity(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.EffectiveCapacity, "getEffectiveCapacity")
+	core.AddCall(mc, c.mq, &c.EffectiveCapacity, "getEffectiveCapacity")
 }
 
 // =============
@@ -84,5 +84,5 @@ func (c *MinipoolQueue) GetEffectiveCapacity(mc *batch.MultiCaller) {
 
 // Get the minipool at the specified position in queue (0-indexed).
 func (c *MinipoolQueue) GetQueueMinipoolAtPosition(mc *batch.MultiCaller, address_Out *common.Address, position uint64) {
-	core.AddCall(mc, c.contract, address_Out, "getMinipoolAt", big.NewInt(int64(position)))
+	core.AddCall(mc, c.mq, address_Out, "getMinipoolAt", big.NewInt(int64(position)))
 }

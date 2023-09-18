@@ -20,8 +20,8 @@ import (
 // Binding for RocketTokenRETH
 type TokenReth struct {
 	*TokenRethDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp   *rocketpool.RocketPool
+	reth *core.Contract
 }
 
 // Details for RocketTokenRETH
@@ -39,7 +39,7 @@ type TokenRethDetails struct {
 // Creates a new TokenReth contract binding
 func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketTokenRETH)
+	reth, err := rp.GetContract(rocketpool.ContractName_RocketTokenRETH)
 	if err != nil {
 		return nil, fmt.Errorf("error getting rETH contract: %w", err)
 	}
@@ -47,7 +47,7 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 	return &TokenReth{
 		TokenRethDetails: &TokenRethDetails{},
 		rp:               rp,
-		contract:         contract,
+		reth:             reth,
 	}, nil
 }
 
@@ -59,17 +59,17 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 
 // Get the rETH total supply
 func (c *TokenReth) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalSupply, "totalSupply")
+	core.AddCall(mc, c.reth, &c.TotalSupply, "totalSupply")
 }
 
 // Get the rETH balance of an address
 func (c *TokenReth) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
-	core.AddCall(mc, c.contract, balance_Out, "balanceOf", address)
+	core.AddCall(mc, c.reth, balance_Out, "balanceOf", address)
 }
 
 // Get the rETH spending allowance of an address and spender
 func (c *TokenReth) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
-	core.AddCall(mc, c.contract, allowance_Out, "allowance", owner, spender)
+	core.AddCall(mc, c.reth, allowance_Out, "allowance", owner, spender)
 }
 
 // === rETH functions ===
@@ -80,32 +80,32 @@ func (c *TokenReth) GetContractEthBalance(opts *bind.CallOpts) (*big.Int, error)
 	if opts != nil {
 		blockNumber = opts.BlockNumber
 	}
-	return c.rp.Client.BalanceAt(context.Background(), *c.contract.Address, blockNumber)
+	return c.rp.Client.BalanceAt(context.Background(), *c.reth.Address, blockNumber)
 }
 
 // Get the ETH value of an amount of rETH
 func (c *TokenReth) GetEthValueOfReth(mc *batch.MultiCaller, value_Out **big.Int, rethAmount *big.Int) {
-	core.AddCall(mc, c.contract, value_Out, "getEthValue", rethAmount)
+	core.AddCall(mc, c.reth, value_Out, "getEthValue", rethAmount)
 }
 
 // Get the rETH value of an amount of ETH
 func (c *TokenReth) GetRethValueOfEth(mc *batch.MultiCaller, value_Out **big.Int, ethAmount *big.Int) {
-	core.AddCall(mc, c.contract, value_Out, "getRethValue", ethAmount)
+	core.AddCall(mc, c.reth, value_Out, "getRethValue", ethAmount)
 }
 
 // Get the current ETH : rETH exchange rate
 func (c *TokenReth) GetExchangeRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.ExchangeRate.RawValue, "getExchangeRate")
+	core.AddCall(mc, c.reth, &c.ExchangeRate.RawValue, "getExchangeRate")
 }
 
 // Get the total amount of ETH collateral available for rETH trades
 func (c *TokenReth) GetTotalCollateral(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.TotalCollateral, "getTotalCollateral")
+	core.AddCall(mc, c.reth, &c.TotalCollateral, "getTotalCollateral")
 }
 
 // Get the rETH collateralization rate
 func (c *TokenReth) GetCollateralRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.CollateralRate.RawValue, "getCollateralRate")
+	core.AddCall(mc, c.reth, &c.CollateralRate.RawValue, "getCollateralRate")
 }
 
 // ====================
@@ -116,22 +116,22 @@ func (c *TokenReth) GetCollateralRate(mc *batch.MultiCaller) {
 
 // Get info for approving rETH's usage by a spender
 func (c *TokenReth) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "approve", opts, spender, amount)
+	return core.NewTransactionInfo(c.reth, "approve", opts, spender, amount)
 }
 
 // Get info for transferring rETH
 func (c *TokenReth) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "transfer", opts, to, amount)
+	return core.NewTransactionInfo(c.reth, "transfer", opts, to, amount)
 }
 
 // Get info for transferring rETH from a sender
 func (c *TokenReth) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "transferFrom", opts, from, to, amount)
+	return core.NewTransactionInfo(c.reth, "transferFrom", opts, from, to, amount)
 }
 
 // === rETH functions ===
 
 // Get info for burning rETH for ETH
 func (c *TokenReth) Burn(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "burn", opts, amount)
+	return core.NewTransactionInfo(c.reth, "burn", opts, amount)
 }

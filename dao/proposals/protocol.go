@@ -16,8 +16,8 @@ import (
 type ProtocolDaoProposal struct {
 	*proposalCommon
 	*ProtocolDaoProposalDetails
-	rp  *rocketpool.RocketPool
-	mgr *core.Contract
+	rp *rocketpool.RocketPool
+	dp *core.Contract
 }
 
 // Details for proposals
@@ -31,7 +31,7 @@ type ProtocolDaoProposalDetails struct {
 // Creates a new ProtocolDaoProposal contract binding
 func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*ProtocolDaoProposal, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
+	dp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO proposal contract: %w", err)
 	}
@@ -40,7 +40,7 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*P
 		proposalCommon:             base,
 		ProtocolDaoProposalDetails: &ProtocolDaoProposalDetails{},
 		rp:                         rp,
-		mgr:                        contract,
+		dp:                         dp,
 	}, nil
 }
 

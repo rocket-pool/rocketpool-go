@@ -26,8 +26,8 @@ const (
 // Binding for RocketDAOProposal
 type DaoProposalManager struct {
 	*DaoProposalManagerDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp *rocketpool.RocketPool
+	dp *core.Contract
 }
 
 // Details for DaoProposalManager
@@ -42,7 +42,7 @@ type DaoProposalManagerDetails struct {
 // Creates a new DaoProposalManager contract binding
 func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
+	dp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
 	if err != nil {
 		return nil, fmt.Errorf("error getting DAO proposal manager contract: %w", err)
 	}
@@ -50,7 +50,7 @@ func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, erro
 	return &DaoProposalManager{
 		DaoProposalManagerDetails: &DaoProposalManagerDetails{},
 		rp:                        rp,
-		contract:                  contract,
+		dp:                        dp,
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, erro
 // Get the total number of DAO proposals
 // NOTE: Proposals are 1-indexed
 func (c *DaoProposalManager) GetProposalCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.ProposalCount.RawValue, "getTotal")
+	core.AddCall(mc, c.dp, &c.ProposalCount.RawValue, "getTotal")
 }
 
 // =============

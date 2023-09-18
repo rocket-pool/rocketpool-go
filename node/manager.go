@@ -26,8 +26,8 @@ const (
 // Binding for RocketNodeManager
 type NodeManager struct {
 	*NodeManagerDetails
-	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	rp      *rocketpool.RocketPool
+	nodeMgr *core.Contract
 }
 
 // Details for RocketNodeManager
@@ -49,7 +49,7 @@ type TimezoneCount struct {
 // Creates a new NodeManager contract binding
 func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketNodeManager)
+	nodeMgr, err := rp.GetContract(rocketpool.ContractName_RocketNodeManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node manager contract: %w", err)
 	}
@@ -57,7 +57,7 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 	return &NodeManager{
 		NodeManagerDetails: &NodeManagerDetails{},
 		rp:                 rp,
-		contract:           contract,
+		nodeMgr:            nodeMgr,
 	}, nil
 }
 
@@ -67,12 +67,12 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 
 // Get the version of the Node Manager contract
 func (c *NodeManager) GetVersion(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Version, "version")
+	core.AddCall(mc, c.nodeMgr, &c.Version, "version")
 }
 
 // Get the number of nodes in the network
 func (c *NodeManager) GetNodeCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeCount.RawValue, "getNodeCount")
+	core.AddCall(mc, c.nodeMgr, &c.NodeCount.RawValue, "getNodeCount")
 }
 
 // Get all basic details
@@ -87,7 +87,7 @@ func (c *NodeManager) GetAllDetails(mc *batch.MultiCaller) {
 
 // Get a node address by index
 func (c *NodeManager) GetNodeAddress(mc *batch.MultiCaller, address_Out *common.Address, index uint64) {
-	core.AddCall(mc, c.contract, address_Out, "getNodeAt", big.NewInt(int64(index)))
+	core.AddCall(mc, c.nodeMgr, address_Out, "getNodeAt", big.NewInt(int64(index)))
 }
 
 // Get all minipool addresses in a standalone call.
@@ -124,7 +124,7 @@ func (c *NodeManager) GetNodeCountPerTimezone(nodeCount uint64, opts *bind.CallO
 		// Get a batch of timezone counts
 		offset := big.NewInt(int64(i))
 		timezoneCounts := new([]TimezoneCount)
-		if err := c.contract.Call(opts, timezoneCounts, "getNodeCountPerTimezone", offset, limit); err != nil {
+		if err := c.nodeMgr.Call(opts, timezoneCounts, "getNodeCountPerTimezone", offset, limit); err != nil {
 			return nil, fmt.Errorf("error getting node counts per timezone (offset %d, limit %d): %w", offset.Uint64(), limit.Uint64(), err)
 		}
 		for _, countWrapper := range *timezoneCounts {
@@ -145,7 +145,7 @@ func (c *NodeManager) GetSmoothingPoolRegisteredNodeCount(nodeCount uint64, opts
 		// Get an SP count from the batch
 		offset := big.NewInt(int64(i))
 		count := new(*big.Int)
-		if err := c.contract.Call(opts, count, "getSmoothingPoolRegisteredNodeCount", offset, limit); err != nil {
+		if err := c.nodeMgr.Call(opts, count, "getSmoothingPoolRegisteredNodeCount", offset, limit); err != nil {
 			return 0, fmt.Errorf("error getting smoothing pool registration count (offset %d, limit %d): %w", offset.Uint64(), limit.Uint64(), err)
 		}
 		total += (*count).Uint64()

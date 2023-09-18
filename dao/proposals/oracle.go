@@ -31,7 +31,7 @@ type OracleDaoProposalDetails struct {
 
 // Creates a new OracleDaoProposal contract binding
 func newOracleDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*OracleDaoProposal, error) {
-	// Create the dntp
+	// Create the contract
 	dntp, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedProposals)
 	if err != nil {
 		return nil, fmt.Errorf("error getting Oracle DAO proposals contract: %w", err)

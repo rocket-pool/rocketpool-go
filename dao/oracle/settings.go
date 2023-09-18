@@ -45,10 +45,10 @@ const (
 // Binding for Oracle DAO settings
 type OracleDaoSettings struct {
 	*OracleDaoSettingsDetails
-	MembersContract   *core.Contract
-	MinipoolContract  *core.Contract
-	ProposalsContract *core.Contract
-	RewardsContract   *core.Contract
+	dnts_members   *core.Contract
+	dnts_minipool  *core.Contract
+	dnts_proposals *core.Contract
+	dnts_rewards   *core.Contract
 
 	rp      *rocketpool.RocketPool
 	odaoMgr *OracleDaoManager
@@ -110,10 +110,10 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 		rp:                       odaoMgr.rp,
 		odaoMgr:                  odaoMgr,
 
-		MembersContract:   contracts[0],
-		MinipoolContract:  contracts[1],
-		ProposalsContract: contracts[2],
-		RewardsContract:   contracts[3],
+		dnts_members:   contracts[0],
+		dnts_minipool:  contracts[1],
+		dnts_proposals: contracts[2],
+		dnts_rewards:   contracts[3],
 	}, nil
 }
 
@@ -125,108 +125,108 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 
 // Get the member proposal quorum threshold
 func (c *OracleDaoSettings) GetQuorum(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.Quorum.RawValue, "getQuorum")
+	core.AddCall(mc, c.dnts_members, &c.Members.Quorum.RawValue, "getQuorum")
 }
 
 // Get the RPL bond required for a member
 func (c *OracleDaoSettings) GetRplBond(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.RplBond, "getRPLBond")
+	core.AddCall(mc, c.dnts_members, &c.Members.RplBond, "getRPLBond")
 }
 
 // Get the maximum number of unbonded minipools a member can run
 func (c *OracleDaoSettings) GetUnbondedMinipoolMax(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.UnbondedMinipoolMax.RawValue, "getMinipoolUnbondedMax")
+	core.AddCall(mc, c.dnts_members, &c.Members.UnbondedMinipoolMax.RawValue, "getMinipoolUnbondedMax")
 }
 
 // Get the minimum commission rate before unbonded minipools are allowed
 func (c *OracleDaoSettings) GetUnbondedMinipoolMinFee(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.UnbondedMinipoolMinFee.RawValue, "getMinipoolUnbondedMinFee")
+	core.AddCall(mc, c.dnts_members, &c.Members.UnbondedMinipoolMinFee.RawValue, "getMinipoolUnbondedMinFee")
 }
 
 // Get the period a member must wait for before submitting another challenge
 func (c *OracleDaoSettings) GetChallengeCooldown(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.ChallengeCooldown.RawValue, "getChallengeCooldown")
+	core.AddCall(mc, c.dnts_members, &c.Members.ChallengeCooldown.RawValue, "getChallengeCooldown")
 }
 
 // Get the period during which a member can respond to a challenge
 func (c *OracleDaoSettings) GetChallengeWindow(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.ChallengeWindow.RawValue, "getChallengeWindow")
+	core.AddCall(mc, c.dnts_members, &c.Members.ChallengeWindow.RawValue, "getChallengeWindow")
 }
 
 // Get the fee for a non-member to challenge a member, in wei
 func (c *OracleDaoSettings) GetChallengeCost(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MembersContract, &c.Members.ChallengeCost, "getChallengeCost")
+	core.AddCall(mc, c.dnts_members, &c.Members.ChallengeCost, "getChallengeCost")
 }
 
 // === RocketDAONodeTrustedSettingsMinipool ===
 
 // Get the amount of time, in seconds, the scrub check lasts before a minipool can move from prelaunch to staking
 func (c *OracleDaoSettings) GetScrubPeriod(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.ScrubPeriod.RawValue, "getScrubPeriod")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.ScrubPeriod.RawValue, "getScrubPeriod")
 }
 
 // Get the fraction of Oracle DAO nodes required for quorum to be reached for a minipool scrub
 func (c *OracleDaoSettings) GetScrubQuorum(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.ScrubQuorum.RawValue, "getScrubQuorum")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.ScrubQuorum.RawValue, "getScrubQuorum")
 }
 
 // Get the amount of time, in seconds, the promotion scrub check lasts before a vacant minipool can be promoted
 func (c *OracleDaoSettings) GetPromotionScrubPeriod(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.PromotionScrubPeriod.RawValue, "getPromotionScrubPeriod")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.PromotionScrubPeriod.RawValue, "getPromotionScrubPeriod")
 }
 
 // Check if the RPL slashing penalty is applied to scrubbed minipools
 func (c *OracleDaoSettings) GetScrubPenaltyEnabled(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.IsScrubPenaltyEnabled, "getScrubPenaltyEnabled")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.IsScrubPenaltyEnabled, "getScrubPenaltyEnabled")
 }
 
 // Get the amount of time, in seconds, a minipool must wait after beginning a bond reduction before it can apply the bond reduction (how long the Oracle DAO has to cancel the reduction if required)
 func (c *OracleDaoSettings) GetBondReductionWindowStart(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.BondReductionWindowStart.RawValue, "getBondReductionWindowStart")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.BondReductionWindowStart.RawValue, "getBondReductionWindowStart")
 }
 
 // Get the amount of time, in seconds, a minipool has to reduce its bond once it has passed the check window
 func (c *OracleDaoSettings) GetBondReductionWindowLength(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.BondReductionWindowLength.RawValue, "getBondReductionWindowLength")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.BondReductionWindowLength.RawValue, "getBondReductionWindowLength")
 }
 
 // Get the fraction of Oracle DAO nodes required for quorum to be reached for a bond reduction cancellation
 func (c *OracleDaoSettings) GetBondReductionCancellationQuorum(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.MinipoolContract, &c.Minipools.BondReductionCancellationQuorum.RawValue, "getCancelBondReductionQuorum")
+	core.AddCall(mc, c.dnts_minipool, &c.Minipools.BondReductionCancellationQuorum.RawValue, "getCancelBondReductionQuorum")
 }
 
 // === RocketDAONodeTrustedSettingsProposals ===
 
 // Get the cooldown period a member must wait, in seconds, after making a proposal before making another
 func (c *OracleDaoSettings) GetProposalCooldownTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.ProposalsContract, &c.Proposals.CooldownTime.RawValue, "getCooldownTime")
+	core.AddCall(mc, c.dnts_proposals, &c.Proposals.CooldownTime.RawValue, "getCooldownTime")
 }
 
 // Get the period, in seconds, a proposal can be voted on
 func (c *OracleDaoSettings) GetVoteTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.ProposalsContract, &c.Proposals.VoteTime.RawValue, "getVoteTime")
+	core.AddCall(mc, c.dnts_proposals, &c.Proposals.VoteTime.RawValue, "getVoteTime")
 }
 
 // Get the delay, in seconds, after creation before a proposal can be voted on
 func (c *OracleDaoSettings) GetVoteDelayTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.ProposalsContract, &c.Proposals.VoteDelayTime.RawValue, "getVoteDelayTime")
+	core.AddCall(mc, c.dnts_proposals, &c.Proposals.VoteDelayTime.RawValue, "getVoteDelayTime")
 }
 
 // Get the period, in seconds, during which a passed proposal can be executed
 func (c *OracleDaoSettings) GetProposalExecuteTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.ProposalsContract, &c.Proposals.ExecuteTime.RawValue, "getExecuteTime")
+	core.AddCall(mc, c.dnts_proposals, &c.Proposals.ExecuteTime.RawValue, "getExecuteTime")
 }
 
 // Get the period, in seconds, during which an action can be performed on an executed proposal
 func (c *OracleDaoSettings) GetProposalActionTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.ProposalsContract, &c.Proposals.ActionTime.RawValue, "getActionTime")
+	core.AddCall(mc, c.dnts_proposals, &c.Proposals.ActionTime.RawValue, "getActionTime")
 }
 
 // === RocketDAONodeTrustedSettingsRewards ===
 
 // Get whether or not the provided rewards network is enabled
 func (c *OracleDaoSettings) GetNetworkEnabled(mc *batch.MultiCaller, enabled_Out *bool, network uint64) {
-	core.AddCall(mc, c.RewardsContract, enabled_Out, "getNetworkEnabled", big.NewInt(0).SetUint64(network))
+	core.AddCall(mc, c.dnts_rewards, enabled_Out, "getNetworkEnabled", big.NewInt(0).SetUint64(network))
 }
 
 // == Meta ==

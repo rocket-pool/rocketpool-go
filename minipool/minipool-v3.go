@@ -114,17 +114,17 @@ func (c *MinipoolV3) QueryAllDetails(mc *batch.MultiCaller) {
 
 // Check if this is a vacant minipool (pre-staking solo migration)
 func (c *MinipoolV3) GetVacant(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.IsVacant, "getVacant")
+	core.AddCall(mc, c.contract, &c.IsVacant, "getVacant")
 }
 
 // Get the node deposit balance of this minipool before its last bond reduction
 func (c *MinipoolV3) GetPreMigrationBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.PreMigrationBalance, "getPreMigrationBalance")
+	core.AddCall(mc, c.contract, &c.PreMigrationBalance, "getPreMigrationBalance")
 }
 
 // Check if the minipool's balance has already been distributed by someone other than the node operator
 func (c *MinipoolV3) GetUserDistributed(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.PreMigrationBalance, "getUserDistributed")
+	core.AddCall(mc, c.contract, &c.PreMigrationBalance, "getUserDistributed")
 }
 
 // === BondReducer ===
@@ -173,17 +173,17 @@ func (c *MinipoolV3) GetLastBondReductionPrevNodeFee(mc *batch.MultiCaller) {
 
 // Get info for distributing the minipool's ETH balance to the node operator and rETH staking pool
 func (c *MinipoolV3) DistributeBalance(opts *bind.TransactOpts, rewardsOnly bool) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "distributeBalance", opts, rewardsOnly)
+	return core.NewTransactionInfo(c.contract, "distributeBalance", opts, rewardsOnly)
 }
 
 // Get info for reducing a minipool's bond
 func (c *MinipoolV3) ReduceBondAmount(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "reduceBondAmount", opts)
+	return core.NewTransactionInfo(c.contract, "reduceBondAmount", opts)
 }
 
 // Get info for promoting a vacant minipool
 func (c *MinipoolV3) Promote(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.Contract, "promote", opts)
+	return core.NewTransactionInfo(c.contract, "promote", opts)
 }
 
 // === BondReducer ===
