@@ -19,14 +19,14 @@ const (
 // ===============
 
 // Binding for RocketDAOProposal
-type DaoProposal struct {
-	Details  DaoProposalDetails
+type DaoProposalManager struct {
+	Details  DaoProposalManagerDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
 
-// Details for RocketDAOProposal
-type DaoProposalDetails struct {
+// Details for DaoProposalManager
+type DaoProposalManagerDetails struct {
 	ProposalCount core.Parameter[uint64] `json:"proposalCount"`
 }
 
@@ -34,16 +34,16 @@ type DaoProposalDetails struct {
 // === Constructors ===
 // ====================
 
-// Creates a new DaoProposal contract binding
-func NewDaoProposal(rp *rocketpool.RocketPool) (*DaoProposal, error) {
+// Creates a new DaoProposalManager contract binding
+func NewDaoProposalDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, error) {
 	// Create the contract
 	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DAO proposal contract: %w", err)
+		return nil, fmt.Errorf("error getting DAO proposal manager contract: %w", err)
 	}
 
-	return &DaoProposal{
-		Details:  DaoProposalDetails{},
+	return &DaoProposalManager{
+		Details:  DaoProposalManagerDetails{},
 		rp:       rp,
 		contract: contract,
 	}, nil
@@ -55,7 +55,7 @@ func NewDaoProposal(rp *rocketpool.RocketPool) (*DaoProposal, error) {
 
 // Get the total number of DAO proposals
 // NOTE: Proposals are 1-indexed
-func (c *DaoProposal) GetProposalCount(mc *batch.MultiCaller) {
+func (c *DaoProposalManager) GetProposalCount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
 }
 
@@ -66,7 +66,7 @@ func (c *DaoProposal) GetProposalCount(mc *batch.MultiCaller) {
 // Get all of the Protocol DAO proposals
 // Returns: Protocol DAO proposals, Oracle DAO proposals, error
 // NOTE: Proposals are 1-indexed
-func (c *DaoProposal) GetProposals(rp *rocketpool.RocketPool, proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*Proposal, []*Proposal, error) {
+func (c *DaoProposalManager) GetProposals(rp *rocketpool.RocketPool, proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*Proposal, []*Proposal, error) {
 	props := make([]*Proposal, proposalCount)
 	for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
 		prop, err := NewProposal(rp, i)

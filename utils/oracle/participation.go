@@ -21,12 +21,12 @@ import (
 // ===============
 
 type TrustedNodeParticipationCalculator struct {
-	rp   *rocketpool.RocketPool
-	dnt  *oracle.OracleDaoManager
-	dnta *oracle.OracleDaoMemberActions
-	pds  *settings.ProtocolDaoSettings
-	nb   *network.NetworkBalances
-	np   *network.NetworkPrices
+	rp      *rocketpool.RocketPool
+	odaoMgr *oracle.OracleDaoManager
+	oma     *oracle.OracleDaoMemberActions
+	pds     *settings.ProtocolDaoSettings
+	nb      *network.NetworkBalances
+	np      *network.NetworkPrices
 }
 
 // The results of the trusted node participation calculation
@@ -46,14 +46,14 @@ type TrustedNodeParticipation struct {
 
 // Creates a new TrustedNodeParticipationCalculator
 func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedNodeParticipationCalculator, error) {
-	dnt, err := oracle.NewOracleDaoManager(rp)
+	odaoMgr, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DaoNodeTrusted binding: %w", err)
+		return nil, fmt.Errorf("error getting oDAO manager binding: %w", err)
 	}
 
-	dnta, err := oracle.NewOracleDaoMemberActions(rp)
+	oma, err := oracle.NewOracleDaoMemberActions(rp)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DaoNodeTrustedActions binding: %w", err)
+		return nil, fmt.Errorf("error getting oDAO member actions binding: %w", err)
 	}
 
 	pds, err := settings.NewProtocolDaoSettings(rp)
@@ -72,12 +72,12 @@ func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedN
 	}
 
 	return &TrustedNodeParticipationCalculator{
-		rp:   rp,
-		dnt:  dnt,
-		dnta: dnta,
-		pds:  pds,
-		nb:   nb,
-		np:   np,
+		rp:      rp,
+		odaoMgr: odaoMgr,
+		oma:     oma,
+		pds:     pds,
+		nb:      nb,
+		np:      np,
 	}, nil
 }
 
@@ -103,18 +103,18 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipa
 	// Get the price frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
 		c.pds.GetSubmitPricesFrequency(mc)
-		c.dnt.GetMemberCount(mc)
+		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
 	updatePricesFrequency := c.pds.Details.Network.SubmitPricesFrequency.Formatted()
-	memberCount := c.dnt.Details.MemberCount.Formatted()
+	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
 	minBlock := (blockNumber/updatePricesFrequency - 50) * updatePricesFrequency
-	latestMemberCountChangedBlock, err := c.dnta.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
+	latestMemberCountChangedBlock, err := c.oma.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipa
 	expected := float64(intervalsPassed) * consensus / float64(memberCount)
 
 	// Get trusted members
-	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
+	members, err := c.odaoMgr.GetMemberAddresses(memberCount, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
@@ -209,18 +209,18 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesPartici
 	// Get the balance frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
 		c.pds.GetSubmitBalancesFrequency(mc)
-		c.dnt.GetMemberCount(mc)
+		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
 	updateBalancesFrequency := c.pds.Details.Network.SubmitBalancesFrequency.Formatted()
-	memberCount := c.dnt.Details.MemberCount.Formatted()
+	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
 	minBlock := (blockNumber/updateBalancesFrequency - 50) * updateBalancesFrequency
-	latestMemberCountChangedBlock, err := c.dnta.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
+	latestMemberCountChangedBlock, err := c.oma.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesPartici
 	expected := float64(intervalsPassed) * consensus / float64(memberCount)
 
 	// Get trusted members
-	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
+	members, err := c.odaoMgr.GetMemberAddresses(memberCount, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
@@ -316,17 +316,17 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestBalancesPartici
 	// Get the price frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
 		c.pds.GetSubmitBalancesFrequency(mc)
-		c.dnt.GetMemberCount(mc)
+		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
 	updateBalancesFrequency := c.pds.Details.Network.SubmitBalancesFrequency.Formatted()
-	memberCount := c.dnt.Details.MemberCount.Formatted()
+	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
 
 	// Get trusted members
-	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
+	members, err := c.odaoMgr.GetMemberAddresses(memberCount, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}
@@ -367,17 +367,17 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestPricesParticipa
 	// Get the price frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
 		c.pds.GetSubmitPricesFrequency(mc)
-		c.dnt.GetMemberCount(mc)
+		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
 	updatePricesFrequency := c.pds.Details.Network.SubmitPricesFrequency.Formatted()
-	memberCount := c.dnt.Details.MemberCount.Formatted()
+	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
 
 	// Get trusted members
-	members, err := c.dnt.GetMemberAddresses(memberCount, opts)
+	members, err := c.odaoMgr.GetMemberAddresses(memberCount, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
 	}

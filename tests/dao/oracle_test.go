@@ -23,7 +23,7 @@ func Test_ChallengeAndKick(t *testing.T) {
 
 	// Decide it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return dnta.DecideChallenge(account.Address, odao1.Transactor)
+		return oma.DecideChallenge(account.Address, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {
 		t.Fatalf("error deciding challenge: %s", err.Error())
@@ -32,17 +32,17 @@ func Test_ChallengeAndKick(t *testing.T) {
 
 	// Get the oDAO member count
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		dnt.GetMemberCount(mc)
+		odaoMgr.GetMemberCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
-	count := dnt.Details.MemberCount.Formatted()
+	count := odaoMgr.Details.MemberCount.Formatted()
 	t.Logf("oDAO now has %d members", count)
 
 	// Make sure the node isn't on the oDAO anymore
-	addresses, err := dnt.GetMemberAddresses(count, nil)
+	addresses, err := odaoMgr.GetMemberAddresses(count, nil)
 	if err != nil {
 		t.Fatalf("error getting oDAO member addresses: %s", err.Error())
 	}
@@ -59,7 +59,7 @@ func Test_ChallengeResolve(t *testing.T) {
 
 	// Respond with the new account
 	err := rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return dnta.DecideChallenge(account.Address, account.Transactor)
+		return oma.DecideChallenge(account.Address, account.Transactor)
 	}, true, account.Transactor)
 	if err != nil {
 		t.Fatalf("error deciding challenge: %s", err.Error())
@@ -68,17 +68,17 @@ func Test_ChallengeResolve(t *testing.T) {
 
 	// Get the oDAO member count
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		dnt.GetMemberCount(mc)
+		odaoMgr.GetMemberCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
-	count := dnt.Details.MemberCount.Formatted()
+	count := odaoMgr.Details.MemberCount.Formatted()
 	t.Logf("oDAO now has %d members", count)
 
 	// Make sure the node is still on the oDAO
-	addresses, err := dnt.GetMemberAddresses(count, nil)
+	addresses, err := odaoMgr.GetMemberAddresses(count, nil)
 	if err != nil {
 		t.Fatalf("error getting oDAO member addresses: %s", err.Error())
 	}
@@ -133,17 +133,17 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 
 	// Verify it's on the oDAO
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		dnt.GetMemberCount(mc)
+		odaoMgr.GetMemberCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
-	count := dnt.Details.MemberCount.Formatted()
+	count := odaoMgr.Details.MemberCount.Formatted()
 	t.Logf("oDAO now has %d members", count)
 
 	// Find it
-	addresses, err := dnt.GetMemberAddresses(count, nil)
+	addresses, err := odaoMgr.GetMemberAddresses(count, nil)
 	if err != nil {
 		t.Fatalf("error getting member addresses: %s", err.Error())
 	}
@@ -161,7 +161,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 
 	// Issue a challenge to it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return dnta.MakeChallenge(account.Address, odao1.Transactor)
+		return oma.MakeChallenge(account.Address, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {
 		t.Fatalf("error challenging member %s: %s", account.Address.Hex(), err.Error())

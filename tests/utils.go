@@ -45,13 +45,13 @@ func RegisterNode(rp *rocketpool.RocketPool, account *Account, timezone string) 
 // Bootstraps a node into the Oracle DAO, taking care of all of the details involved
 func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount *Account, timezone string, id string, url string) (*node.Node, error) {
 	// Get some contract bindings
-	dnt, err := oracle.NewOracleDaoManager(rp)
+	odaoMgr, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DNT binding: %w", err)
+		return nil, fmt.Errorf("error getting oDAO manager binding: %w", err)
 	}
-	dnta, err := oracle.NewOracleDaoMemberActions(rp)
+	oma, err := oracle.NewOracleDaoMemberActions(rp)
 	if err != nil {
-		return nil, fmt.Errorf("error getting DNTA binding: %w", err)
+		return nil, fmt.Errorf("error getting OMA binding: %w", err)
 	}
 	fsrpl, err := tokens.NewTokenRplFixedSupply(rp)
 	if err != nil {
@@ -74,7 +74,7 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 		return nil, fmt.Errorf("error getting oDAO settings binding: %w", err)
 	}
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		dnt.GetMemberCount(mc)
+		odaoMgr.GetMemberCount(mc)
 		oSettings.GetRplBond(mc)
 		return nil
 	}, nil)
@@ -86,7 +86,7 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	// Bootstrap it and mint RPL for it
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
 		func() (*core.TransactionInfo, error) {
-			return dnt.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor)
+			return odaoMgr.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
 			return MintLegacyRpl(rp, owner, nodeAccount, rplBond)
@@ -105,10 +105,10 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 			return rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
-			return rpl.Approve(*dnta.Contract.Address, rplBond, nodeAccount.Transactor)
+			return rpl.Approve(*oma.Contract.Address, rplBond, nodeAccount.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
-			return dnta.Join(nodeAccount.Transactor)
+			return oma.Join(nodeAccount.Transactor)
 		},
 	}, false, nodeAccount.Transactor)
 	if err != nil {

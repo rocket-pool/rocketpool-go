@@ -103,14 +103,14 @@ func (m *TestManager) InitializeDeployment() error {
 	rp := m.RocketPool
 
 	// Get the contract bindings
-	dnt, err := oracle.NewOracleDaoManager(rp)
+	odaoMgr, err := oracle.NewOracleDaoManager(rp)
 	if err != nil {
-		return fmt.Errorf("error creating DNT binding: %w", err)
+		return fmt.Errorf("error creating oDAO manager binding: %w", err)
 	}
 
 	// Get some contract state
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		dnt.GetMemberCount(mc)
+		odaoMgr.GetMemberCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
@@ -118,8 +118,8 @@ func (m *TestManager) InitializeDeployment() error {
 	}
 
 	// If there aren't members, bootstrap the protocol
-	if dnt.Details.MemberCount.Formatted() == 0 {
-		err = m.initializeImpl(dnt)
+	if odaoMgr.Details.MemberCount.Formatted() == 0 {
+		err = m.initializeImpl(odaoMgr)
 		if err != nil {
 			return fmt.Errorf("error initializing network: %w", err)
 		}
@@ -224,7 +224,7 @@ func (m *TestManager) revertToSnapshot(snapshotID string) error {
 }
 
 // Implementation for initialization
-func (m *TestManager) initializeImpl(dnt *oracle.OracleDaoManager) error {
+func (m *TestManager) initializeImpl(odaoMgr *oracle.OracleDaoManager) error {
 	rp := m.RocketPool
 
 	// Prep the accounts
@@ -265,17 +265,17 @@ func (m *TestManager) initializeImpl(dnt *oracle.OracleDaoManager) error {
 
 	// Make sure they're on it
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		dnt.GetMemberCount(mc)
+		odaoMgr.GetMemberCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
 		return fmt.Errorf("error getting oDAO member count: %w", err)
 	}
-	memberCount := dnt.Details.MemberCount.Formatted()
+	memberCount := odaoMgr.Details.MemberCount.Formatted()
 	if memberCount != 3 {
 		return fmt.Errorf("expected 3 oDAO members but there are %d", memberCount)
 	}
-	addresses, err := dnt.GetMemberAddresses(memberCount, nil)
+	addresses, err := odaoMgr.GetMemberAddresses(memberCount, nil)
 	if err != nil {
 		return fmt.Errorf("error getting oDAO member addresses: %w", err)
 	}

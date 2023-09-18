@@ -19,8 +19,8 @@ var (
 	rp   *rocketpool.RocketPool
 	pdao *settings.ProtocolDaoSettings
 	odao *settings.OracleDaoSettings
-	dp   *dao.DaoProposal
-	dntp *oracle.OracleDaoProposals
+	dpm  *dao.DaoProposalManager
+	op   *oracle.OracleDaoProposals
 
 	odao1 *tests.Account
 	odao2 *tests.Account
@@ -45,13 +45,13 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fail("error creating odao settings binding: %s", err.Error())
 	}
-	dp, err = dao.NewDaoProposal(rp)
+	dpm, err = dao.NewDaoProposalDaoProposalManager(rp)
 	if err != nil {
-		fail("error creating DP: %s", err.Error())
+		fail("error creating DPM: %s", err.Error())
 	}
-	dntp, err = oracle.NewOracleDaoProposals(rp)
+	op, err = oracle.NewOracleDaoProposals(rp)
 	if err != nil {
-		fail("error creating DNTP: %s", err.Error())
+		fail("error creating OP: %s", err.Error())
 	}
 
 	// Create the default values for the pDAO / oDAO settings as a reference

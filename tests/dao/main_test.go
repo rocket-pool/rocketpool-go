@@ -13,14 +13,14 @@ import (
 )
 
 var (
-	mgr  *tests.TestManager
-	rp   *rocketpool.RocketPool
-	pdao *settings.ProtocolDaoSettings
-	odao *settings.OracleDaoSettings
-	dp   *dao.DaoProposal
-	dnt  *oracle.OracleDaoManager
-	dnta *oracle.OracleDaoMemberActions
-	dntp *oracle.OracleDaoProposals
+	mgr     *tests.TestManager
+	rp      *rocketpool.RocketPool
+	pdao    *settings.ProtocolDaoSettings
+	odao    *settings.OracleDaoSettings
+	dpm     *dao.DaoProposalManager
+	odaoMgr *oracle.OracleDaoManager
+	oma     *oracle.OracleDaoMemberActions
+	op      *oracle.OracleDaoProposals
 
 	odao1 *tests.Account
 	odao2 *tests.Account
@@ -45,21 +45,21 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fail("error creating odao settings binding: %s", err.Error())
 	}
-	dp, err = dao.NewDaoProposal(rp)
+	dpm, err = dao.NewDaoProposalDaoProposalManager(rp)
 	if err != nil {
-		fail("error creating DP: %s", err.Error())
+		fail("error creating DPM: %s", err.Error())
 	}
-	dnt, err = oracle.NewOracleDaoManager(rp)
+	odaoMgr, err = oracle.NewOracleDaoManager(rp)
 	if err != nil {
-		fail("error creating DNT: %s", err.Error())
+		fail("error creating oDAO manager: %s", err.Error())
 	}
-	dnta, err = oracle.NewOracleDaoMemberActions(rp)
+	oma, err = oracle.NewOracleDaoMemberActions(rp)
 	if err != nil {
-		fail("error creating DNTA: %s", err.Error())
+		fail("error creating OMA: %s", err.Error())
 	}
-	dntp, err = oracle.NewOracleDaoProposals(rp)
+	op, err = oracle.NewOracleDaoProposals(rp)
 	if err != nil {
-		fail("error creating DNTP: %s", err.Error())
+		fail("error creating OP: %s", err.Error())
 	}
 
 	// Initialize the network

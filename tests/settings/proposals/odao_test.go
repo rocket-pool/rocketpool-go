@@ -229,14 +229,14 @@ func testOdaoParameterProposal(t *testing.T, setter func(*settings.OracleDaoSett
 
 	// Make sure there aren't any proposals
 	err := rp.Query(func(mc *batch.MultiCaller) error {
-		dp.GetProposalCount(mc)
+		dpm.GetProposalCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatalf("error getting proposal count: %s", err.Error())
 	}
-	if dp.Details.ProposalCount.Formatted() != 0 {
-		t.Fatalf("expected 0 proposals but count was %d", dp.Details.ProposalCount.Formatted())
+	if dpm.Details.ProposalCount.Formatted() != 0 {
+		t.Fatalf("expected 0 proposals but count was %d", dpm.Details.ProposalCount.Formatted())
 	}
 
 	// Run the proposer
@@ -258,20 +258,20 @@ func testOdaoParameterProposal(t *testing.T, setter func(*settings.OracleDaoSett
 
 	// Make sure the proposal count is good
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		dp.GetProposalCount(mc)
+		dpm.GetProposalCount(mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatalf("error getting proposal count: %s", err.Error())
 	}
-	propCount := dp.Details.ProposalCount.Formatted()
+	propCount := dpm.Details.ProposalCount.Formatted()
 	if propCount != 1 {
 		t.Fatalf("expected 1 proposal but count was %d", propCount)
 	}
 	t.Logf("Prop count = %d, ok", propCount)
 
 	// Get the proposal
-	pdaoProps, odaoProps, err := dp.GetProposals(rp, propCount, true, nil)
+	pdaoProps, odaoProps, err := dpm.GetProposals(rp, propCount, true, nil)
 	if err != nil {
 		t.Fatalf("error getting proposals: %s", err.Error())
 	}
@@ -292,7 +292,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*settings.OracleDaoSett
 
 	// Vote yay from node 1
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return dntp.VoteOnProposal(prop.Details.ID.Formatted(), true, odao1.Transactor)
+		return op.VoteOnProposal(prop.Details.ID.Formatted(), true, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {
 		t.Fatalf("error voting on proposal: %s", err.Error())
@@ -302,10 +302,10 @@ func testOdaoParameterProposal(t *testing.T, setter func(*settings.OracleDaoSett
 	// Vote yay from node 2 and execute it
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
 		func() (*core.TransactionInfo, error) {
-			return dntp.VoteOnProposal(prop.Details.ID.Formatted(), true, odao2.Transactor)
+			return op.VoteOnProposal(prop.Details.ID.Formatted(), true, odao2.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
-			return dntp.ExecuteProposal(prop.Details.ID.Formatted(), odao2.Transactor)
+			return op.ExecuteProposal(prop.Details.ID.Formatted(), odao2.Transactor)
 		},
 	}, false, odao2.Transactor)
 	if err != nil {
