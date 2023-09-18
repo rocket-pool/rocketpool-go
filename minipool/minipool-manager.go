@@ -27,6 +27,7 @@ type MinipoolManager struct {
 	*MinipoolManagerDetails
 	rp    *rocketpool.RocketPool
 	mpMgr *core.Contract
+	mq    *core.Contract
 }
 
 // Details for RocketMinipoolManager
@@ -36,6 +37,10 @@ type MinipoolManagerDetails struct {
 	FinalisedMinipoolCount core.Parameter[uint64] `json:"finalisedMinipoolCount"`
 	ActiveMinipoolCount    core.Parameter[uint64] `json:"activeMinipoolCount"`
 	VacantMinipoolCount    core.Parameter[uint64] `json:"vacantMinipoolCount"`
+
+	TotalQueueLength       core.Parameter[uint64] `json:"totalQueueLength"`
+	TotalQueueCapacity     *big.Int               `json:"totalQueueCapacity"`
+	EffectiveQueueCapacity *big.Int               `json:"effectiveQueueCapacity"`
 }
 
 // The counts of minipools per status
@@ -47,28 +52,46 @@ type MinipoolCountsPerStatus struct {
 	Dissolved    *big.Int `abi:"dissolvedCount"`
 }
 
+// Minipool queue capacity
+type QueueCapacity struct {
+	Total     *big.Int
+	Effective *big.Int
+}
+
+// Minipools queue status details
+type QueueDetails struct {
+	Position int64
+}
+
 // ====================
 // === Constructors ===
 // ====================
 
 // Creates a new MinipoolManager contract binding
 func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
-	// Create the mpMgr
+	// Create the contracts
 	mpMgr, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting minipool manager contract: %w", err)
+	}
+	mq, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolQueue)
+	if err != nil {
+		return nil, fmt.Errorf("error getting minipool queue contract: %w", err)
 	}
 
 	return &MinipoolManager{
 		MinipoolManagerDetails: &MinipoolManagerDetails{},
 		rp:                     rp,
 		mpMgr:                  mpMgr,
+		mq:                     mq,
 	}, nil
 }
 
 // =============
 // === Calls ===
 // =============
+
+// === MinipoolManager ===
 
 // Get the minipool count
 func (c *MinipoolManager) GetMinipoolCount(mc *batch.MultiCaller) {
@@ -95,12 +118,21 @@ func (c *MinipoolManager) GetVacantMinipoolCount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.mpMgr, &c.VacantMinipoolCount.RawValue, "getVacantMinipoolCount")
 }
 
-// Get all basic details
-func (c *MinipoolManager) GetAllDetails(mc *batch.MultiCaller) {
-	c.GetMinipoolCount(mc)
-	c.GetStakingMinipoolCount(mc)
-	c.GetFinalisedMinipoolCount(mc)
-	c.GetActiveMinipoolCount(mc)
+// === MinipoolQueue ===
+
+// Get the total length of the minipool queue
+func (c *MinipoolManager) GetTotalLength(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mq, &c.TotalQueueLength.RawValue, "getTotalLength")
+}
+
+// Get the total capacity of the minipool queue
+func (c *MinipoolManager) GetTotalCapacity(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mq, &c.TotalQueueCapacity, "getTotalCapacity")
+}
+
+// Get the total effective capacity of the minipool queue (used in node demand calculation)
+func (c *MinipoolManager) GetEffectiveCapacity(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.mq, &c.EffectiveQueueCapacity, "getEffectiveCapacity")
 }
 
 // =================
@@ -319,4 +351,13 @@ func (c *MinipoolManager) CreateMinipoolsFromAddresses(addresses []common.Addres
 	}
 
 	return minipools, nil
+}
+
+// =============
+// === Utils ===
+// =============
+
+// Get the minipool at the specified position in queue (0-indexed).
+func (c *MinipoolManager) GetMinipoolAtQueuePosition(mc *batch.MultiCaller, address_Out *common.Address, position uint64) {
+	core.AddCall(mc, c.mq, address_Out, "getMinipoolAt", big.NewInt(int64(position)))
 }

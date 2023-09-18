@@ -16,7 +16,7 @@ import (
 const (
 	nodeTimezoneBatchSize       int = 1000
 	smoothingPoolCountBatchSize int = 1000
-	effectiveStakeBatchSize     int = 250
+	effectiveStakeBatchSize     int = 1000
 )
 
 // ===============
@@ -28,12 +28,13 @@ type NodeManager struct {
 	*NodeManagerDetails
 	rp      *rocketpool.RocketPool
 	nodeMgr *core.Contract
+	ns      *core.Contract
 }
 
 // Details for RocketNodeManager
 type NodeManagerDetails struct {
-	Version   uint8                  `json:"version"`
-	NodeCount core.Parameter[uint64] `json:"nodeCount"`
+	NodeCount     core.Parameter[uint64] `json:"nodeCount"`
+	TotalRplStake *big.Int               `json:"totalRplStake"`
 }
 
 // Count of nodes belonging to a timezone
@@ -48,16 +49,21 @@ type TimezoneCount struct {
 
 // Creates a new NodeManager contract binding
 func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
-	// Create the contract
+	// Create the contracts
 	nodeMgr, err := rp.GetContract(rocketpool.ContractName_RocketNodeManager)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node manager contract: %w", err)
+	}
+	ns, err := rp.GetContract(rocketpool.ContractName_RocketNodeStaking)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node staking contract: %w", err)
 	}
 
 	return &NodeManager{
 		NodeManagerDetails: &NodeManagerDetails{},
 		rp:                 rp,
 		nodeMgr:            nodeMgr,
+		ns:                 ns,
 	}, nil
 }
 
@@ -65,20 +71,18 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 // === Calls ===
 // =============
 
-// Get the version of the Node Manager contract
-func (c *NodeManager) GetVersion(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.Version, "version")
-}
+// === NodeManager ===
 
 // Get the number of nodes in the network
 func (c *NodeManager) GetNodeCount(mc *batch.MultiCaller) {
 	core.AddCall(mc, c.nodeMgr, &c.NodeCount.RawValue, "getNodeCount")
 }
 
-// Get all basic details
-func (c *NodeManager) GetAllDetails(mc *batch.MultiCaller) {
-	c.GetVersion(mc)
-	c.GetNodeCount(mc)
+// === NodeStaking ===
+
+// Get the total RPL staked in the network
+func (c *NodeManager) GetTotalRPLStake(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.ns, &c.TotalRplStake, "getTotalRPLStake")
 }
 
 // =================
@@ -155,36 +159,19 @@ func (c *NodeManager) GetSmoothingPoolRegisteredNodeCount(nodeCount uint64, opts
 }
 
 // Get the total effective RPL stake of the network
-func (c *NodeManager) GetTotalEffectiveRplStake(rp *rocketpool.RocketPool, nodeCount uint64, opts *bind.CallOpts) (*big.Int, error) {
-	// Get the list of all node addresses to query
-	addresses, err := c.GetNodeAddresses(nodeCount, opts)
-	if err != nil {
-		return nil, fmt.Errorf("error getting node addresses: %w", err)
-	}
-
-	// Query the effective stake of each node
+func (c *NodeManager) GetTotalEffectiveRplStake(nodeCount uint64, opts *bind.CallOpts) (*big.Int, error) {
 	total := big.NewInt(0)
-	nodes := make([]*Node, len(addresses))
-	err = rp.BatchQuery(int(nodeCount), effectiveStakeBatchSize, func(mc *batch.MultiCaller, i int) error {
-		// Create the node binding
-		address := addresses[i]
-		node, err := NewNode(rp, address)
-		if err != nil {
-			return fmt.Errorf("error creating node %s binding: %w", address.Hex(), err)
+
+	limit := big.NewInt(int64(effectiveStakeBatchSize))
+	for i := 0; i < int(nodeCount); i += effectiveStakeBatchSize {
+		// Get a cumulative effective stake from the batch
+		offset := big.NewInt(int64(i))
+		count := new(*big.Int)
+		if err := c.ns.Call(opts, count, "calculateTotalEffectiveRPLStake", offset, limit); err != nil {
+			return nil, fmt.Errorf("error getting total effective stake (offset %d, limit %d): %w", offset.Uint64(), limit.Uint64(), err)
 		}
-		nodes[i] = node
-
-		// Get the effective RPL stake
-		node.GetEffectiveRplStake(mc)
-		return nil
-	}, opts)
-	if err != nil {
-		return nil, fmt.Errorf("error querying effective stakes: %w", err)
+		total.Add(total, *count)
 	}
 
-	// Sum up the total
-	for _, node := range nodes {
-		total.Add(total, node.EffectiveRplStake)
-	}
 	return total, nil
 }

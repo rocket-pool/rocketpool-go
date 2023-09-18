@@ -25,7 +25,7 @@ type TrustedNodeParticipationCalculator struct {
 	odaoMgr *oracle.OracleDaoManager
 	oma     *oracle.OracleDaoMemberActions
 	pds     *settings.ProtocolDaoSettings
-	nb      *network.NetworkBalances
+	nb      *network.NetworkManager
 	np      *network.NetworkPrices
 }
 
