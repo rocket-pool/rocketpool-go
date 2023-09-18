@@ -271,7 +271,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*settings.OracleDaoSett
 	t.Logf("Prop count = %d, ok", propCount)
 
 	// Get the proposal
-	pdaoProps, odaoProps, err := dp.GetProposals(rp, nil, propCount)
+	pdaoProps, odaoProps, err := dp.GetProposals(rp, propCount, true, nil)
 	if err != nil {
 		t.Fatalf("error getting proposals: %s", err.Error())
 	}

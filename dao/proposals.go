@@ -11,8 +11,7 @@ import (
 
 // Settings
 const (
-	ProposalDAONamesBatchSize = 50
-	ProposalDetailsBatchSize  = 10
+	proposalBatchSize int = 100
 )
 
 // ===============
@@ -67,17 +66,22 @@ func (c *DaoProposal) GetProposalCount(mc *batch.MultiCaller) {
 // Get all of the Protocol DAO proposals
 // Returns: Protocol DAO proposals, Oracle DAO proposals, error
 // NOTE: Proposals are 1-indexed
-func (c *DaoProposal) GetProposals(rp *rocketpool.RocketPool, opts *bind.CallOpts, proposalCount uint64) ([]*Proposal, []*Proposal, error) {
+func (c *DaoProposal) GetProposals(rp *rocketpool.RocketPool, proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*Proposal, []*Proposal, error) {
 	props := make([]*Proposal, proposalCount)
+	for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
+		prop, err := NewProposal(rp, i)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error creating DAO proposal %d", i)
+		}
+		props[i-1] = prop
+	}
 
-	err := rp.Query(func(mc *batch.MultiCaller) error {
-		for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
-			prop, err := NewProposal(rp, i)
-			if err != nil {
-				return fmt.Errorf("error creating DAO proposal %d", i)
-			}
-			props[i-1] = prop
-			prop.GetAllDetails(mc)
+	err := rp.BatchQuery(int(proposalCount), proposalBatchSize, func(mc *batch.MultiCaller, index int) error {
+		if includeDetails {
+			props[index].GetAllDetails(mc)
+		} else {
+			props[index].GetDAO(mc)   // Needed for sorting
+			props[index].GetState(mc) // Frequently needed for determining which proposals to query more
 		}
 		return nil
 	}, opts)

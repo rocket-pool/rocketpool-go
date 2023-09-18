@@ -105,11 +105,10 @@ func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.
 
 	// Include the details if requested
 	if includeDetails {
-		err := rp.BatchQuery(int(minipoolCount), minipoolBatchSize,
-			func(mc *batch.MultiCaller, index int) error {
-				minipools[index].QueryAllDetails(mc)
-				return nil
-			}, opts)
+		err := rp.BatchQuery(int(minipoolCount), minipoolBatchSize, func(mc *batch.MultiCaller, index int) error {
+			minipools[index].QueryAllDetails(mc)
+			return nil
+		}, opts)
 		if err != nil {
 			return nil, fmt.Errorf("error getting minipool details: %w", err)
 		}
