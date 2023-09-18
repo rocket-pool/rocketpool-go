@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	batch "github.com/rocket-pool/batch-query"
-	"github.com/rocket-pool/rocketpool-go/dao"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/dao/proposals"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
@@ -19,7 +19,7 @@ var (
 	rp   *rocketpool.RocketPool
 	pdao *settings.ProtocolDaoSettings
 	odao *settings.OracleDaoSettings
-	dpm  *dao.DaoProposalManager
+	dpm  *proposals.DaoProposalManager
 	op   *oracle.OracleDaoProposals
 
 	odao1 *tests.Account
@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fail("error creating odao settings binding: %s", err.Error())
 	}
-	dpm, err = dao.NewDaoProposalManager(rp)
+	dpm, err = proposals.NewDaoProposalManager(rp)
 	if err != nil {
 		fail("error creating DPM: %s", err.Error())
 	}

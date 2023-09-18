@@ -14,7 +14,7 @@ import (
 // === Interfaces ===
 // ==================
 
-type Minipool interface {
+type IMinipool interface {
 	QueryAllDetails(mc *batch.MultiCaller)
 	GetMinipoolCommon() *MinipoolCommon
 	GetContract() *core.Contract
@@ -25,7 +25,7 @@ type Minipool interface {
 // ====================
 
 // Create a minipool binding from an explicit version number
-func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, version uint8) (Minipool, error) {
+func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, version uint8) (IMinipool, error) {
 	switch version {
 	case 1, 2:
 		return newMinipool_v2(rp, address)
@@ -37,7 +37,7 @@ func NewMinipoolFromVersion(rp *rocketpool.RocketPool, address common.Address, v
 }
 
 // Create a minipool binding from its address
-func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address, includeDetails bool, opts *bind.CallOpts) (Minipool, error) {
+func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address, includeDetails bool, opts *bind.CallOpts) (IMinipool, error) {
 	// Get the minipool version
 	var version uint8
 	results, err := rp.FlexQuery(func(mc *batch.MultiCaller) error {
@@ -73,7 +73,7 @@ func CreateMinipoolFromAddress(rp *rocketpool.RocketPool, address common.Address
 
 // Create bindings for all minipools from the provided addresses in a standalone call.
 // This will use an internal batched multicall invocation to build all of them quickly.
-func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.Address, includeDetails bool, opts *bind.CallOpts) ([]Minipool, error) {
+func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.Address, includeDetails bool, opts *bind.CallOpts) ([]IMinipool, error) {
 	minipoolCount := len(addresses)
 
 	// Get the minipool versions
@@ -94,7 +94,7 @@ func CreateMinipoolsFromAddresses(rp *rocketpool.RocketPool, addresses []common.
 	}
 
 	// Create the minipools
-	minipools := make([]Minipool, minipoolCount)
+	minipools := make([]IMinipool, minipoolCount)
 	for i := 0; i < int(minipoolCount); i++ {
 		minipool, err := NewMinipoolFromVersion(rp, addresses[i], versions[i])
 		if err != nil {

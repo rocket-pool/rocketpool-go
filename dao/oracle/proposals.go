@@ -100,21 +100,6 @@ func (c *OracleDaoProposals) ProposeUpgradeContract(message string, upgradeType 
 	return c.submitProposal(opts, message, "proposalUpgrade", upgradeType, contractName, compressedAbi, contractAddress)
 }
 
-// Get info for cancelling a proposal
-func (c *OracleDaoProposals) CancelProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "cancel", opts, big.NewInt(int64(proposalId)))
-}
-
-// Get info for voting on a proposal
-func (c *OracleDaoProposals) VoteOnProposal(proposalId uint64, support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "vote", opts, big.NewInt(int64(proposalId)), support)
-}
-
-// Get info for executing a proposal
-func (c *OracleDaoProposals) ExecuteProposal(proposalId uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "execute", opts, big.NewInt(int64(proposalId)))
-}
-
 // Internal method used for actually constructing and submitting a proposal
 func (c *OracleDaoProposals) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*core.TransactionInfo, error) {
 	payload, err := c.contract.ABI.Pack(method, args...)

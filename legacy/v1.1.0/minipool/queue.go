@@ -190,7 +190,7 @@ func GetQueueNextCapacity(rp *rocketpool.RocketPool, opts *bind.CallOpts, legacy
 }
 
 // Get Queue position details of a minipool
-func GetQueueDetails(rp *rocketpool.RocketPool, mp minipool.Minipool, opts *bind.CallOpts, legacyRocketMinipoolQueueAddress *common.Address) (QueueDetails, error) {
+func GetQueueDetails(rp *rocketpool.RocketPool, mp minipool.IMinipool, opts *bind.CallOpts, legacyRocketMinipoolQueueAddress *common.Address) (QueueDetails, error) {
 	position, err := GetQueuePositionOfMinipool(rp, mp, opts, legacyRocketMinipoolQueueAddress)
 	if err != nil {
 		return QueueDetails{}, err
@@ -203,7 +203,7 @@ func GetQueueDetails(rp *rocketpool.RocketPool, mp minipool.Minipool, opts *bind
 }
 
 // Get a minipools position in queue (1-indexed). 0 means it is currently not queued.
-func GetQueuePositionOfMinipool(rp *rocketpool.RocketPool, mp minipool.Minipool, opts *bind.CallOpts, legacyRocketMinipoolQueueAddress *common.Address) (uint64, error) {
+func GetQueuePositionOfMinipool(rp *rocketpool.RocketPool, mp minipool.IMinipool, opts *bind.CallOpts, legacyRocketMinipoolQueueAddress *common.Address) (uint64, error) {
 	depositType, err := mp.GetDepositType(opts)
 	if err != nil {
 		return 0, fmt.Errorf("Could not get deposit type: %w", err)
@@ -256,7 +256,7 @@ func GetQueuePositionOfMinipool(rp *rocketpool.RocketPool, mp minipool.Minipool,
 }
 
 // Get the minipool at the specified position in queue (0-indexed).
-func GetQueueMinipoolAtPosition(rp *rocketpool.RocketPool, position uint64, opts *bind.CallOpts, legacyRocketMinipoolQueueAddress *common.Address) (minipool.Minipool, error) {
+func GetQueueMinipoolAtPosition(rp *rocketpool.RocketPool, position uint64, opts *bind.CallOpts, legacyRocketMinipoolQueueAddress *common.Address) (minipool.IMinipool, error) {
 	totalLength, err := GetQueueTotalLength(rp, opts, legacyRocketMinipoolQueueAddress)
 	if err != nil {
 		return nil, fmt.Errorf("Could not get total queue length: %w", err)
@@ -269,7 +269,7 @@ func GetQueueMinipoolAtPosition(rp *rocketpool.RocketPool, position uint64, opts
 		return nil, fmt.Errorf("Could not get queue lengths: %w", err)
 	}
 
-	getMinipool := func(key string) (minipool.Minipool, error) {
+	getMinipool := func(key string) (minipool.IMinipool, error) {
 		pos := big.NewInt(int64(position))
 		address, err := storage.GetAddressQueueItem(rp, opts, crypto.Keccak256Hash([]byte(key)), pos)
 		if err != nil {

@@ -1,0 +1,128 @@
+package proposals
+
+import (
+	"fmt"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/rocketpool"
+)
+
+// Settings
+const (
+	proposalBatchSize int = 100
+)
+
+// ===============
+// === Structs ===
+// ===============
+
+// Binding for RocketDAOProposal
+type DaoProposalManager struct {
+	Details  DaoProposalManagerDetails
+	rp       *rocketpool.RocketPool
+	contract *core.Contract
+}
+
+// Details for DaoProposalManager
+type DaoProposalManagerDetails struct {
+	ProposalCount core.Parameter[uint64] `json:"proposalCount"`
+}
+
+// ====================
+// === Constructors ===
+// ====================
+
+// Creates a new DaoProposalManager contract binding
+func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, error) {
+	// Create the contract
+	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
+	if err != nil {
+		return nil, fmt.Errorf("error getting DAO proposal manager contract: %w", err)
+	}
+
+	return &DaoProposalManager{
+		Details:  DaoProposalManagerDetails{},
+		rp:       rp,
+		contract: contract,
+	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get the total number of DAO proposals
+// NOTE: Proposals are 1-indexed
+func (c *DaoProposalManager) GetProposalCount(mc *batch.MultiCaller) {
+	core.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
+}
+
+// =============
+// === Utils ===
+// =============
+
+// Get all of the Protocol DAO proposals
+// NOTE: Proposals are 1-indexed
+func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*ProtocolDaoProposal, []*OracleDaoProposal, error) {
+	// Create prop commons for each one
+	props := make([]*ProposalCommon, proposalCount)
+	for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
+		prop, err := newProposalCommon(c.rp, i)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error creating DAO proposal %d", i)
+		}
+		props[i-1] = prop
+	}
+
+	// Get the DAOs
+	daos := make([]string, len(props))
+	err := c.rp.BatchQuery(len(props), proposalBatchSize, func(mc *batch.MultiCaller, i int) error {
+		props[i].getDAO(mc, &daos[i])
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting proposal DAOs: %w", err)
+	}
+
+	// Construct concrete bindings for each one
+	pDaoProps := []*ProtocolDaoProposal{}
+	oDaoProps := []*OracleDaoProposal{}
+	totalProps := []IProposal{}
+	for i, prop := range props {
+		switch daos[i] {
+		case string(rocketpool.ContractName_RocketDAOProtocolProposals):
+			pdaoProp, err := newProtocolDaoProposal(c.rp, prop)
+			if err != nil {
+				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.Details.ID.Formatted(), err)
+			}
+			pDaoProps = append(pDaoProps, pdaoProp)
+			totalProps = append(totalProps, pdaoProp)
+
+		case string(rocketpool.ContractName_RocketDAONodeTrustedProposals):
+			odaoProp, err := newOracleDaoProposal(c.rp, prop)
+			if err != nil {
+				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.Details.ID.Formatted(), err)
+			}
+			oDaoProps = append(oDaoProps, odaoProp)
+			totalProps = append(totalProps, odaoProp)
+
+		default:
+			return nil, nil, fmt.Errorf("proposal %d has DAO [%s] which is not recognized", prop.Details.ID.Formatted(), daos[i])
+		}
+	}
+
+	// Get all details if requested
+	if includeDetails {
+		err = c.rp.BatchQuery(int(proposalCount), proposalBatchSize, func(mc *batch.MultiCaller, index int) error {
+			totalProps[index].QueryAllDetails(mc)
+			return nil
+		}, opts)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error getting ")
+		}
+	}
+
+	return pDaoProps, oDaoProps, nil
+}

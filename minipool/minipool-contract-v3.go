@@ -26,7 +26,7 @@ var minipoolV3Abi *abi.ABI
 // ===============
 
 type MinipoolV3 struct {
-	MinipoolCommon
+	*MinipoolCommon
 	Details MinipoolV3Details
 	br      *core.Contract
 }
@@ -77,14 +77,14 @@ func newMinipool_v3(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 
 	// Create and return
 	return &MinipoolV3{
-		MinipoolCommon: *base,
+		MinipoolCommon: base,
 		Details:        MinipoolV3Details{},
 		br:             br,
 	}, nil
 }
 
 // Get the minipool as a v3 minipool if it implements the required methods
-func GetMinipoolAsV3(mp Minipool) (*MinipoolV3, bool) {
+func GetMinipoolAsV3(mp IMinipool) (*MinipoolV3, bool) {
 	castedMp, ok := mp.(*MinipoolV3)
 	if ok {
 		return castedMp, true
@@ -97,7 +97,7 @@ func GetMinipoolAsV3(mp Minipool) (*MinipoolV3, bool) {
 // =============
 
 func (c *MinipoolV3) GetMinipoolCommon() *MinipoolCommon {
-	return &c.MinipoolCommon
+	return c.MinipoolCommon
 }
 
 // Get the basic details
