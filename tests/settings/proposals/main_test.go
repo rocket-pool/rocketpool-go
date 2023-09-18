@@ -8,19 +8,18 @@ import (
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/proposals"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
 	settings_test "github.com/rocket-pool/rocketpool-go/tests/settings"
 )
 
 var (
-	mgr  *tests.TestManager
-	rp   *rocketpool.RocketPool
-	pdao *settings.ProtocolDaoSettings
-	odao *settings.OracleDaoSettings
-	dpm  *proposals.DaoProposalManager
-	op   *oracle.OracleDaoProposals
+	mgr     *tests.TestManager
+	rp      *rocketpool.RocketPool
+	pdaoMgr *protocol.ProtocolDaoManager
+	odaoMgr *oracle.OracleDaoManager
+	dpm     *proposals.DaoProposalManager
 
 	odao1 *tests.Account
 	odao2 *tests.Account
@@ -37,21 +36,17 @@ func TestMain(m *testing.M) {
 	rp = mgr.RocketPool
 
 	// Make the pDAO / oDAO bindings
-	pdao, err = settings.NewProtocolDaoSettings(rp)
+	pdaoMgr, err = protocol.NewProtocolDaoManager(rp)
 	if err != nil {
-		fail("error creating pdao settings binding: %s", err.Error())
+		fail("error creating pdao manager binding: %s", err.Error())
 	}
-	odao, err = settings.NewOracleDaoSettings(rp)
+	odaoMgr, err = oracle.NewOracleDaoManager(rp)
 	if err != nil {
-		fail("error creating odao settings binding: %s", err.Error())
+		fail("error creating odao manager binding: %s", err.Error())
 	}
 	dpm, err = proposals.NewDaoProposalManager(rp)
 	if err != nil {
 		fail("error creating DPM: %s", err.Error())
-	}
-	op, err = oracle.NewOracleDaoProposals(rp)
-	if err != nil {
-		fail("error creating OP: %s", err.Error())
 	}
 
 	// Create the default values for the pDAO / oDAO settings as a reference
@@ -62,8 +57,8 @@ func TestMain(m *testing.M) {
 
 	// Get all of the current settings
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		odao.GetAllDetails(mc)
-		pdao.GetAllDetails(mc)
+		odaoMgr.Settings.GetAllDetails(mc)
+		pdaoMgr.Settings.GetAllDetails(mc)
 		return nil
 	}, nil)
 	if err != nil {
@@ -71,8 +66,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// Verify details
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, &odao.Details)
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, &pdao.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, &odaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, &pdaoMgr.Settings.Details)
 
 	// Initialize the network
 	err = mgr.InitializeDeployment()

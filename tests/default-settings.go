@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/rocket-pool/rocketpool-go/settings"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
 var once sync.Once
-var PDaoDefaults settings.ProtocolDaoSettingsDetails
-var ODaoDefaults settings.OracleDaoSettingsDetails
+var PDaoDefaults protocol.ProtocolDaoSettingsDetails
+var ODaoDefaults oracle.OracleDaoSettingsDetails
 
 func CreateDefaults(mgr *TestManager) error {
 	var err error
@@ -32,7 +33,7 @@ func CreateDefaults(mgr *TestManager) error {
 		// ====================
 		// === Protocol DAO ===
 		// ====================
-		PDaoDefaults = settings.ProtocolDaoSettingsDetails{}
+		PDaoDefaults = protocol.ProtocolDaoSettingsDetails{}
 
 		// Auction
 		PDaoDefaults.Auction.IsCreateLotEnabled = true
@@ -94,7 +95,7 @@ func CreateDefaults(mgr *TestManager) error {
 		// ==================
 		// === Oracle DAO ===
 		// ==================
-		ODaoDefaults = settings.OracleDaoSettingsDetails{}
+		ODaoDefaults = oracle.OracleDaoSettingsDetails{}
 
 		// Members
 		ODaoDefaults.Members.ChallengeCooldown.Set(7 * 24 * time.Hour) // 7 days

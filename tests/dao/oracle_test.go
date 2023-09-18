@@ -14,16 +14,16 @@ func Test_ChallengeAndKick(t *testing.T) {
 	account, _ := prepChallenge(t)
 
 	// Wait the challenge period
-	secondsToWait := int(odao.Details.Members.ChallengeWindow.Formatted().Seconds())
+	secondsToWait := int(odaoMgr.Settings.Details.Members.ChallengeWindow.Formatted().Seconds())
 	err := mgr.IncreaseTime(secondsToWait)
 	if err != nil {
-		t.Fatalf("error waiting %s for challenge window: %s", odao.Details.Members.ChallengeWindow.Formatted(), err.Error())
+		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Details.Members.ChallengeWindow.Formatted(), err.Error())
 	}
-	t.Logf("Time increased by %s", odao.Details.Members.ChallengeWindow.Formatted())
+	t.Logf("Time increased by %s", odaoMgr.Settings.Details.Members.ChallengeWindow.Formatted())
 
 	// Decide it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return oma.DecideChallenge(account.Address, odao1.Transactor)
+		return odaoMgr.DecideChallenge(account.Address, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {
 		t.Fatalf("error deciding challenge: %s", err.Error())
@@ -59,7 +59,7 @@ func Test_ChallengeResolve(t *testing.T) {
 
 	// Respond with the new account
 	err := rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return oma.DecideChallenge(account.Address, account.Transactor)
+		return odaoMgr.DecideChallenge(account.Address, account.Transactor)
 	}, true, account.Transactor)
 	if err != nil {
 		t.Fatalf("error deciding challenge: %s", err.Error())
@@ -161,7 +161,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 
 	// Issue a challenge to it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
-		return oma.MakeChallenge(account.Address, odao1.Transactor)
+		return odaoMgr.MakeChallenge(account.Address, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {
 		t.Fatalf("error challenging member %s: %s", account.Address.Hex(), err.Error())
@@ -171,7 +171,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	// Query some state
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
 		member.GetIsChallenged(mc)
-		odao.GetChallengeWindow(mc)
+		odaoMgr.Settings.GetChallengeWindow(mc)
 		return nil
 	}, nil)
 	if err != nil {

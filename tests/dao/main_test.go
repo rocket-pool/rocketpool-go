@@ -8,19 +8,14 @@ import (
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/proposals"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
 )
 
 var (
 	mgr     *tests.TestManager
 	rp      *rocketpool.RocketPool
-	pdao    *settings.ProtocolDaoSettings
-	odao    *settings.OracleDaoSettings
 	dpm     *proposals.DaoProposalManager
 	odaoMgr *oracle.OracleDaoManager
-	oma     *oracle.OracleDaoMemberActions
-	op      *oracle.OracleDaoProposals
 
 	odao1 *tests.Account
 	odao2 *tests.Account
@@ -37,14 +32,6 @@ func TestMain(m *testing.M) {
 	rp = mgr.RocketPool
 
 	// Make the pDAO / oDAO bindings
-	pdao, err = settings.NewProtocolDaoSettings(rp)
-	if err != nil {
-		fail("error creating pdao settings binding: %s", err.Error())
-	}
-	odao, err = settings.NewOracleDaoSettings(rp)
-	if err != nil {
-		fail("error creating odao settings binding: %s", err.Error())
-	}
 	dpm, err = proposals.NewDaoProposalManager(rp)
 	if err != nil {
 		fail("error creating DPM: %s", err.Error())
@@ -52,14 +39,6 @@ func TestMain(m *testing.M) {
 	odaoMgr, err = oracle.NewOracleDaoManager(rp)
 	if err != nil {
 		fail("error creating oDAO manager: %s", err.Error())
-	}
-	oma, err = oracle.NewOracleDaoMemberActions(rp)
-	if err != nil {
-		fail("error creating OMA: %s", err.Error())
-	}
-	op, err = oracle.NewOracleDaoProposals(rp)
-	if err != nil {
-		fail("error creating OP: %s", err.Error())
 	}
 
 	// Initialize the network

@@ -11,8 +11,8 @@ import (
 	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings"
 )
 
 // TestManager wraps the EVM client binding and everything needed to interact with it for the Rocket Pool unit tests
@@ -234,15 +234,15 @@ func (m *TestManager) initializeImpl(odaoMgr *oracle.OracleDaoManager) error {
 	odao3 := m.NonOwnerAccounts[2]
 
 	// Get the settings managers
-	pSettings, err := settings.NewProtocolDaoSettings(rp)
+	pdaoMgr, err := protocol.NewProtocolDaoManager(rp)
 	if err != nil {
-		return fmt.Errorf("error creating protocol DAO binding: %w", err)
+		return fmt.Errorf("error creating protocol DAO manager binding: %w", err)
 	}
 
 	// Bootstrap all of the relevant parameters
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
 		func() (*core.TransactionInfo, error) {
-			return pSettings.BootstrapNodeRegistrationEnabled(true, owner.Transactor)
+			return pdaoMgr.Settings.BootstrapNodeRegistrationEnabled(true, owner.Transactor)
 		},
 	}, true, owner.Transactor)
 	if err != nil {

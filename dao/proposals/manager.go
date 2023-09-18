@@ -1,18 +1,32 @@
 package proposals
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	strutils "github.com/rocket-pool/rocketpool-go/utils/strings"
 )
 
 // Settings
 const (
 	proposalBatchSize int = 100
 )
+
+// ==================
+// === Interfaces ===
+// ==================
+
+type IProposal interface {
+	QueryAllDetails(mc *batch.MultiCaller)
+	GetProposalCommon() *ProposalCommon
+}
 
 // ===============
 // === Structs ===
@@ -62,6 +76,23 @@ func (c *DaoProposalManager) GetProposalCount(mc *batch.MultiCaller) {
 // =============
 // === Utils ===
 // =============
+
+// Create a minipool binding from an explicit version number
+func (c *DaoProposalManager) NewProposalFromDao(id uint64, dao rocketpool.ContractName) (IProposal, error) {
+	base, err := newProposalCommon(c.rp, id)
+	if err != nil {
+		return nil, fmt.Errorf("error creating common proposal binding: %w", err)
+	}
+
+	switch dao {
+	case rocketpool.ContractName_RocketDAOProtocolProposals:
+		return newProtocolDaoProposal(c.rp, base)
+	case rocketpool.ContractName_RocketDAONodeTrustedProposals:
+		return newOracleDaoProposal(c.rp, base)
+	default:
+		return nil, fmt.Errorf("unexpected proposal DAO [%s]", dao)
+	}
+}
 
 // Get all of the Protocol DAO proposals
 // NOTE: Proposals are 1-indexed
@@ -125,4 +156,46 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 	}
 
 	return pDaoProps, oDaoProps, nil
+}
+
+// Get the proposal's payload as a string
+func (c *DaoProposalManager) GetPayloadAsString(daoName rocketpool.ContractName, payload []byte) (string, error) {
+	// Get the ABI
+	contract, err := c.rp.GetContract(daoName)
+	if err != nil {
+		return "", fmt.Errorf("error getting contract [%s]: %w", daoName, err)
+	}
+	daoContractAbi := contract.ABI
+
+	// Get proposal payload method
+	method, err := daoContractAbi.MethodById(payload)
+	if err != nil {
+		return "", fmt.Errorf("error getting proposal payload method: %w", err)
+	}
+
+	// Get proposal payload argument values
+	args, err := method.Inputs.UnpackValues(payload[4:])
+	if err != nil {
+		return "", fmt.Errorf("error getting proposal payload arguments: %w", err)
+	}
+
+	// Format argument values as strings
+	argStrs := []string{}
+	for ai, arg := range args {
+		switch method.Inputs[ai].Type.T {
+		case abi.AddressTy:
+			argStrs = append(argStrs, arg.(common.Address).Hex())
+		case abi.HashTy:
+			argStrs = append(argStrs, arg.(common.Hash).Hex())
+		case abi.FixedBytesTy:
+			fallthrough
+		case abi.BytesTy:
+			argStrs = append(argStrs, hex.EncodeToString(arg.([]byte)))
+		default:
+			argStrs = append(argStrs, fmt.Sprintf("%v", arg))
+		}
+	}
+
+	// Build & return payload string
+	return strutils.Sanitize(fmt.Sprintf("%s(%s)", method.RawName, strings.Join(argStrs, ","))), nil
 }

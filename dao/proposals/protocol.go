@@ -22,6 +22,7 @@ type ProtocolDaoProposal struct {
 
 // Details for proposals
 type ProtocolDaoProposalDetails struct {
+	*ProposalCommonDetails
 }
 
 // ====================
@@ -38,9 +39,11 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*P
 
 	return &ProtocolDaoProposal{
 		ProposalCommon: base,
-		Details:        ProtocolDaoProposalDetails{},
-		rp:             rp,
-		mgr:            contract,
+		Details: ProtocolDaoProposalDetails{
+			ProposalCommonDetails: &base.Details,
+		},
+		rp:  rp,
+		mgr: contract,
 	}, nil
 }
 

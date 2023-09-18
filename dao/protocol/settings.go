@@ -1,4 +1,4 @@
-package settings
+package protocol
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -27,8 +26,8 @@ type ProtocolDaoSettings struct {
 	NodeContract      *core.Contract
 	RewardsContract   *core.Contract
 
-	rp          *rocketpool.RocketPool
-	daoProtocol *protocol.ProtocolDaoManager
+	rp      *rocketpool.RocketPool
+	pdaoMgr *ProtocolDaoManager
 }
 
 // Details for Protocol DAO settings
@@ -103,14 +102,9 @@ type ProtocolDaoSettingsDetails struct {
 // ====================
 
 // Creates a new ProtocolDaoSettings binding
-func NewProtocolDaoSettings(rp *rocketpool.RocketPool) (*ProtocolDaoSettings, error) {
-	daoProtocol, err := protocol.NewProtocolDaoManager(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting DAO protocol binding: %w", err)
-	}
-
+func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, error) {
 	// Get the contracts
-	contracts, err := rp.GetContracts([]rocketpool.ContractName{
+	contracts, err := pdaoMgr.rp.GetContracts([]rocketpool.ContractName{
 		rocketpool.ContractName_RocketDAOProtocolSettingsAuction,
 		rocketpool.ContractName_RocketDAOProtocolSettingsDeposit,
 		rocketpool.ContractName_RocketDAOProtocolSettingsInflation,
@@ -124,9 +118,9 @@ func NewProtocolDaoSettings(rp *rocketpool.RocketPool) (*ProtocolDaoSettings, er
 	}
 
 	return &ProtocolDaoSettings{
-		Details:     ProtocolDaoSettingsDetails{},
-		rp:          rp,
-		daoProtocol: daoProtocol,
+		Details: ProtocolDaoSettingsDetails{},
+		rp:      pdaoMgr.rp,
+		pdaoMgr: pdaoMgr,
 
 		AuctionContract:   contracts[0],
 		DepositContract:   contracts[1],
@@ -441,201 +435,201 @@ func (c *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 
 // Set the create lot enabled flag
 func (c *ProtocolDaoSettings) BootstrapCreateAuctionLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.create.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.create.enabled", value, opts)
 }
 
 // Set the create lot enabled flag
 func (c *ProtocolDaoSettings) BootstrapBidOnAuctionLotEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.bidding.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.bidding.enabled", value, opts)
 }
 
 // Set the minimum ETH value for lots
 func (c *ProtocolDaoSettings) BootstrapAuctionLotMinimumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.minimum", value, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.minimum", value, opts)
 }
 
 // Set the maximum ETH value for lots
 func (c *ProtocolDaoSettings) BootstrapAuctionLotMaximumEthValue(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.maximum", value, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.value.maximum", value, opts)
 }
 
 // Set the duration value for lots, in blocks
 func (c *ProtocolDaoSettings) BootstrapAuctionLotDuration(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.duration", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.lot.duration", value.RawValue, opts)
 }
 
 // Set the starting price ratio for lots
 func (c *ProtocolDaoSettings) BootstrapAuctionLotStartingPriceRatio(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.start", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.start", value.RawValue, opts)
 }
 
 // Set the reserve price ratio for lots
 func (c *ProtocolDaoSettings) BootstrapAuctionLotReservePriceRatio(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.reserve", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsAuction, "auction.price.reserve", value.RawValue, opts)
 }
 
 // === RocketDAOProtocolSettingsDeposit ===
 
 // Set the deposit enabled flag
 func (c *ProtocolDaoSettings) BootstrapPoolDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.enabled", value, opts)
 }
 
 // Set the deposit assignments enabled flag
 func (c *ProtocolDaoSettings) BootstrapAssignPoolDepositsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.enabled", value, opts)
 }
 
 // Set the minimum deposit amount
 func (c *ProtocolDaoSettings) BootstrapMinimumPoolDeposit(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.minimum", value, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.minimum", value, opts)
 }
 
 // Set the maximum deposit pool size
 func (c *ProtocolDaoSettings) BootstrapMaximumDepositPoolSize(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.pool.maximum", value, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.pool.maximum", value, opts)
 }
 
 // Set the max assignments per deposit
 func (c *ProtocolDaoSettings) BootstrapMaximumPoolDepositAssignments(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.maximum", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.maximum", value.RawValue, opts)
 }
 
 // Set the max socialised assignments per deposit
 func (c *ProtocolDaoSettings) BootstrapMaximumSocialisedPoolDepositAssignments(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.socialised.maximum", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.assign.socialised.maximum", value.RawValue, opts)
 }
 
 // Set the deposit fee
 func (c *ProtocolDaoSettings) BootstrapDepositFee(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.fee", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsDeposit, "deposit.fee", value.RawValue, opts)
 }
 
 // === RocketDAOProtocolSettingsInflation ===
 
 // Set the RPL inflation rate per interval
 func (c *ProtocolDaoSettings) BootstrapInflationIntervalRate(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.rate", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.rate", value.RawValue, opts)
 }
 
 // Set the RPL inflation start time
 func (c *ProtocolDaoSettings) BootstrapInflationIntervalStartTime(value core.Parameter[time.Time], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.start", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsInflation, "rpl.inflation.interval.start", value.RawValue, opts)
 }
 
 // === RocketDAOProtocolSettingsMinipool ===
 
 // Set the flag for enabling minipool withdrawable event submissions
 func (c *ProtocolDaoSettings) BootstrapSubmitWithdrawableEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.submit.withdrawable.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.submit.withdrawable.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapMinipoolLaunchTimeout(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.launch.timeout", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.launch.timeout", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapBondReductionEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.bond.reduction.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.bond.reduction.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapMaximumMinipoolCount(value core.Parameter[uint64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.maximum.count", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.maximum.count", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapUserDistributeWindowStart(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.user.distribute.window.start", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.user.distribute.window.start", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapUserDistributeWindowLength(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.user.distribute.window.length", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool, "minipool.user.distribute.window.length", value.RawValue, opts)
 }
 
 // === RocketDAOProtocolSettingsNetwork ===
 
 func (c *ProtocolDaoSettings) BootstrapOracleDaoConsensusThreshold(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.consensus.threshold", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.consensus.threshold", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapNodePenaltyThreshold(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.penalty.threshold", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.penalty.threshold", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapPerPenaltyRate(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.penalty.per.rate", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.penalty.per.rate", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapSubmitBalancesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapSubmitBalancesFrequency(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.frequency", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.balances.frequency", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapSubmitPricesEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapSubmitPricesFrequency(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.frequency", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.prices.frequency", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapMinimumNodeFee(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.minimum", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.minimum", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapTargetNodeFee(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.target", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.target", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapMaximumNodeFee(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.maximum", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.maximum", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapNodeFeeDemandRange(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.demand.range", value, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.node.fee.demand.range", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapTargetRethCollateralRate(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.collateral.target", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.collateral.target", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapRethDepositDelay(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.deposit.delay", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.reth.deposit.delay", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapSubmitRewardsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.rewards.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNetwork, "network.submit.rewards.enabled", value, opts)
 }
 
 // === RocketDAOProtocolSettingsNode ===
 
 func (c *ProtocolDaoSettings) BootstrapNodeRegistrationEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.registration.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.registration.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapSmoothingPoolRegistrationEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.smoothing.pool.registration.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.smoothing.pool.registration.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapNodeDepositEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.deposit.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.deposit.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapVacantMinipoolsEnabled(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.vacant.minipools.enabled", value, opts)
+	return c.pdaoMgr.BootstrapBool(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.vacant.minipools.enabled", value, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapMinimumPerMinipoolStake(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.minimum", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.minimum", value.RawValue, opts)
 }
 
 func (c *ProtocolDaoSettings) BootstrapMaximumPerMinipoolStake(value core.Parameter[float64], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.maximum", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsNode, "node.per.minipool.stake.maximum", value.RawValue, opts)
 }
 
 // === RocketDAOProtocolSettingsRewards ===
 
 func (c *ProtocolDaoSettings) BootstrapRewardsIntervalTime(value core.Parameter[time.Duration], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return c.daoProtocol.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsRewards, "rpl.rewards.claim.period.time", value.RawValue, opts)
+	return c.pdaoMgr.BootstrapUint(rocketpool.ContractName_RocketDAOProtocolSettingsRewards, "rpl.rewards.claim.period.time", value.RawValue, opts)
 }

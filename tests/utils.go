@@ -9,7 +9,6 @@ import (
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/node"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tokens"
 )
 
@@ -49,9 +48,9 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	if err != nil {
 		return nil, fmt.Errorf("error getting oDAO manager binding: %w", err)
 	}
-	oma, err := oracle.NewOracleDaoMemberActions(rp)
+	oma, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedActions)
 	if err != nil {
-		return nil, fmt.Errorf("error getting OMA binding: %w", err)
+		return nil, fmt.Errorf("error getting OMA contract: %w", err)
 	}
 	fsrpl, err := tokens.NewTokenRplFixedSupply(rp)
 	if err != nil {
@@ -69,10 +68,7 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	}
 
 	// Get the amount of RPL to mint
-	oSettings, err := settings.NewOracleDaoSettings(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting oDAO settings binding: %w", err)
-	}
+	oSettings := odaoMgr.Settings
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
 		odaoMgr.GetMemberCount(mc)
 		oSettings.GetRplBond(mc)
@@ -105,10 +101,10 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 			return rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
-			return rpl.Approve(*oma.Contract.Address, rplBond, nodeAccount.Transactor)
+			return rpl.Approve(*oma.Address, rplBond, nodeAccount.Transactor)
 		},
 		func() (*core.TransactionInfo, error) {
-			return oma.Join(nodeAccount.Transactor)
+			return odaoMgr.Join(nodeAccount.Transactor)
 		},
 	}, false, nodeAccount.Transactor)
 	if err != nil {

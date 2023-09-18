@@ -8,18 +8,19 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings"
 	"github.com/rocket-pool/rocketpool-go/tests"
 	settings_test "github.com/rocket-pool/rocketpool-go/tests/settings"
 )
 
 var (
-	mgr  *tests.TestManager
-	rp   *rocketpool.RocketPool
-	pdao *settings.ProtocolDaoSettings
-	odao *settings.OracleDaoSettings
-	opts *bind.TransactOpts
+	mgr     *tests.TestManager
+	rp      *rocketpool.RocketPool
+	pdaoMgr *protocol.ProtocolDaoManager
+	odaoMgr *oracle.OracleDaoManager
+	opts    *bind.TransactOpts
 )
 
 func TestMain(m *testing.M) {
@@ -32,13 +33,13 @@ func TestMain(m *testing.M) {
 	rp = mgr.RocketPool
 
 	// Make the pDAO / oDAO bindings
-	pdao, err = settings.NewProtocolDaoSettings(rp)
+	pdaoMgr, err = protocol.NewProtocolDaoManager(rp)
 	if err != nil {
-		log.Fatal(fmt.Errorf("error creating pdao settings binding: %w", err))
+		log.Fatal(fmt.Errorf("error creating pdao manager binding: %w", err))
 	}
-	odao, err = settings.NewOracleDaoSettings(rp)
+	odaoMgr, err = oracle.NewOracleDaoManager(rp)
 	if err != nil {
-		log.Fatal(fmt.Errorf("error creating odao settings binding: %w", err))
+		log.Fatal(fmt.Errorf("error creating odao manager binding: %w", err))
 	}
 
 	// Create the default values for the pDAO / oDAO settings as a reference
@@ -52,8 +53,8 @@ func TestMain(m *testing.M) {
 
 	// Get all of the current settings
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		odao.GetAllDetails(mc)
-		pdao.GetAllDetails(mc)
+		odaoMgr.Settings.GetAllDetails(mc)
+		pdaoMgr.Settings.GetAllDetails(mc)
 		return nil
 	}, nil)
 	if err != nil {
@@ -61,8 +62,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// Verify details
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, &odao.Details)
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, &pdao.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, &odaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, &pdaoMgr.Settings.Details)
 
 	// Run tests
 	os.Exit(m.Run())

@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -166,23 +165,4 @@ func (c *ProposalCommon) GetMemberSupported(mc *batch.MultiCaller, out *bool, ad
 // Get which DAO the proposal is for - reserved for internal use
 func (c *ProposalCommon) getDAO(mc *batch.MultiCaller, dao_Out *string) {
 	core.AddCall(mc, c.contract, dao_Out, "getDAO", c.Details.ID.RawValue)
-}
-
-// ====================
-// === Transactions ===
-// ====================
-
-// Get info for cancelling a proposal
-func (c *ProposalCommon) Cancel(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "cancel", opts, c.Details.ID.RawValue)
-}
-
-// Get info for voting on a proposal
-func (c *ProposalCommon) VoteOn(support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "vote", opts, c.Details.ID.RawValue, support)
-}
-
-// Get info for executing a proposal
-func (c *ProposalCommon) ExecuteProposal(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "execute", opts, c.Details.ID.RawValue)
 }

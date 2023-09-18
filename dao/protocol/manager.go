@@ -18,8 +18,9 @@ import (
 
 // Binding for RocketDAOProtocol
 type ProtocolDaoManager struct {
+	Settings *ProtocolDaoSettings
 	rp       *rocketpool.RocketPool
-	contract *core.Contract
+	dp       *core.Contract
 }
 
 // ====================
@@ -28,16 +29,22 @@ type ProtocolDaoManager struct {
 
 // Creates a new ProtocolDaoManager contract binding
 func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, error) {
-	// Create the contract
-	contract, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocol)
+	// Create the contracts
+	dp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocol)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO manager contract: %w", err)
 	}
 
-	return &ProtocolDaoManager{
-		rp:       rp,
-		contract: contract,
-	}, nil
+	pdaoMgr := &ProtocolDaoManager{
+		rp: rp,
+		dp: dp,
+	}
+	settings, err := newProtocolDaoSettings(pdaoMgr)
+	if err != nil {
+		return nil, fmt.Errorf("error creating Protocol DAO settings binding: %w", err)
+	}
+	pdaoMgr.Settings = settings
+	return pdaoMgr, nil
 }
 
 // ====================
@@ -46,20 +53,20 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 
 // Get info for bootstrapping a bool setting
 func (c *ProtocolDaoManager) BootstrapBool(contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "bootstrapSettingBool", opts, contractName, settingPath, value)
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingBool", opts, contractName, settingPath, value)
 }
 
 // Get info for bootstrapping a uint256 setting
 func (c *ProtocolDaoManager) BootstrapUint(contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "bootstrapSettingUint", opts, contractName, settingPath, value)
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingUint", opts, contractName, settingPath, value)
 }
 
 // Get info for bootstrapping an address setting
 func (c *ProtocolDaoManager) BootstrapAddress(contractName rocketpool.ContractName, settingPath string, value common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "bootstrapSettingAddress", opts, contractName, settingPath, value)
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingAddress", opts, contractName, settingPath, value)
 }
 
 // Get info for bootstrapping a rewards claimer
 func (c *ProtocolDaoManager) BootstrapClaimer(contractName rocketpool.ContractName, amount float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "bootstrapSettingClaimer", opts, contractName, eth.EthToWei(amount))
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingClaimer", opts, contractName, eth.EthToWei(amount))
 }
