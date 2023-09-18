@@ -18,13 +18,13 @@ import (
 
 // Binding for proposals
 type proposalCommon struct {
-	*proposalCommonDetails
+	*ProposalCommonDetails
 	rp *rocketpool.RocketPool
 	dp *core.Contract
 }
 
 // Details for proposals
-type proposalCommonDetails struct {
+type ProposalCommonDetails struct {
 	ID              core.Parameter[uint64]                   `json:"id"`
 	ProposerAddress common.Address                           `json:"proposerAddress"`
 	Message         string                                   `json:"message"`
@@ -56,7 +56,7 @@ func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*proposalCommon, e
 	}
 
 	return &proposalCommon{
-		proposalCommonDetails: &proposalCommonDetails{
+		ProposalCommonDetails: &ProposalCommonDetails{
 			ID: core.Parameter[uint64]{
 				RawValue: big.NewInt(0).SetUint64(id),
 			},
@@ -69,6 +69,11 @@ func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*proposalCommon, e
 // =============
 // === Calls ===
 // =============
+
+// Get all of the details common across each type of proposal
+func (c *proposalCommon) GetCommonDetails() *ProposalCommonDetails {
+	return c.ProposalCommonDetails
+}
 
 // Get the address of the node that created the proposal
 func (c *proposalCommon) GetProposerAddress(mc *batch.MultiCaller) {

@@ -13,6 +13,9 @@ type IProposal interface {
 	// Get all of the proposal's details
 	QueryAllDetails(mc *batch.MultiCaller)
 
+	// Get all of the details common across each type of proposal
+	GetCommonDetails() *ProposalCommonDetails
+
 	// Get the address of the node that created the proposal
 	GetProposerAddress(mc *batch.MultiCaller)
 

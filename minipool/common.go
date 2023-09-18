@@ -27,7 +27,7 @@ const (
 
 // Basic binding for version-agnostic RocketMinipool contracts
 type minipoolCommon struct {
-	*minipoolCommonDetails
+	*MinipoolCommonDetails
 	contract *core.Contract
 	rp       *rocketpool.RocketPool
 	mpMgr    *core.Contract
@@ -36,7 +36,7 @@ type minipoolCommon struct {
 }
 
 // Basic details about a minipool, version-agnostic
-type minipoolCommonDetails struct {
+type MinipoolCommonDetails struct {
 	// Core parameters
 	Address                    common.Address                            `json:"address"`
 	Version                    uint8                                     `json:"version"`
@@ -119,7 +119,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 	}
 
 	return &minipoolCommon{
-		minipoolCommonDetails: &minipoolCommonDetails{
+		MinipoolCommonDetails: &MinipoolCommonDetails{
 			Address: *contract.Address,
 			Version: version,
 		},
@@ -138,6 +138,11 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 // Gets the underlying minipool's contract
 func (c *minipoolCommon) GetContract() *core.Contract {
 	return c.contract
+}
+
+// Gets the common details for all minipool types
+func (c *minipoolCommon) GetCommonDetails() *MinipoolCommonDetails {
+	return c.MinipoolCommonDetails
 }
 
 // === Minipool ===

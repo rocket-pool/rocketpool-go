@@ -21,6 +21,9 @@ type IMinipool interface {
 	// Gets the underlying minipool's contract
 	GetContract() *core.Contract
 
+	// Gets the common details for all minipool types
+	GetCommonDetails() *MinipoolCommonDetails
+
 	// Get the minipool's penalty count
 	GetPenaltyCount(mc *batch.MultiCaller)
 
