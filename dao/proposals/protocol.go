@@ -47,6 +47,15 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*P
 	}, nil
 }
 
+// Get a proposal as an Protocol DAO propsal
+func GetProposalAsProtocol(proposal IProposal) (*ProtocolDaoProposal, bool) {
+	castedProp, ok := proposal.(*ProtocolDaoProposal)
+	if ok {
+		return castedProp, true
+	}
+	return nil, false
+}
+
 // =============
 // === Calls ===
 // =============

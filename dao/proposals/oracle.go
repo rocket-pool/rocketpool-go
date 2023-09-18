@@ -48,6 +48,15 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*Ora
 	}, nil
 }
 
+// Get a proposal as an Oracle DAO propsal
+func GetProposalAsOracle(proposal IProposal) (*OracleDaoProposal, bool) {
+	castedProp, ok := proposal.(*OracleDaoProposal)
+	if ok {
+		return castedProp, true
+	}
+	return nil, false
+}
+
 // =============
 // === Calls ===
 // =============
