@@ -18,7 +18,7 @@ import (
 
 // Binding for RocketTokenRPL
 type TokenRpl struct {
-	Details  TokenRplDetails
+	*TokenRplDetails
 	Contract *core.Contract
 	rp       *rocketpool.RocketPool
 }
@@ -42,9 +42,9 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 	}
 
 	return &TokenRpl{
-		Details:  TokenRplDetails{},
-		Contract: contract,
-		rp:       rp,
+		TokenRplDetails: &TokenRplDetails{},
+		Contract:        contract,
+		rp:              rp,
 	}, nil
 }
 
@@ -56,7 +56,7 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 
 // Get the RPL total supply
 func (c *TokenRpl) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.TotalSupply, "totalSupply")
+	core.AddCall(mc, c.Contract, &c.TotalSupply, "totalSupply")
 }
 
 // Get the RPL balance of an address
@@ -73,7 +73,7 @@ func (c *TokenRpl) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, 
 
 // Get the RPL inflation interval rate
 func (c *TokenRpl) GetInflationIntervalRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.InflationIntervalRate, "getInflationIntervalRate")
+	core.AddCall(mc, c.Contract, &c.InflationIntervalRate, "getInflationIntervalRate")
 }
 
 // ====================

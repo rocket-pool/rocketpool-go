@@ -25,11 +25,10 @@ var minipoolV2Abi *abi.ABI
 
 type MinipoolV2 struct {
 	*minipoolCommon
-	Details MinipoolV2Details
+	*MinipoolV2Details
 }
 
 type MinipoolV2Details struct {
-	*minipoolCommonDetails
 }
 
 // ====================
@@ -60,10 +59,8 @@ func newMinipool_v2(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 
 	// Create and return
 	return &MinipoolV2{
-		minipoolCommon: base,
-		Details: MinipoolV2Details{
-			minipoolCommonDetails: &base.Details,
-		},
+		minipoolCommon:    base,
+		MinipoolV2Details: &MinipoolV2Details{},
 	}, nil
 }
 

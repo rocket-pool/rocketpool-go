@@ -118,7 +118,7 @@ func (m *TestManager) InitializeDeployment() error {
 	}
 
 	// If there aren't members, bootstrap the protocol
-	if odaoMgr.Details.MemberCount.Formatted() == 0 {
+	if odaoMgr.MemberCount.Formatted() == 0 {
 		err = m.initializeImpl(odaoMgr)
 		if err != nil {
 			return fmt.Errorf("error initializing network: %w", err)
@@ -271,7 +271,7 @@ func (m *TestManager) initializeImpl(odaoMgr *oracle.OracleDaoManager) error {
 	if err != nil {
 		return fmt.Errorf("error getting oDAO member count: %w", err)
 	}
-	memberCount := odaoMgr.Details.MemberCount.Formatted()
+	memberCount := odaoMgr.MemberCount.Formatted()
 	if memberCount != 3 {
 		return fmt.Errorf("expected 3 oDAO members but there are %d", memberCount)
 	}

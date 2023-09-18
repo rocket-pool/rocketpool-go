@@ -14,12 +14,12 @@ func Test_ChallengeAndKick(t *testing.T) {
 	account, _ := prepChallenge(t)
 
 	// Wait the challenge period
-	secondsToWait := int(odaoMgr.Settings.Details.Members.ChallengeWindow.Formatted().Seconds())
+	secondsToWait := int(odaoMgr.Settings.Members.ChallengeWindow.Formatted().Seconds())
 	err := mgr.IncreaseTime(secondsToWait)
 	if err != nil {
-		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Details.Members.ChallengeWindow.Formatted(), err.Error())
+		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Members.ChallengeWindow.Formatted(), err.Error())
 	}
-	t.Logf("Time increased by %s", odaoMgr.Settings.Details.Members.ChallengeWindow.Formatted())
+	t.Logf("Time increased by %s", odaoMgr.Settings.Members.ChallengeWindow.Formatted())
 
 	// Decide it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
@@ -38,7 +38,7 @@ func Test_ChallengeAndKick(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
-	count := odaoMgr.Details.MemberCount.Formatted()
+	count := odaoMgr.MemberCount.Formatted()
 	t.Logf("oDAO now has %d members", count)
 
 	// Make sure the node isn't on the oDAO anymore
@@ -74,7 +74,7 @@ func Test_ChallengeResolve(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
-	count := odaoMgr.Details.MemberCount.Formatted()
+	count := odaoMgr.MemberCount.Formatted()
 	t.Logf("oDAO now has %d members", count)
 
 	// Make sure the node is still on the oDAO
@@ -104,7 +104,7 @@ func Test_ChallengeResolve(t *testing.T) {
 	}
 
 	// Make sure it's not challenged anymore
-	if member.Details.IsChallenged {
+	if member.IsChallenged {
 		t.Fatalf("member is challenged, but should not be")
 	}
 	t.Logf("Challenge resolved!")
@@ -139,7 +139,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
-	count := odaoMgr.Details.MemberCount.Formatted()
+	count := odaoMgr.MemberCount.Formatted()
 	t.Logf("oDAO now has %d members", count)
 
 	// Find it
@@ -179,7 +179,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	}
 
 	// Make sure the challenge is visible
-	if !member.Details.IsChallenged {
+	if !member.IsChallenged {
 		t.Fatalf("member is not challenged, but should be")
 	}
 	t.Logf("Challenge is visible")

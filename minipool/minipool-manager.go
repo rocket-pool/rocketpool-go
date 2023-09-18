@@ -24,7 +24,7 @@ const (
 
 // Binding for RocketMinipoolManager
 type MinipoolManager struct {
-	Details  MinipoolManagerDetails
+	*MinipoolManagerDetails
 	rp       *rocketpool.RocketPool
 	Contract *core.Contract
 }
@@ -60,9 +60,9 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 	}
 
 	return &MinipoolManager{
-		Details:  MinipoolManagerDetails{},
-		rp:       rp,
-		Contract: contract,
+		MinipoolManagerDetails: &MinipoolManagerDetails{},
+		rp:                     rp,
+		Contract:               contract,
 	}, nil
 }
 
@@ -72,27 +72,27 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 
 // Get the minipool count
 func (c *MinipoolManager) GetMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.MinipoolCount.RawValue, "getMinipoolCount")
+	core.AddCall(mc, c.Contract, &c.MinipoolCount.RawValue, "getMinipoolCount")
 }
 
 // Get the number of staking minipools in the network
 func (c *MinipoolManager) GetStakingMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.StakingMinipoolCount.RawValue, "getStakingMinipoolCount")
+	core.AddCall(mc, c.Contract, &c.StakingMinipoolCount.RawValue, "getStakingMinipoolCount")
 }
 
 // Get the number of finalised minipools in the network
 func (c *MinipoolManager) GetFinalisedMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.FinalisedMinipoolCount.RawValue, "getFinalisedMinipoolCount")
+	core.AddCall(mc, c.Contract, &c.FinalisedMinipoolCount.RawValue, "getFinalisedMinipoolCount")
 }
 
 // Get the number of active minipools in the network
 func (c *MinipoolManager) GetActiveMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.ActiveMinipoolCount.RawValue, "getActiveMinipoolCount")
+	core.AddCall(mc, c.Contract, &c.ActiveMinipoolCount.RawValue, "getActiveMinipoolCount")
 }
 
 // Get the number of vacant minipools in the network
 func (c *MinipoolManager) GetVacantMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.Contract, &c.Details.VacantMinipoolCount.RawValue, "getVacantMinipoolCount")
+	core.AddCall(mc, c.Contract, &c.VacantMinipoolCount.RawValue, "getVacantMinipoolCount")
 }
 
 // Get all basic details

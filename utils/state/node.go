@@ -252,7 +252,7 @@ func getNodeAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkContracts
 	if err != nil {
 		return []common.Address{}, err
 	}
-	nodeCount := nodeMgr.Details.NodeCount.Formatted()
+	nodeCount := nodeMgr.NodeCount.Formatted()
 
 	// Sync
 	var wg errgroup.Group

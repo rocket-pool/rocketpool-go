@@ -18,7 +18,7 @@ import (
 
 // Binding for RocketTokenRPLFixedSupply
 type TokenRplFixedSupply struct {
-	Details  TokenRplFixedSupplyDetails
+	*TokenRplFixedSupplyDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -41,9 +41,9 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 	}
 
 	return &TokenRplFixedSupply{
-		Details:  TokenRplFixedSupplyDetails{},
-		rp:       rp,
-		contract: contract,
+		TokenRplFixedSupplyDetails: &TokenRplFixedSupplyDetails{},
+		rp:                         rp,
+		contract:                   contract,
 	}, nil
 }
 
@@ -55,7 +55,7 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 
 // Get the fixed-supply RPL total supply
 func (c *TokenRplFixedSupply) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.TotalSupply, "totalSupply")
+	core.AddCall(mc, c.contract, &c.TotalSupply, "totalSupply")
 }
 
 // Get the fixed-supply RPL balance of an address

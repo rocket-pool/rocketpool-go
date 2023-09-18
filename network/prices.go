@@ -19,7 +19,7 @@ import (
 
 // Binding for RocketNetworkPrices
 type NetworkPrices struct {
-	Details  NetworkPricesDetails
+	*NetworkPricesDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -44,8 +44,9 @@ func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 	}
 
 	return &NetworkPrices{
-		rp:       rp,
-		contract: contract,
+		NetworkPricesDetails: &NetworkPricesDetails{},
+		rp:                   rp,
+		contract:             contract,
 	}, nil
 }
 
@@ -55,17 +56,17 @@ func NewNetworkPrices(rp *rocketpool.RocketPool) (*NetworkPrices, error) {
 
 // Get the block number which network prices are current for
 func (c *NetworkPrices) GetPricesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.PricesBlock.RawValue, "getPricesBlock")
+	core.AddCall(mc, c.contract, &c.PricesBlock.RawValue, "getPricesBlock")
 }
 
 // Get the current network RPL price in ETH
 func (c *NetworkPrices) GetRplPrice(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.RplPrice.RawValue, "getRPLPrice")
+	core.AddCall(mc, c.contract, &c.RplPrice.RawValue, "getRPLPrice")
 }
 
 // Returns the latest block number that oracles should be reporting prices for
 func (c *NetworkPrices) GetLatestReportablePricesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
+	core.AddCall(mc, c.contract, &c.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
 }
 
 // Get all basic details

@@ -20,7 +20,7 @@ import (
 
 // Binding for RocketDAONodeTrusted
 type OracleDaoManager struct {
-	Details  OracleDaoManagerDetails
+	*OracleDaoManagerDetails
 	Settings *OracleDaoSettings
 	rp       *rocketpool.RocketPool
 	dnt      *core.Contract
@@ -55,11 +55,11 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 	}
 
 	odaoMgr := &OracleDaoManager{
-		Details: OracleDaoManagerDetails{},
-		rp:      rp,
-		dnt:     dnt,
-		dnta:    dnta,
-		dntp:    dntp,
+		OracleDaoManagerDetails: &OracleDaoManagerDetails{},
+		rp:                      rp,
+		dnt:                     dnt,
+		dnta:                    dnta,
+		dntp:                    dntp,
 	}
 	settings, err := newOracleDaoSettings(odaoMgr)
 	if err != nil {
@@ -75,12 +75,12 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 
 // Get the member count
 func (c *OracleDaoManager) GetMemberCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.Details.MemberCount.RawValue, "getMemberCount")
+	core.AddCall(mc, c.dnt, &c.MemberCount.RawValue, "getMemberCount")
 }
 
 // Get the minimum member count
 func (c *OracleDaoManager) GetMinimumMemberCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.Details.MinimumMemberCount.RawValue, "getMemberMinRequired")
+	core.AddCall(mc, c.dnt, &c.MinimumMemberCount.RawValue, "getMemberMinRequired")
 }
 
 // Get all basic details

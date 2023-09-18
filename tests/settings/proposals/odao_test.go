@@ -235,8 +235,8 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	if err != nil {
 		t.Fatalf("error getting proposal count: %s", err.Error())
 	}
-	if dpm.Details.ProposalCount.Formatted() != 0 {
-		t.Fatalf("expected 0 proposals but count was %d", dpm.Details.ProposalCount.Formatted())
+	if dpm.ProposalCount.Formatted() != 0 {
+		t.Fatalf("expected 0 proposals but count was %d", dpm.ProposalCount.Formatted())
 	}
 
 	// Run the proposer
@@ -253,7 +253,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	if err != nil {
 		t.Fatalf("error querying all updated details: %s", err)
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &tests.ODaoDefaults, &odaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(t.Fatalf, &tests.ODaoDefaults, odaoMgr.Settings.OracleDaoSettingsDetails)
 	t.Log("Settings match the defaults after proposal creation, ok")
 
 	// Make sure the proposal count is good
@@ -264,7 +264,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	if err != nil {
 		t.Fatalf("error getting proposal count: %s", err.Error())
 	}
-	propCount := dpm.Details.ProposalCount.Formatted()
+	propCount := dpm.ProposalCount.Formatted()
 	if propCount != 1 {
 		t.Fatalf("expected 1 proposal but count was %d", propCount)
 	}
@@ -279,7 +279,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 		t.Fatalf("expected 0 pDAO prop and 1 oDAO prop but counts were %d and %d", len(pdaoProps), len(odaoProps))
 	}
 	prop := odaoProps[0]
-	t.Logf("Got prop with ID %d: %s", prop.Details.ID.Formatted(), prop.Details.Message)
+	t.Logf("Got prop with ID %d: %s", prop.ID.Formatted(), prop.Message)
 
 	// Skip enough time to allow voting
 	voteDelayTime := settings.Proposals.VoteDelayTime.Formatted()
@@ -321,6 +321,6 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	if err != nil {
 		t.Fatalf("error querying all updated details: %s", err.Error())
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &settings, &odaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(t.Fatalf, &settings, odaoMgr.Settings.OracleDaoSettingsDetails)
 	t.Log("New settings match expected settings - proposal succeeded")
 }

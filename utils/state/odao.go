@@ -90,7 +90,7 @@ func getOdaoAddresses(rp *rocketpool.RocketPool, contracts *NetworkContracts, op
 	if err != nil {
 		return []common.Address{}, err
 	}
-	memberCount := mgr.Details.MemberCount.Formatted()
+	memberCount := mgr.MemberCount.Formatted()
 
 	// Sync
 	var wg errgroup.Group

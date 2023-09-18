@@ -340,7 +340,7 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 	if err != nil {
 		t.Fatal(fmt.Errorf("error querying all updated details: %w", err))
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &newOdaoSettings, &odaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(t.Fatalf, &newOdaoSettings, odaoMgr.Settings.OracleDaoSettingsDetails)
 	t.Log("New settings match expected settings")
 }
 
@@ -401,6 +401,6 @@ func testOdaoParameterBootstrap(t *testing.T, setter func(*oracle.OracleDaoSetti
 	if err != nil {
 		t.Fatal(fmt.Errorf("error querying all updated details: %w", err))
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &settings, &odaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(t.Fatalf, &settings, odaoMgr.Settings.OracleDaoSettingsDetails)
 	t.Log("New settings match expected settings")
 }

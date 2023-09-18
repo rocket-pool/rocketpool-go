@@ -66,8 +66,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// Verify details
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, &odaoMgr.Settings.Details)
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, &pdaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, odaoMgr.Settings.OracleDaoSettingsDetails)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, pdaoMgr.Settings.ProtocolDaoSettingsDetails)
 
 	// Initialize the network
 	err = mgr.InitializeDeployment()

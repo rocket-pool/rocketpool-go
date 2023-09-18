@@ -16,14 +16,13 @@ import (
 // Binding for Oracle DAO proposals
 type OracleDaoProposal struct {
 	*proposalCommon
-	Details OracleDaoProposalDetails
-	rp      *rocketpool.RocketPool
-	dntp    *core.Contract
+	*OracleDaoProposalDetails
+	rp   *rocketpool.RocketPool
+	dntp *core.Contract
 }
 
 // Details for proposals
 type OracleDaoProposalDetails struct {
-	*proposalCommonDetails
 }
 
 // ====================
@@ -39,12 +38,10 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*Ora
 	}
 
 	return &OracleDaoProposal{
-		proposalCommon: base,
-		Details: OracleDaoProposalDetails{
-			proposalCommonDetails: &base.Details,
-		},
-		rp:   rp,
-		dntp: dntp,
+		proposalCommon:           base,
+		OracleDaoProposalDetails: &OracleDaoProposalDetails{},
+		rp:                       rp,
+		dntp:                     dntp,
 	}, nil
 }
 
@@ -72,15 +69,15 @@ func (c *OracleDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
 
 // Get info for cancelling a proposal
 func (c *OracleDaoProposal) Cancel(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "cancel", opts, c.Details.ID.RawValue)
+	return core.NewTransactionInfo(c.dntp, "cancel", opts, c.ID.RawValue)
 }
 
 // Get info for voting on a proposal
 func (c *OracleDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "vote", opts, c.Details.ID.RawValue, support)
+	return core.NewTransactionInfo(c.dntp, "vote", opts, c.ID.RawValue, support)
 }
 
 // Get info for executing a proposal
 func (c *OracleDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "execute", opts, c.Details.ID.RawValue)
+	return core.NewTransactionInfo(c.dntp, "execute", opts, c.ID.RawValue)
 }

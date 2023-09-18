@@ -17,7 +17,7 @@ import (
 
 // Binding for RocketNodeStaking
 type NodeStaking struct {
-	Details  NodeStakingDetails
+	*NodeStakingDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -41,9 +41,9 @@ func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 	}
 
 	return &NodeStaking{
-		Details:  NodeStakingDetails{},
-		rp:       rp,
-		contract: contract,
+		NodeStakingDetails: &NodeStakingDetails{},
+		rp:                 rp,
+		contract:           contract,
 	}, nil
 }
 
@@ -53,12 +53,12 @@ func NewNodeStaking(rp *rocketpool.RocketPool) (*NodeStaking, error) {
 
 // Get the version of the Node Staking contract
 func (c *NodeStaking) GetVersion(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.Version, "version")
+	core.AddCall(mc, c.contract, &c.Version, "version")
 }
 
 // Get the total RPL staked in the network
 func (c *NodeStaking) GetTotalRPLStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.TotalRplStake, "getTotalRPLStake")
+	core.AddCall(mc, c.contract, &c.TotalRplStake, "getTotalRPLStake")
 }
 
 // Get all basic details

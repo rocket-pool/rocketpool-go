@@ -25,7 +25,7 @@ const (
 
 // Binding for RocketDAOProposal
 type DaoProposalManager struct {
-	Details  DaoProposalManagerDetails
+	*DaoProposalManagerDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -48,9 +48,9 @@ func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, erro
 	}
 
 	return &DaoProposalManager{
-		Details:  DaoProposalManagerDetails{},
-		rp:       rp,
-		contract: contract,
+		DaoProposalManagerDetails: &DaoProposalManagerDetails{},
+		rp:                        rp,
+		contract:                  contract,
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func NewDaoProposalManager(rp *rocketpool.RocketPool) (*DaoProposalManager, erro
 // Get the total number of DAO proposals
 // NOTE: Proposals are 1-indexed
 func (c *DaoProposalManager) GetProposalCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.ProposalCount.RawValue, "getTotal")
+	core.AddCall(mc, c.contract, &c.ProposalCount.RawValue, "getTotal")
 }
 
 // =============
@@ -143,7 +143,7 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 		case string(rocketpool.ContractName_RocketDAOProtocolProposals):
 			pdaoProp, err := newProtocolDaoProposal(c.rp, prop)
 			if err != nil {
-				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.Details.ID.Formatted(), err)
+				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.ID.Formatted(), err)
 			}
 			pDaoProps = append(pDaoProps, pdaoProp)
 			totalProps = append(totalProps, pdaoProp)
@@ -151,13 +151,13 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 		case string(rocketpool.ContractName_RocketDAONodeTrustedProposals):
 			odaoProp, err := newOracleDaoProposal(c.rp, prop)
 			if err != nil {
-				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.Details.ID.Formatted(), err)
+				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.ID.Formatted(), err)
 			}
 			oDaoProps = append(oDaoProps, odaoProp)
 			totalProps = append(totalProps, odaoProp)
 
 		default:
-			return nil, nil, fmt.Errorf("proposal %d has DAO [%s] which is not recognized", prop.Details.ID.Formatted(), daos[i])
+			return nil, nil, fmt.Errorf("proposal %d has DAO [%s] which is not recognized", prop.ID.Formatted(), daos[i])
 		}
 	}
 

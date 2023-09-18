@@ -661,7 +661,7 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	if err != nil {
 		t.Fatal(fmt.Errorf("error querying all updated details: %w", err))
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &newPdaoSettings, &pdaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(t.Fatalf, &newPdaoSettings, pdaoMgr.Settings.ProtocolDaoSettingsDetails)
 	t.Log("New settings match expected settings")
 }
 
@@ -722,6 +722,6 @@ func testPdaoParameterBootstrap(t *testing.T, setter func(*protocol.ProtocolDaoS
 	if err != nil {
 		t.Fatal(fmt.Errorf("error querying all updated details: %w", err))
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &settings, &pdaoMgr.Settings.Details)
+	settings_test.EnsureSameDetails(t.Fatalf, &settings, pdaoMgr.Settings.ProtocolDaoSettingsDetails)
 	t.Log("New settings match expected settings")
 }

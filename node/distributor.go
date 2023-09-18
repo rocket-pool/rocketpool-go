@@ -18,7 +18,7 @@ import (
 
 // Binding for RocketNodeDistributorDelegate
 type NodeDistributor struct {
-	Details  NodeDistributorDetails
+	*NodeDistributorDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -44,7 +44,7 @@ func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, d
 	}
 
 	return &NodeDistributor{
-		Details: NodeDistributorDetails{
+		NodeDistributorDetails: &NodeDistributorDetails{
 			NodeAddress:        nodeAddress,
 			DistributorAddress: distributorAddress,
 		},
@@ -59,12 +59,12 @@ func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, d
 
 // Gets the node share of the distributor's current balance
 func (c *NodeDistributor) GetNodeShare(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.NodeShare, "getNodeShare")
+	core.AddCall(mc, c.contract, &c.NodeShare, "getNodeShare")
 }
 
 // Gets the user share of the distributor's current balance
 func (c *NodeDistributor) GetUserShare(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.UserShare, "getUserShare")
+	core.AddCall(mc, c.contract, &c.UserShare, "getUserShare")
 }
 
 // Get all basic details

@@ -77,7 +77,7 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	if err != nil {
 		return nil, fmt.Errorf("error getting network info: %w", err)
 	}
-	rplBond := oSettings.Details.Members.RplBond
+	rplBond := oSettings.Members.RplBond
 
 	// Bootstrap it and mint RPL for it
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){

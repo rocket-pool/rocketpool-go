@@ -15,14 +15,13 @@ import (
 // Binding for Protocol DAO proposals
 type ProtocolDaoProposal struct {
 	*proposalCommon
-	Details ProtocolDaoProposalDetails
-	rp      *rocketpool.RocketPool
-	mgr     *core.Contract
+	*ProtocolDaoProposalDetails
+	rp  *rocketpool.RocketPool
+	mgr *core.Contract
 }
 
 // Details for proposals
 type ProtocolDaoProposalDetails struct {
-	*proposalCommonDetails
 }
 
 // ====================
@@ -38,12 +37,10 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*P
 	}
 
 	return &ProtocolDaoProposal{
-		proposalCommon: base,
-		Details: ProtocolDaoProposalDetails{
-			proposalCommonDetails: &base.Details,
-		},
-		rp:  rp,
-		mgr: contract,
+		proposalCommon:             base,
+		ProtocolDaoProposalDetails: &ProtocolDaoProposalDetails{},
+		rp:                         rp,
+		mgr:                        contract,
 	}, nil
 }
 

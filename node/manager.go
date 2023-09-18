@@ -25,7 +25,7 @@ const (
 
 // Binding for RocketNodeManager
 type NodeManager struct {
-	Details  NodeManagerDetails
+	*NodeManagerDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -55,9 +55,9 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 	}
 
 	return &NodeManager{
-		Details:  NodeManagerDetails{},
-		rp:       rp,
-		contract: contract,
+		NodeManagerDetails: &NodeManagerDetails{},
+		rp:                 rp,
+		contract:           contract,
 	}, nil
 }
 
@@ -67,12 +67,12 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 
 // Get the version of the Node Manager contract
 func (c *NodeManager) GetVersion(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.Version, "version")
+	core.AddCall(mc, c.contract, &c.Version, "version")
 }
 
 // Get the number of nodes in the network
 func (c *NodeManager) GetNodeCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.NodeCount.RawValue, "getNodeCount")
+	core.AddCall(mc, c.contract, &c.NodeCount.RawValue, "getNodeCount")
 }
 
 // Get all basic details
@@ -184,7 +184,7 @@ func (c *NodeManager) GetTotalEffectiveRplStake(rp *rocketpool.RocketPool, nodeC
 
 	// Sum up the total
 	for _, node := range nodes {
-		total.Add(total, node.Details.EffectiveRplStake)
+		total.Add(total, node.EffectiveRplStake)
 	}
 	return total, nil
 }

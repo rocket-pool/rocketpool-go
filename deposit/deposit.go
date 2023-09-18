@@ -17,7 +17,7 @@ import (
 
 // Binding for RocketDepositPool
 type DepositPool struct {
-	Details  DepositPoolDetails
+	*DepositPoolDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -42,9 +42,9 @@ func NewDepositPool(rp *rocketpool.RocketPool) (*DepositPool, error) {
 	}
 
 	return &DepositPool{
-		Details:  DepositPoolDetails{},
-		rp:       rp,
-		contract: contract,
+		DepositPoolDetails: &DepositPoolDetails{},
+		rp:                 rp,
+		contract:           contract,
 	}, nil
 }
 
@@ -54,17 +54,17 @@ func NewDepositPool(rp *rocketpool.RocketPool) (*DepositPool, error) {
 
 // Get the deposit pool balance
 func (c *DepositPool) GetBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.Balance, "getBalance")
+	core.AddCall(mc, c.contract, &c.Balance, "getBalance")
 }
 
 // Get the deposit pool balance provided by pool stakers
 func (c *DepositPool) GetUserBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.Balance, "getUserBalance")
+	core.AddCall(mc, c.contract, &c.Balance, "getUserBalance")
 }
 
 // Get the excess deposit pool balance
 func (c *DepositPool) GetExcessBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.Balance, "getExcessBalance")
+	core.AddCall(mc, c.contract, &c.Balance, "getExcessBalance")
 }
 
 // Get all basic details

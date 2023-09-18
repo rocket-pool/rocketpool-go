@@ -17,7 +17,7 @@ import (
 
 // Binding for Beacon Deposit
 type BeaconDeposit struct {
-	Details  BeaconDepositDetails
+	*BeaconDepositDetails
 	contract *core.Contract
 }
 
@@ -39,7 +39,8 @@ func NewBeaconDeposit(rp *rocketpool.RocketPool) (*BeaconDeposit, error) {
 	}
 
 	return &BeaconDeposit{
-		contract: contract,
+		BeaconDepositDetails: &BeaconDepositDetails{},
+		contract:             contract,
 	}, nil
 }
 
@@ -49,7 +50,7 @@ func NewBeaconDeposit(rp *rocketpool.RocketPool) (*BeaconDeposit, error) {
 
 // Get the deposit root for new deposits
 func (c *BeaconDeposit) GetDepositRoot(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.DepositRoot, "get_deposit_root")
+	core.AddCall(mc, c.contract, &c.DepositRoot, "get_deposit_root")
 }
 
 // ====================

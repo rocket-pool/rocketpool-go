@@ -15,7 +15,7 @@ import (
 
 // Binding for RocketNetworkFees
 type NetworkFees struct {
-	Details  NetworkFeesDetails
+	*NetworkFeesDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -40,9 +40,9 @@ func NewNetworkFees(rp *rocketpool.RocketPool) (*NetworkFees, error) {
 	}
 
 	return &NetworkFees{
-		Details:  NetworkFeesDetails{},
-		rp:       rp,
-		contract: contract,
+		NetworkFeesDetails: &NetworkFeesDetails{},
+		rp:                 rp,
+		contract:           contract,
 	}, nil
 }
 
@@ -52,17 +52,17 @@ func NewNetworkFees(rp *rocketpool.RocketPool) (*NetworkFees, error) {
 
 // Get the current network node demand in ETH
 func (c *NetworkFees) GetNodeDemand(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.NodeDemand, "getNodeDemand")
+	core.AddCall(mc, c.contract, &c.NodeDemand, "getNodeDemand")
 }
 
 // Get the current network node commission rate
 func (c *NetworkFees) GetNodeFee(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.NodeFee.RawValue, "getNodeFee")
+	core.AddCall(mc, c.contract, &c.NodeFee.RawValue, "getNodeFee")
 }
 
 // Get the network node fee for a node demand value
 func (c *NetworkFees) GetNodeFeeByDemand(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.NodeFeeByDemand.RawValue, "getNodeFeeByDemand")
+	core.AddCall(mc, c.contract, &c.NodeFeeByDemand.RawValue, "getNodeFeeByDemand")
 }
 
 // Get all basic details

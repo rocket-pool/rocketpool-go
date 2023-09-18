@@ -28,7 +28,7 @@ type QueueDetails struct {
 
 // Binding for RocketMinipoolQueue
 type MinipoolQueue struct {
-	Details  MinipoolQueueDetails
+	*MinipoolQueueDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
 }
@@ -53,9 +53,9 @@ func NewMinipoolQueue(rp *rocketpool.RocketPool) (*MinipoolQueue, error) {
 	}
 
 	return &MinipoolQueue{
-		Details:  MinipoolQueueDetails{},
-		rp:       rp,
-		contract: contract,
+		MinipoolQueueDetails: &MinipoolQueueDetails{},
+		rp:                   rp,
+		contract:             contract,
 	}, nil
 }
 
@@ -65,17 +65,17 @@ func NewMinipoolQueue(rp *rocketpool.RocketPool) (*MinipoolQueue, error) {
 
 // Get the total length of the minipool queue
 func (c *MinipoolQueue) GetTotalLength(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.TotalLength.RawValue, "getTotalLength")
+	core.AddCall(mc, c.contract, &c.TotalLength.RawValue, "getTotalLength")
 }
 
 // Get the total capacity of the minipool queue
 func (c *MinipoolQueue) GetTotalCapacity(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.TotalCapacity, "getTotalCapacity")
+	core.AddCall(mc, c.contract, &c.TotalCapacity, "getTotalCapacity")
 }
 
 // Get the total effective capacity of the minipool queue (used in node demand calculation)
 func (c *MinipoolQueue) GetEffectiveCapacity(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Details.EffectiveCapacity, "getEffectiveCapacity")
+	core.AddCall(mc, c.contract, &c.EffectiveCapacity, "getEffectiveCapacity")
 }
 
 // =============
