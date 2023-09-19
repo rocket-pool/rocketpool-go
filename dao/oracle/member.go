@@ -32,7 +32,7 @@ type OracleDaoMemberDetails struct {
 	ReplacedTime           core.Parameter[time.Time] `json:"replacedTime"`
 	LeftTime               core.Parameter[time.Time] `json:"leftTime"`
 	LastProposalTime       core.Parameter[time.Time] `json:"lastProposalTime"`
-	RPLBondAmount          *big.Int                  `json:"rplBondAmount"`
+	RplBondAmount          *big.Int                  `json:"rplBondAmount"`
 	ReplacementAddress     common.Address            `json:"replacementAddress"`
 	IsChallenged           bool                      `json:"isChallenged"`
 	UnbondedValidatorCount core.Parameter[uint64]    `json:"unbondedValidatorCount"`
@@ -104,7 +104,7 @@ func (c *OracleDaoMember) GetLastProposalTime(mc *batch.MultiCaller) {
 
 // Get the member's RPL bond amount
 func (c *OracleDaoMember) GetRplBondAmount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.RPLBondAmount, "getMemberRPLBondAmount", c.Address)
+	core.AddCall(mc, c.dnt, &c.RplBondAmount, "getMemberRPLBondAmount", c.Address)
 }
 
 // Get the member's replacement address if a replace proposal is pending
