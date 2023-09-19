@@ -10,9 +10,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/network"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings"
 	"gonum.org/v1/gonum/mathext"
 )
 
@@ -23,10 +23,8 @@ import (
 type TrustedNodeParticipationCalculator struct {
 	rp      *rocketpool.RocketPool
 	odaoMgr *oracle.OracleDaoManager
-	oma     *oracle.OracleDaoMemberActions
-	pds     *settings.ProtocolDaoSettings
-	nb      *network.NetworkManager
-	np      *network.NetworkPrices
+	pds     *protocol.ProtocolDaoSettings
+	nm      *network.NetworkManager
 }
 
 // The results of the trusted node participation calculation
@@ -50,34 +48,21 @@ func NewTrustedNodeParticipationCalculator(rp *rocketpool.RocketPool) (*TrustedN
 	if err != nil {
 		return nil, fmt.Errorf("error getting oDAO manager binding: %w", err)
 	}
-
-	oma, err := oracle.NewOracleDaoMemberActions(rp)
+	pdaoMgr, err := protocol.NewProtocolDaoManager(rp)
 	if err != nil {
-		return nil, fmt.Errorf("error getting oDAO member actions binding: %w", err)
+		return nil, fmt.Errorf("error getting Protocol DAO manager binding: %w", err)
 	}
-
-	pds, err := settings.NewProtocolDaoSettings(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting Protocol DAO settings binding: %w", err)
-	}
-
-	nb, err := network.NewNetworkBalances(rp)
+	pds := pdaoMgr.Settings
+	nm, err := network.NewNetworkManager(rp)
 	if err != nil {
 		return nil, fmt.Errorf("error getting NetworkBalances binding: %w", err)
-	}
-
-	np, err := network.NewNetworkPrices(rp)
-	if err != nil {
-		return nil, fmt.Errorf("error getting NetworkPrices binding: %w", err)
 	}
 
 	return &TrustedNodeParticipationCalculator{
 		rp:      rp,
 		odaoMgr: odaoMgr,
-		oma:     oma,
 		pds:     pds,
-		nb:      nb,
-		np:      np,
+		nm:      nm,
 	}, nil
 }
 
@@ -109,12 +94,12 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipa
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updatePricesFrequency := c.pds.Details.Network.SubmitPricesFrequency.Formatted()
-	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
+	updatePricesFrequency := c.pds.Network.SubmitPricesFrequency.Formatted()
+	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
 	minBlock := (blockNumber/updatePricesFrequency - 50) * updatePricesFrequency
-	latestMemberCountChangedBlock, err := c.oma.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
+	latestMemberCountChangedBlock, err := c.odaoMgr.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +135,7 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipa
 		participationTable[member] = make([]bool, intervalsPassed)
 		actual := 0
 		if intervalsPassed > 0 {
-			blocks, err := c.np.GetPricesSubmissions(member, startBlock, intervalSize, opts)
+			blocks, err := c.nm.GetPricesSubmissions(member, startBlock, intervalSize, opts)
 			if err != nil {
 				return nil, err
 			}
@@ -215,12 +200,12 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesPartici
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updateBalancesFrequency := c.pds.Details.Network.SubmitBalancesFrequency.Formatted()
-	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
+	updateBalancesFrequency := c.pds.Network.SubmitBalancesFrequency.Formatted()
+	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
 	minBlock := (blockNumber/updateBalancesFrequency - 50) * updateBalancesFrequency
-	latestMemberCountChangedBlock, err := c.oma.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
+	latestMemberCountChangedBlock, err := c.odaoMgr.GetLatestMemberCountChangedBlock(minBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +242,7 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesPartici
 		participationTable[member] = make([]bool, intervalsPassed)
 		actual := 0
 		if intervalsPassed > 0 {
-			blocks, err := c.nb.GetBalancesSubmissions(member, startBlock, intervalSize, opts)
+			blocks, err := c.nm.GetBalancesSubmissions(member, startBlock, intervalSize, opts)
 			if err != nil {
 				return nil, err
 			}
@@ -322,8 +307,8 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestBalancesPartici
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updateBalancesFrequency := c.pds.Details.Network.SubmitBalancesFrequency.Formatted()
-	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
+	updateBalancesFrequency := c.pds.Network.SubmitBalancesFrequency.Formatted()
+	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get trusted members
 	members, err := c.odaoMgr.GetMemberAddresses(memberCount, opts)
@@ -333,7 +318,7 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestBalancesPartici
 
 	// Get submission within the current interval
 	fromBlock := blockNumber / updateBalancesFrequency * updateBalancesFrequency
-	submissions, err := c.nb.GetLatestBalancesSubmissions(fromBlock, intervalSize, opts)
+	submissions, err := c.nm.GetLatestBalancesSubmissions(fromBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -373,8 +358,8 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestPricesParticipa
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updatePricesFrequency := c.pds.Details.Network.SubmitPricesFrequency.Formatted()
-	memberCount := c.odaoMgr.Details.MemberCount.Formatted()
+	updatePricesFrequency := c.pds.Network.SubmitPricesFrequency.Formatted()
+	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get trusted members
 	members, err := c.odaoMgr.GetMemberAddresses(memberCount, opts)
@@ -384,7 +369,7 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestPricesParticipa
 
 	// Get submission within the current interval
 	fromBlock := blockNumber / updatePricesFrequency * updatePricesFrequency
-	submissions, err := c.np.GetLatestPricesSubmissions(fromBlock, intervalSize, opts)
+	submissions, err := c.nm.GetLatestPricesSubmissions(fromBlock, intervalSize, opts)
 	if err != nil {
 		return nil, err
 	}

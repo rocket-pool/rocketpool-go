@@ -14,6 +14,10 @@ import (
 	"github.com/rocket-pool/rocketpool-go/utils/strings"
 )
 
+const (
+	oracleDaoMemberBatchSize int = 200
+)
+
 // ===============
 // === Structs ===
 // ===============
@@ -236,6 +240,61 @@ func (c *OracleDaoManager) GetMemberAddresses(memberCount uint64, opts *bind.Cal
 
 	// Return
 	return addresses, nil
+}
+
+// Get an Oracle DAO member by address.
+// Use GetMemberCount() for the memberCount parameter.
+func (c *OracleDaoManager) CreateMemberFromAddress(address common.Address, includeDetails bool, opts *bind.CallOpts) (*OracleDaoMember, error) {
+	// Create the member binding
+	member, err := NewOracleDaoMember(c.rp, address)
+	if err != nil {
+		return nil, fmt.Errorf("error creating Oracle DAO member binding for %s: %w", address.Hex(), err)
+	}
+
+	if includeDetails {
+		err = c.rp.Query(func(mc *batch.MultiCaller) error {
+			member.GetAllDetails(mc)
+			return nil
+		}, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
+		}
+	}
+
+	// Return
+	return member, nil
+}
+
+// Get the list of all Oracle DAO members.
+// Use GetMemberCount() for the memberCount parameter.
+func (c *OracleDaoManager) CreateMembersFromAddresses(addresses []common.Address, includeDetails bool, opts *bind.CallOpts) ([]*OracleDaoMember, error) {
+	// Create the member bindings
+	memberCount := len(addresses)
+	members := make([]*OracleDaoMember, memberCount)
+	for i, address := range addresses {
+		member, err := NewOracleDaoMember(c.rp, address)
+		if err != nil {
+			return nil, fmt.Errorf("error creating Oracle DAO member binding for %s: %w", address.Hex(), err)
+		}
+		members[i] = member
+	}
+
+	if includeDetails {
+		err := c.rp.BatchQuery(int(memberCount), oracleDaoMemberBatchSize,
+			func(mc *batch.MultiCaller, index int) error {
+				member := members[index]
+				member.GetAllDetails(mc)
+				return nil
+			},
+			opts,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
+		}
+	}
+
+	// Return
+	return members, nil
 }
 
 // =============

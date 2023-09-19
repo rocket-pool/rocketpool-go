@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/minipool"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
 
@@ -36,7 +35,8 @@ type NetworkDetails struct {
 	SmoothingPoolAddress          common.Address
 	DepositPoolBalance            *big.Int
 	DepositPoolExcess             *big.Int
-	QueueCapacity                 minipool.QueueCapacity
+	TotalQueueCapacity            *big.Int
+	EffectiveQueueCapacity        *big.Int
 	QueueLength                   *big.Int
 	RPLInflationIntervalRate      *big.Int
 	RPLTotalSupply                *big.Int
@@ -147,10 +147,8 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	details.IntervalDuration = convertToDuration(intervalDuration)
 	details.ScrubPeriod = convertToDuration(scrubPeriodSeconds)
 	details.SmoothingPoolAddress = *contracts.RocketSmoothingPool.Address
-	details.QueueCapacity = minipool.QueueCapacity{
-		Total:     totalQueueCapacity,
-		Effective: effectiveQueueCapacity,
-	}
+	details.TotalQueueCapacity = totalQueueCapacity
+	details.EffectiveQueueCapacity = effectiveQueueCapacity
 	details.QueueLength = totalQueueLength
 	details.PricesBlock = pricesBlock.Uint64()
 	details.LatestReportablePricesBlock = latestReportablePricesBlock.Uint64()

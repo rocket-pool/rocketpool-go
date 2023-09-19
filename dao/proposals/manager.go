@@ -80,6 +80,8 @@ func (c *DaoProposalManager) NewProposalFromDao(id uint64, dao rocketpool.Contra
 		return newProtocolDaoProposal(c.rp, base)
 	case rocketpool.ContractName_RocketDAONodeTrustedProposals:
 		return newOracleDaoProposal(c.rp, base)
+	case "":
+		return nil, fmt.Errorf("proposal %d does not exist", id)
 	default:
 		return nil, fmt.Errorf("unexpected proposal DAO [%s]", dao)
 	}
@@ -106,6 +108,8 @@ func (c *DaoProposalManager) CreateProposalFromID(id uint64, opts *bind.CallOpts
 		return newProtocolDaoProposal(c.rp, prop)
 	case string(rocketpool.ContractName_RocketDAONodeTrustedProposals):
 		return newOracleDaoProposal(c.rp, prop)
+	case "":
+		return nil, fmt.Errorf("proposal %d does not exist", id)
 	default:
 		return nil, fmt.Errorf("unexpected proposal DAO [%s]", dao)
 	}
