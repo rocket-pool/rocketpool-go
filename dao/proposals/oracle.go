@@ -81,3 +81,8 @@ func (c *OracleDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core
 func (c *OracleDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.dntp, "execute", opts, c.ID.RawValue)
 }
+
+// Get the proposal's payload as a string
+func (c *OracleDaoProposal) GetPayloadAsString() (string, error) {
+	return getPayloadAsStringImpl(c.rp, c.dntp, c.Payload)
+}

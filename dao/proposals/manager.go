@@ -1,17 +1,12 @@
 package proposals
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	strutils "github.com/rocket-pool/rocketpool-go/utils/strings"
 )
 
 // Settings
@@ -177,46 +172,4 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 	}
 
 	return pDaoProps, oDaoProps, nil
-}
-
-// Get the proposal's payload as a string
-func (c *DaoProposalManager) GetPayloadAsString(daoName rocketpool.ContractName, payload []byte) (string, error) {
-	// Get the ABI
-	contract, err := c.rp.GetContract(daoName)
-	if err != nil {
-		return "", fmt.Errorf("error getting contract [%s]: %w", daoName, err)
-	}
-	daoContractAbi := contract.ABI
-
-	// Get proposal payload method
-	method, err := daoContractAbi.MethodById(payload)
-	if err != nil {
-		return "", fmt.Errorf("error getting proposal payload method: %w", err)
-	}
-
-	// Get proposal payload argument values
-	args, err := method.Inputs.UnpackValues(payload[4:])
-	if err != nil {
-		return "", fmt.Errorf("error getting proposal payload arguments: %w", err)
-	}
-
-	// Format argument values as strings
-	argStrs := []string{}
-	for ai, arg := range args {
-		switch method.Inputs[ai].Type.T {
-		case abi.AddressTy:
-			argStrs = append(argStrs, arg.(common.Address).Hex())
-		case abi.HashTy:
-			argStrs = append(argStrs, arg.(common.Hash).Hex())
-		case abi.FixedBytesTy:
-			fallthrough
-		case abi.BytesTy:
-			argStrs = append(argStrs, hex.EncodeToString(arg.([]byte)))
-		default:
-			argStrs = append(argStrs, fmt.Sprintf("%v", arg))
-		}
-	}
-
-	// Build & return payload string
-	return strutils.Sanitize(fmt.Sprintf("%s(%s)", method.RawName, strings.Join(argStrs, ","))), nil
 }

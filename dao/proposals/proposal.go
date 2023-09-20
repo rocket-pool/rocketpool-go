@@ -61,6 +61,9 @@ type IProposal interface {
 	// Check if a node has voted in favor of the proposal
 	GetMemberSupported(mc *batch.MultiCaller, out *bool, address common.Address)
 
+	// Get the proposal's payload as a string
+	GetPayloadAsString() (string, error)
+
 	// Get which DAO the proposal is for - reserved for internal use
 	getDAO(mc *batch.MultiCaller, dao_Out *string)
 }
