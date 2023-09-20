@@ -10,13 +10,13 @@ import (
 type ProposalState uint8
 
 const (
-	Pending ProposalState = iota
-	Active
-	Cancelled
-	Defeated
-	Succeeded
-	Expired
-	Executed
+	ProposalState_Pending ProposalState = iota
+	ProposalState_Active
+	ProposalState_Cancelled
+	ProposalState_Defeated
+	ProposalState_Succeeded
+	ProposalState_Expired
+	ProposalState_Executed
 )
 
 var ProposalStates = []string{"Pending", "Active", "Cancelled", "Defeated", "Succeeded", "Expired", "Executed"}
@@ -34,14 +34,14 @@ func StringToProposalState(value string) (ProposalState, error) {
 			return ProposalState(state), nil
 		}
 	}
-	return 0, fmt.Errorf("Invalid proposal state '%s'", value)
+	return 0, fmt.Errorf("invalid proposal state '%s'", value)
 }
 
 // JSON encoding
 func (s ProposalState) MarshalJSON() ([]byte, error) {
 	str := s.String()
 	if str == "" {
-		return []byte{}, fmt.Errorf("Invalid proposal state '%d'", s)
+		return []byte{}, fmt.Errorf("invalid proposal state '%d'", s)
 	}
 	return json.Marshal(str)
 }

@@ -193,7 +193,7 @@ func CalculateAverageFeeAndDistributorShares(rp *rocketpool.RocketPool, contract
 	totalFee := big.NewInt(0)
 	eligibleMinipools := int64(0)
 	for _, mpd := range minipoolDetails {
-		if mpd.Status == types.Staking && !mpd.Finalised {
+		if mpd.Status == types.MinipoolStatus_Staking && !mpd.Finalised {
 			totalFee.Add(totalFee, mpd.NodeFee)
 			eligibleMinipools++
 		}

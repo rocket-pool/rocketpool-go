@@ -32,7 +32,7 @@ func (v ValidatorPubkey) String() string {
 func HexToValidatorPubkey(value string) (ValidatorPubkey, error) {
 	pubkey := make([]byte, ValidatorPubkeyLength)
 	if len(value) != hex.EncodedLen(ValidatorPubkeyLength) {
-		return ValidatorPubkey{}, fmt.Errorf("Invalid validator public key hex string %s: invalid length %d", value, len(value))
+		return ValidatorPubkey{}, fmt.Errorf("invalid validator public key hex string %s: invalid length %d", value, len(value))
 	}
 	if _, err := hex.Decode(pubkey, []byte(value)); err != nil {
 		return ValidatorPubkey{}, err
@@ -80,7 +80,7 @@ func (v ValidatorSignature) String() string {
 func HexToValidatorSignature(value string) (ValidatorSignature, error) {
 	signature := make([]byte, ValidatorSignatureLength)
 	if len(value) != hex.EncodedLen(ValidatorSignatureLength) {
-		return ValidatorSignature{}, fmt.Errorf("Invalid validator signature hex string %s: invalid length %d", value, len(value))
+		return ValidatorSignature{}, fmt.Errorf("invalid validator signature hex string %s: invalid length %d", value, len(value))
 	}
 	if _, err := hex.Decode(signature, []byte(value)); err != nil {
 		return ValidatorSignature{}, err

@@ -10,11 +10,11 @@ import (
 type MinipoolStatus uint8
 
 const (
-	Initialized MinipoolStatus = iota
-	Prelaunch
-	Staking
-	Withdrawable
-	Dissolved
+	MinipoolStatus_Initialized MinipoolStatus = iota
+	MinipoolStatus_Prelaunch
+	MinipoolStatus_Staking
+	MinipoolStatus_Withdrawable
+	MinipoolStatus_Dissolved
 )
 
 var MinipoolStatuses = []string{"Initialized", "Prelaunch", "Staking", "Withdrawable", "Dissolved"}
@@ -32,14 +32,14 @@ func StringToMinipoolStatus(value string) (MinipoolStatus, error) {
 			return MinipoolStatus(status), nil
 		}
 	}
-	return 0, fmt.Errorf("Invalid minipool status '%s'", value)
+	return 0, fmt.Errorf("invalid minipool status '%s'", value)
 }
 
 // JSON encoding
 func (s MinipoolStatus) MarshalJSON() ([]byte, error) {
 	str := s.String()
 	if str == "" {
-		return []byte{}, fmt.Errorf("Invalid minipool status '%d'", s)
+		return []byte{}, fmt.Errorf("invalid minipool status '%d'", s)
 	}
 	return json.Marshal(str)
 }
@@ -81,14 +81,14 @@ func StringToMinipoolDeposit(value string) (MinipoolDeposit, error) {
 			return MinipoolDeposit(depositType), nil
 		}
 	}
-	return 0, fmt.Errorf("Invalid minipool deposit type '%s'", value)
+	return 0, fmt.Errorf("invalid minipool deposit type '%s'", value)
 }
 
 // JSON encoding
 func (d MinipoolDeposit) MarshalJSON() ([]byte, error) {
 	str := d.String()
 	if str == "" {
-		return []byte{}, fmt.Errorf("Invalid minipool deposit type '%d'", d)
+		return []byte{}, fmt.Errorf("invalid minipool deposit type '%d'", d)
 	}
 	return json.Marshal(str)
 }
