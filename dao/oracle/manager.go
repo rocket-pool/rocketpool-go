@@ -148,7 +148,7 @@ func (c *OracleDaoManager) DecideChallenge(memberAddress common.Address, opts *b
 // === DAONodeTrustedProposals ===
 
 // Get info for proposing to invite a new member to the Oracle DAO
-func (c *OracleDaoManager) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId, string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
 	if message == "" {
 		message = fmt.Sprintf("invite %s (%s)", newMemberId, newMemberAddress.Hex())
