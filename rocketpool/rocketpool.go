@@ -130,6 +130,7 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 
 		// Make the contract binding
 		contract := &core.Contract{
+			Name:     string(contractName),
 			Contract: bind.NewBoundContract(addresses[i], *abi, rp.Client, rp.Client, rp.Client),
 			Address:  &addresses[i],
 			ABI:      abi,
@@ -221,6 +222,7 @@ func (rp *RocketPool) MakeContract(contractName ContractName, address common.Add
 
 	// Create and return
 	return &core.Contract{
+		Name:     string(contractName),
 		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
 		Address:  &address,
 		ABI:      abi,

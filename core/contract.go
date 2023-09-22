@@ -24,6 +24,7 @@ type FormattedUint8Type interface {
 
 // Contract type wraps go-ethereum bound contract
 type Contract struct {
+	Name     string
 	Contract *bind.BoundContract
 	Address  *common.Address
 	ABI      *abi.ABI
