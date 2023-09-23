@@ -33,8 +33,8 @@ type NodeManager struct {
 
 // Details for RocketNodeManager
 type NodeManagerDetails struct {
-	NodeCount     core.Parameter[uint64] `json:"nodeCount"`
-	TotalRplStake *big.Int               `json:"totalRplStake"`
+	NodeCount     core.Uint256Parameter[uint64] `json:"nodeCount"`
+	TotalRplStake *big.Int                      `json:"totalRplStake"`
 }
 
 // Count of nodes belonging to a timezone

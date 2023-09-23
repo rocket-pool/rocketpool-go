@@ -16,7 +16,7 @@ import (
 )
 
 func Test_BootstrapChallengeCooldown(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Member.ChallengeCooldown.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Member.ChallengeCooldown.Value.SetRawValue(newVal.RawValue)
@@ -35,7 +35,7 @@ func Test_BootstrapChallengeCost(t *testing.T) {
 }
 
 func Test_BootstrapChallengeWindow(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Member.ChallengeWindow.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Member.ChallengeWindow.Value = newVal
@@ -45,7 +45,7 @@ func Test_BootstrapChallengeWindow(t *testing.T) {
 }
 
 func Test_BootstrapQuorum(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.ODaoDefaults.Member.Quorum.Value.Formatted() + 0.15)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Member.Quorum.Value.SetRawValue(newVal.RawValue)
@@ -64,7 +64,7 @@ func Test_BootstrapRplBond(t *testing.T) {
 }
 
 func Test_BootstrapUnbondedMinipoolMax(t *testing.T) {
-	newVal := core.Parameter[uint64]{}
+	newVal := core.Uint256Parameter[uint64]{}
 	newVal.Set(tests.ODaoDefaults.Member.UnbondedMinipoolMax.Value.Formatted() + 5)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Member.UnbondedMinipoolMax.Value.SetRawValue(newVal.RawValue)
@@ -74,7 +74,7 @@ func Test_BootstrapUnbondedMinipoolMax(t *testing.T) {
 }
 
 func Test_BootstrapUnbondedMinipoolMinFee(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.ODaoDefaults.Member.UnbondedMinipoolMinFee.Value.Formatted() + 0.1)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Member.UnbondedMinipoolMinFee.Value.SetRawValue(newVal.RawValue)
@@ -84,7 +84,7 @@ func Test_BootstrapUnbondedMinipoolMinFee(t *testing.T) {
 }
 
 func Test_BootstrapBondReductionCancellationQuorum(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.ODaoDefaults.Minipool.BondReductionCancellationQuorum.Value.Formatted() + 0.15)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Minipool.BondReductionCancellationQuorum.Value.SetRawValue(newVal.RawValue)
@@ -94,7 +94,7 @@ func Test_BootstrapBondReductionCancellationQuorum(t *testing.T) {
 }
 
 func Test_BootstrapBondReductionWindowLength(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Minipool.BondReductionWindowLength.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Minipool.BondReductionWindowLength.Value.SetRawValue(newVal.RawValue)
@@ -104,7 +104,7 @@ func Test_BootstrapBondReductionWindowLength(t *testing.T) {
 }
 
 func Test_BootstrapBondReductionWindowStart(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Minipool.BondReductionWindowStart.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Minipool.BondReductionWindowStart.Value.SetRawValue(newVal.RawValue)
@@ -123,7 +123,7 @@ func Test_BootstrapScrubPenaltyEnabled(t *testing.T) {
 }
 
 func Test_BootstrapPromotionScrubPeriod(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Minipool.PromotionScrubPeriod.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Minipool.PromotionScrubPeriod.Value.SetRawValue(newVal.RawValue)
@@ -133,7 +133,7 @@ func Test_BootstrapPromotionScrubPeriod(t *testing.T) {
 }
 
 func Test_BootstrapScrubPeriod(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Minipool.ScrubPeriod.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Minipool.ScrubPeriod.Value.SetRawValue(newVal.RawValue)
@@ -143,7 +143,7 @@ func Test_BootstrapScrubPeriod(t *testing.T) {
 }
 
 func Test_BootstrapScrubQuorum(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.ODaoDefaults.Minipool.ScrubQuorum.Value.Formatted() + 0.15)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Minipool.ScrubQuorum.Value.SetRawValue(newVal.RawValue)
@@ -153,7 +153,7 @@ func Test_BootstrapScrubQuorum(t *testing.T) {
 }
 
 func Test_BootstrapProposalActionTime(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Proposal.ActionTime.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Proposal.ActionTime.Value.SetRawValue(newVal.RawValue)
@@ -163,7 +163,7 @@ func Test_BootstrapProposalActionTime(t *testing.T) {
 }
 
 func Test_BootstrapProposalCooldownTime(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Proposal.CooldownTime.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Proposal.CooldownTime.Value.SetRawValue(newVal.RawValue)
@@ -173,7 +173,7 @@ func Test_BootstrapProposalCooldownTime(t *testing.T) {
 }
 
 func Test_BootstrapProposalExecuteTime(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Proposal.ExecuteTime.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Proposal.ExecuteTime.Value.SetRawValue(newVal.RawValue)
@@ -183,7 +183,7 @@ func Test_BootstrapProposalExecuteTime(t *testing.T) {
 }
 
 func Test_BootstrapVoteDelayTime(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Proposal.VoteDelayTime.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Proposal.VoteDelayTime.Value.SetRawValue(newVal.RawValue)
@@ -193,7 +193,7 @@ func Test_BootstrapVoteDelayTime(t *testing.T) {
 }
 
 func Test_BootstrapVoteTime(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.ODaoDefaults.Proposal.VoteTime.Value.Formatted() + time.Hour)
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
 		newSettings.Proposal.VoteTime.Value.SetRawValue(newVal.RawValue)

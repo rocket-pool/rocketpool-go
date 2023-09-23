@@ -10,29 +10,29 @@ import (
 
 // A parameter represented as a uint256 (a *big.Int) in the contracts, but with more useful meaning when
 // properly formatted
-type Parameter[fType FormattedType] struct {
+type Uint256Parameter[fType FormattedType] struct {
 	// The raw value stored in the contracts
 	RawValue *big.Int `json:"rawValue"`
 }
 
 // Interface for all parameter types
-type IParameter interface {
+type IUint256Parameter interface {
 	GetRawValue() *big.Int
 	SetRawValue(*big.Int)
 }
 
 // Get the parameter's raw value
-func (p *Parameter[fType]) GetRawValue() *big.Int {
+func (p *Uint256Parameter[fType]) GetRawValue() *big.Int {
 	return p.RawValue
 }
 
 // Set the parameter's raw value to a copy of the provided input
-func (p *Parameter[fType]) SetRawValue(value *big.Int) {
+func (p *Uint256Parameter[fType]) SetRawValue(value *big.Int) {
 	p.RawValue = big.NewInt(0).Set(value)
 }
 
 // Get the formatted value of the parameter
-func (p *Parameter[fType]) Formatted() fType {
+func (p *Uint256Parameter[fType]) Formatted() fType {
 	// Switch on the parameter type and convert it
 	var formatted fType
 	switch f := any(&formatted).(type) { // Go can't switch on type parameters yet so we have to do this nonsense
@@ -51,7 +51,7 @@ func (p *Parameter[fType]) Formatted() fType {
 }
 
 // Sets the parameter's value using the well-defined type
-func (p *Parameter[fType]) Set(value fType) {
+func (p *Uint256Parameter[fType]) Set(value fType) {
 	// Switch on the parameter type and convert it
 	switch f := any(&value).(type) { // Go can't switch on type parameters yet so we have to do this nonsense
 	case *time.Time:

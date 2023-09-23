@@ -34,8 +34,8 @@ type OracleDaoManager struct {
 
 // Details for OracleDaoManager
 type OracleDaoManagerDetails struct {
-	MemberCount        core.Parameter[uint64] `json:"memberCount"`
-	MinimumMemberCount core.Parameter[uint64] `json:"minimumMemberCount"`
+	MemberCount        core.Uint256Parameter[uint64] `json:"memberCount"`
+	MinimumMemberCount core.Uint256Parameter[uint64] `json:"minimumMemberCount"`
 }
 
 // ====================

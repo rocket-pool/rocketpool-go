@@ -32,15 +32,15 @@ type MinipoolManager struct {
 
 // Details for RocketMinipoolManager
 type MinipoolManagerDetails struct {
-	MinipoolCount          core.Parameter[uint64] `json:"minipoolCount"`
-	StakingMinipoolCount   core.Parameter[uint64] `json:"stakingMinipoolCount"`
-	FinalisedMinipoolCount core.Parameter[uint64] `json:"finalisedMinipoolCount"`
-	ActiveMinipoolCount    core.Parameter[uint64] `json:"activeMinipoolCount"`
-	VacantMinipoolCount    core.Parameter[uint64] `json:"vacantMinipoolCount"`
+	MinipoolCount          core.Uint256Parameter[uint64] `json:"minipoolCount"`
+	StakingMinipoolCount   core.Uint256Parameter[uint64] `json:"stakingMinipoolCount"`
+	FinalisedMinipoolCount core.Uint256Parameter[uint64] `json:"finalisedMinipoolCount"`
+	ActiveMinipoolCount    core.Uint256Parameter[uint64] `json:"activeMinipoolCount"`
+	VacantMinipoolCount    core.Uint256Parameter[uint64] `json:"vacantMinipoolCount"`
 
-	TotalQueueLength       core.Parameter[uint64] `json:"totalQueueLength"`
-	TotalQueueCapacity     *big.Int               `json:"totalQueueCapacity"`
-	EffectiveQueueCapacity *big.Int               `json:"effectiveQueueCapacity"`
+	TotalQueueLength       core.Uint256Parameter[uint64] `json:"totalQueueLength"`
+	TotalQueueCapacity     *big.Int                      `json:"totalQueueCapacity"`
+	EffectiveQueueCapacity *big.Int                      `json:"effectiveQueueCapacity"`
 }
 
 // The counts of minipools per status

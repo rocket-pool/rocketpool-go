@@ -37,33 +37,33 @@ type NodeDetails struct {
 	DistributorAddress common.Address `json:"distributorAddress"`
 
 	// NodeManager
-	Address                          common.Address            `json:"address"`
-	Exists                           bool                      `json:"exists"`
-	RegistrationTime                 core.Parameter[time.Time] `json:"registrationTime"`
-	TimezoneLocation                 string                    `json:"timezoneLocation"`
-	RewardNetwork                    core.Parameter[uint64]    `json:"rewardNetwork"`
-	IsFeeDistributorInitialized      bool                      `json:"isFeeDistributorInitialized"`
-	AverageFee                       core.Parameter[float64]   `json:"averageFee"`
-	SmoothingPoolRegistrationState   bool                      `json:"smoothingPoolRegistrationState"`
-	SmoothingPoolRegistrationChanged core.Parameter[time.Time] `json:"smoothingPoolRegistrationChanged"`
+	Address                          common.Address                   `json:"address"`
+	Exists                           bool                             `json:"exists"`
+	RegistrationTime                 core.Uint256Parameter[time.Time] `json:"registrationTime"`
+	TimezoneLocation                 string                           `json:"timezoneLocation"`
+	RewardNetwork                    core.Uint256Parameter[uint64]    `json:"rewardNetwork"`
+	IsFeeDistributorInitialized      bool                             `json:"isFeeDistributorInitialized"`
+	AverageFee                       core.Uint256Parameter[float64]   `json:"averageFee"`
+	SmoothingPoolRegistrationState   bool                             `json:"smoothingPoolRegistrationState"`
+	SmoothingPoolRegistrationChanged core.Uint256Parameter[time.Time] `json:"smoothingPoolRegistrationChanged"`
 
 	// NodeDeposit
 	Credit *big.Int `json:"credit"`
 
 	// NodeStaking
-	RplStake          *big.Int                  `json:"rplStake"`
-	EffectiveRplStake *big.Int                  `json:"effectiveRplStake"`
-	MinimumRplStake   *big.Int                  `json:"minimumRplStake"`
-	MaximumRplStake   *big.Int                  `json:"maximumRplStake"`
-	RplStakedTime     core.Parameter[time.Time] `json:"rplStakedTime"`
-	EthMatched        *big.Int                  `json:"ethMatched"`
-	EthMatchedLimit   *big.Int                  `json:"ethMatchedLimit"`
+	RplStake          *big.Int                         `json:"rplStake"`
+	EffectiveRplStake *big.Int                         `json:"effectiveRplStake"`
+	MinimumRplStake   *big.Int                         `json:"minimumRplStake"`
+	MaximumRplStake   *big.Int                         `json:"maximumRplStake"`
+	RplStakedTime     core.Uint256Parameter[time.Time] `json:"rplStakedTime"`
+	EthMatched        *big.Int                         `json:"ethMatched"`
+	EthMatchedLimit   *big.Int                         `json:"ethMatchedLimit"`
 
 	// MinipoolManager
-	MinipoolCount           core.Parameter[uint64] `json:"minipoolCount"`
-	ActiveMinipoolCount     core.Parameter[uint64] `json:"activeMinipoolCount"`
-	FinalisedMinipoolCount  core.Parameter[uint64] `json:"finalisedMinipoolCount"`
-	ValidatingMinipoolCount core.Parameter[uint64] `json:"validatingMinipoolCount"`
+	MinipoolCount           core.Uint256Parameter[uint64] `json:"minipoolCount"`
+	ActiveMinipoolCount     core.Uint256Parameter[uint64] `json:"activeMinipoolCount"`
+	FinalisedMinipoolCount  core.Uint256Parameter[uint64] `json:"finalisedMinipoolCount"`
+	ValidatingMinipoolCount core.Uint256Parameter[uint64] `json:"validatingMinipoolCount"`
 
 	// Storage
 	WithdrawalAddress        common.Address `json:"withdrawalAddress"`

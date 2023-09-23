@@ -94,7 +94,7 @@ func (s *OracleDaoUintSetting) SetRawValue(value *big.Int) {
 /// =======================
 
 type OracleDaoCompoundSetting[DataType core.FormattedType] struct {
-	Value core.Parameter[DataType]
+	Value core.Uint256Parameter[DataType]
 
 	settingContract *core.Contract
 	odaoMgr         *OracleDaoManager
@@ -115,11 +115,11 @@ func (s *OracleDaoCompoundSetting[DataType]) Get(mc *batch.MultiCaller) {
 	core.AddCall(mc, s.settingContract, &s.Value.RawValue, "getSettingUint", s.path)
 }
 
-func (s *OracleDaoCompoundSetting[DataType]) ProposeSet(value core.Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoCompoundSetting[DataType]) ProposeSet(value core.Uint256Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.odaoMgr.ProposeSetUint("", rocketpool.ContractName(s.settingContract.Name), s.path, s.Value.RawValue, opts)
 }
 
-func (s *OracleDaoCompoundSetting[DataType]) Bootstrap(value core.Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoCompoundSetting[DataType]) Bootstrap(value core.Uint256Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapUint(rocketpool.ContractName(s.settingContract.Name), s.path, s.Value.RawValue, opts)
 }
 

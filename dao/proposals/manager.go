@@ -27,7 +27,7 @@ type DaoProposalManager struct {
 
 // Details for DaoProposalManager
 type DaoProposalManagerDetails struct {
-	ProposalCount core.Parameter[uint64] `json:"proposalCount"`
+	ProposalCount core.Uint256Parameter[uint64] `json:"proposalCount"`
 }
 
 // ====================

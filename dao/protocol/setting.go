@@ -100,7 +100,7 @@ func (s *ProtocolDaoUintSetting) SetRawValue(value *big.Int) {
 /// =======================
 
 type ProtocolDaoCompoundSetting[DataType core.FormattedType] struct {
-	Value core.Parameter[DataType]
+	Value core.Uint256Parameter[DataType]
 
 	settingContract *core.Contract
 	pdaoMgr         *ProtocolDaoManager
@@ -128,7 +128,7 @@ func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value core.Parameter[D
 }
 */
 
-func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value core.Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value core.Uint256Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.pdaoMgr.BootstrapUint(rocketpool.ContractName(s.settingContract.Name), s.path, s.Value.RawValue, opts)
 }
 

@@ -23,21 +23,21 @@ type AuctionLot struct {
 
 // Details for auction lots
 type AuctionLotDetails struct {
-	Index               core.Parameter[uint64]  `json:"index"`
-	Exists              bool                    `json:"exists"`
-	StartBlock          core.Parameter[uint64]  `json:"startBlock"`
-	EndBlock            core.Parameter[uint64]  `json:"endBlock"`
-	StartPrice          core.Parameter[float64] `json:"startPrice"`
-	ReservePrice        core.Parameter[float64] `json:"reservePrice"`
-	PriceAtCurrentBlock core.Parameter[float64] `json:"priceAtCurrentBlock"`
-	PriceByTotalBids    core.Parameter[float64] `json:"priceByTotalBids"`
-	CurrentPrice        core.Parameter[float64] `json:"currentPrice"`
-	TotalRplAmount      *big.Int                `json:"totalRplAmount"`
-	ClaimedRplAmount    *big.Int                `json:"claimedRplAmount"`
-	RemainingRplAmount  *big.Int                `json:"remainingRplAmount"`
-	TotalBidAmount      *big.Int                `json:"totalBidAmount"`
-	IsCleared           bool                    `json:"cleared"`
-	RplRecovered        bool                    `json:"rplRecovered"`
+	Index               core.Uint256Parameter[uint64]  `json:"index"`
+	Exists              bool                           `json:"exists"`
+	StartBlock          core.Uint256Parameter[uint64]  `json:"startBlock"`
+	EndBlock            core.Uint256Parameter[uint64]  `json:"endBlock"`
+	StartPrice          core.Uint256Parameter[float64] `json:"startPrice"`
+	ReservePrice        core.Uint256Parameter[float64] `json:"reservePrice"`
+	PriceAtCurrentBlock core.Uint256Parameter[float64] `json:"priceAtCurrentBlock"`
+	PriceByTotalBids    core.Uint256Parameter[float64] `json:"priceByTotalBids"`
+	CurrentPrice        core.Uint256Parameter[float64] `json:"currentPrice"`
+	TotalRplAmount      *big.Int                       `json:"totalRplAmount"`
+	ClaimedRplAmount    *big.Int                       `json:"claimedRplAmount"`
+	RemainingRplAmount  *big.Int                       `json:"remainingRplAmount"`
+	TotalBidAmount      *big.Int                       `json:"totalBidAmount"`
+	IsCleared           bool                           `json:"cleared"`
+	RplRecovered        bool                           `json:"rplRecovered"`
 }
 
 // ====================
@@ -54,7 +54,7 @@ func NewAuctionLot(rp *rocketpool.RocketPool, index uint64) (*AuctionLot, error)
 
 	return &AuctionLot{
 		AuctionLotDetails: &AuctionLotDetails{
-			Index: core.Parameter[uint64]{
+			Index: core.Uint256Parameter[uint64]{
 				RawValue: big.NewInt(int64(index)),
 			},
 		},
@@ -137,7 +137,7 @@ func (c *AuctionLot) GetLotRplRecovered(mc *batch.MultiCaller) {
 }
 
 // Get the price of the lot at the given block
-func (c *AuctionLot) GetLotPriceAtBlock(mc *batch.MultiCaller, out *core.Parameter[float64], blockNumber uint64) {
+func (c *AuctionLot) GetLotPriceAtBlock(mc *batch.MultiCaller, out *core.Uint256Parameter[float64], blockNumber uint64) {
 	core.AddCall(mc, c.am, &out.RawValue, "getLotPriceAtBlock", c.Index.RawValue, big.NewInt(int64(blockNumber)))
 }
 

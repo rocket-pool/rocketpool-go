@@ -24,10 +24,10 @@ type AuctionManager struct {
 
 // Details for RocketAuctionManager
 type AuctionManagerDetails struct {
-	TotalRplBalance     *big.Int               `json:"totalRplBalance"`
-	AllottedRplBalance  *big.Int               `json:"allottedRplBalance"`
-	RemainingRplBalance *big.Int               `json:"remainingRplBalance"`
-	LotCount            core.Parameter[uint64] `json:"lotCount"`
+	TotalRplBalance     *big.Int                      `json:"totalRplBalance"`
+	AllottedRplBalance  *big.Int                      `json:"allottedRplBalance"`
+	RemainingRplBalance *big.Int                      `json:"remainingRplBalance"`
+	LotCount            core.Uint256Parameter[uint64] `json:"lotCount"`
 }
 
 // ====================

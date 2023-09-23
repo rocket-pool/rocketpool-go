@@ -34,14 +34,14 @@ type RewardsPool struct {
 
 // Details for RocketRewardsPool
 type RewardsPoolDetails struct {
-	RewardIndex                core.Parameter[uint64]        `json:"rewardIndex"`
-	IntervalStart              core.Parameter[time.Time]     `json:"intervalStart"`
-	IntervalDuration           core.Parameter[time.Duration] `json:"intervalDuration"`
-	NodeOperatorRewardsPercent core.Parameter[float64]       `json:"nodeOperatorRewardsPercent"`
-	OracleDaoRewardsPercent    core.Parameter[float64]       `json:"oracleDaoRewardsPercent"`
-	ProtocolDaoRewardsPercent  core.Parameter[float64]       `json:"protocolDaoRewardsPercent"`
-	PendingRplRewards          *big.Int                      `json:"pendingRplRewards"`
-	PendingEthRewards          *big.Int                      `json:"pendingEthRewards"`
+	RewardIndex                core.Uint256Parameter[uint64]        `json:"rewardIndex"`
+	IntervalStart              core.Uint256Parameter[time.Time]     `json:"intervalStart"`
+	IntervalDuration           core.Uint256Parameter[time.Duration] `json:"intervalDuration"`
+	NodeOperatorRewardsPercent core.Uint256Parameter[float64]       `json:"nodeOperatorRewardsPercent"`
+	OracleDaoRewardsPercent    core.Uint256Parameter[float64]       `json:"oracleDaoRewardsPercent"`
+	ProtocolDaoRewardsPercent  core.Uint256Parameter[float64]       `json:"protocolDaoRewardsPercent"`
+	PendingRplRewards          *big.Int                             `json:"pendingRplRewards"`
+	PendingEthRewards          *big.Int                             `json:"pendingEthRewards"`
 }
 
 // Info for a rewards snapshot event

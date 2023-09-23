@@ -26,10 +26,10 @@ type TokenReth struct {
 
 // Details for RocketTokenRETH
 type TokenRethDetails struct {
-	TotalSupply     *big.Int                `json:"totalSupply"`
-	ExchangeRate    core.Parameter[float64] `json:"exchangeRate"`
-	TotalCollateral *big.Int                `json:"totalCollateral"`
-	CollateralRate  core.Parameter[float64] `json:"collateralRate"`
+	TotalSupply     *big.Int                       `json:"totalSupply"`
+	ExchangeRate    core.Uint256Parameter[float64] `json:"exchangeRate"`
+	TotalCollateral *big.Int                       `json:"totalCollateral"`
+	CollateralRate  core.Uint256Parameter[float64] `json:"collateralRate"`
 }
 
 // ====================

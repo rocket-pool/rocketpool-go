@@ -25,16 +25,16 @@ type proposalCommon struct {
 
 // Details for proposals
 type ProposalCommonDetails struct {
-	ID              core.Parameter[uint64]                   `json:"id"`
+	ID              core.Uint256Parameter[uint64]            `json:"id"`
 	ProposerAddress common.Address                           `json:"proposerAddress"`
 	Message         string                                   `json:"message"`
-	CreatedTime     core.Parameter[time.Time]                `json:"createdTime"`
-	StartTime       core.Parameter[time.Time]                `json:"startTime"`
-	EndTime         core.Parameter[time.Time]                `json:"endTime"`
-	ExpiryTime      core.Parameter[time.Time]                `json:"expiryTime"`
-	VotesRequired   core.Parameter[float64]                  `json:"votesRequired"`
-	VotesFor        core.Parameter[float64]                  `json:"votesFor"`
-	VotesAgainst    core.Parameter[float64]                  `json:"votesAgainst"`
+	CreatedTime     core.Uint256Parameter[time.Time]         `json:"createdTime"`
+	StartTime       core.Uint256Parameter[time.Time]         `json:"startTime"`
+	EndTime         core.Uint256Parameter[time.Time]         `json:"endTime"`
+	ExpiryTime      core.Uint256Parameter[time.Time]         `json:"expiryTime"`
+	VotesRequired   core.Uint256Parameter[float64]           `json:"votesRequired"`
+	VotesFor        core.Uint256Parameter[float64]           `json:"votesFor"`
+	VotesAgainst    core.Uint256Parameter[float64]           `json:"votesAgainst"`
 	MemberVoted     bool                                     `json:"memberVoted"`
 	MemberSupported bool                                     `json:"memberSupported"`
 	IsCancelled     bool                                     `json:"isCancelled"`
@@ -57,7 +57,7 @@ func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*proposalCommon, e
 
 	return &proposalCommon{
 		ProposalCommonDetails: &ProposalCommonDetails{
-			ID: core.Parameter[uint64]{
+			ID: core.Uint256Parameter[uint64]{
 				RawValue: big.NewInt(0).SetUint64(id),
 			},
 		},

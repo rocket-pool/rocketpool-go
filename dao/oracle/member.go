@@ -23,19 +23,19 @@ type OracleDaoMember struct {
 
 // Details for Oracle DAO members
 type OracleDaoMemberDetails struct {
-	Address                common.Address            `json:"address"`
-	Exists                 bool                      `json:"exists"`
-	ID                     string                    `json:"id"`
-	Url                    string                    `json:"url"`
-	InvitedTime            core.Parameter[time.Time] `json:"invitedTime"`
-	JoinedTime             core.Parameter[time.Time] `json:"joinedTime"`
-	ReplacedTime           core.Parameter[time.Time] `json:"replacedTime"`
-	LeftTime               core.Parameter[time.Time] `json:"leftTime"`
-	LastProposalTime       core.Parameter[time.Time] `json:"lastProposalTime"`
-	RplBondAmount          *big.Int                  `json:"rplBondAmount"`
-	ReplacementAddress     common.Address            `json:"replacementAddress"`
-	IsChallenged           bool                      `json:"isChallenged"`
-	UnbondedValidatorCount core.Parameter[uint64]    `json:"unbondedValidatorCount"`
+	Address                common.Address                   `json:"address"`
+	Exists                 bool                             `json:"exists"`
+	ID                     string                           `json:"id"`
+	Url                    string                           `json:"url"`
+	InvitedTime            core.Uint256Parameter[time.Time] `json:"invitedTime"`
+	JoinedTime             core.Uint256Parameter[time.Time] `json:"joinedTime"`
+	ReplacedTime           core.Uint256Parameter[time.Time] `json:"replacedTime"`
+	LeftTime               core.Uint256Parameter[time.Time] `json:"leftTime"`
+	LastProposalTime       core.Uint256Parameter[time.Time] `json:"lastProposalTime"`
+	RplBondAmount          *big.Int                         `json:"rplBondAmount"`
+	ReplacementAddress     common.Address                   `json:"replacementAddress"`
+	IsChallenged           bool                             `json:"isChallenged"`
+	UnbondedValidatorCount core.Uint256Parameter[uint64]    `json:"unbondedValidatorCount"`
 }
 
 // ====================

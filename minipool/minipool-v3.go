@@ -32,15 +32,15 @@ type MinipoolV3 struct {
 }
 
 type MinipoolV3Details struct {
-	IsVacant                     bool                      `json:"isVacant"`
-	PreMigrationBalance          *big.Int                  `json:"preMigrationBalance"`
-	HasUserDistributed           bool                      `json:"hasUserDistributed"`
-	IsBondReduceCancelled        bool                      `json:"isBondReduceCancelled"`
-	ReduceBondTime               core.Parameter[time.Time] `json:"reduceBondTime"`
-	ReduceBondValue              *big.Int                  `json:"reduceBondValue"`
-	LastBondReductionTime        core.Parameter[time.Time] `json:"lastBondReductionTime"`
-	LastBondReductionPrevValue   *big.Int                  `json:"lastBondReductionPrevValue"`
-	LastBondReductionPrevNodeFee core.Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
+	IsVacant                     bool                             `json:"isVacant"`
+	PreMigrationBalance          *big.Int                         `json:"preMigrationBalance"`
+	HasUserDistributed           bool                             `json:"hasUserDistributed"`
+	IsBondReduceCancelled        bool                             `json:"isBondReduceCancelled"`
+	ReduceBondTime               core.Uint256Parameter[time.Time] `json:"reduceBondTime"`
+	ReduceBondValue              *big.Int                         `json:"reduceBondValue"`
+	LastBondReductionTime        core.Uint256Parameter[time.Time] `json:"lastBondReductionTime"`
+	LastBondReductionPrevValue   *big.Int                         `json:"lastBondReductionPrevValue"`
+	LastBondReductionPrevNodeFee core.Uint256Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
 }
 
 // ====================

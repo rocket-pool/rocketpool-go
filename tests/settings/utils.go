@@ -43,7 +43,7 @@ func compareImpl(log func(string, ...any), expected reflect.Value, actual reflec
 		childActual := actual.Field(i)
 
 		// Try casting to parameters first
-		expectedParam, isIParameter := childExpected.Addr().Interface().(core.IParameter)
+		expectedParam, isIParameter := childExpected.Addr().Interface().(core.IUint256Parameter)
 		expectedUint8Param, isIUint8Parameter := childExpected.Addr().Interface().(core.IUint8Parameter)
 
 		// Try casting to settings next
@@ -53,7 +53,7 @@ func compareImpl(log func(string, ...any), expected reflect.Value, actual reflec
 		passedCheck := true
 		if isIParameter {
 			// Handle parameters
-			actualParam := childActual.Addr().Interface().(core.IParameter)
+			actualParam := childActual.Addr().Interface().(core.IUint256Parameter)
 			if expectedParam.GetRawValue() == nil {
 				logMessage(log, "field %s.%s of type %s - expected was nil", header, field.Name, field.Type.Name())
 			} else if actualParam.GetRawValue() == nil {
@@ -153,7 +153,7 @@ func cloneImpl(t *testing.T, source reflect.Value, dest reflect.Value, header st
 		childDest := dest.Field(i)
 
 		// Try casting to parameters first
-		sourceParam, isIParameter := childSource.Addr().Interface().(core.IParameter)
+		sourceParam, isIParameter := childSource.Addr().Interface().(core.IUint256Parameter)
 		sourceUint8Param, isIUint8Parameter := childSource.Addr().Interface().(core.IUint8Parameter)
 
 		// Try casting to settings next
@@ -162,7 +162,7 @@ func cloneImpl(t *testing.T, source reflect.Value, dest reflect.Value, header st
 
 		if isIParameter {
 			// Handle parameters
-			destParam := childDest.Addr().Interface().(core.IParameter)
+			destParam := childDest.Addr().Interface().(core.IUint256Parameter)
 			if sourceParam.GetRawValue() == nil {
 				t.Errorf("field %s.%s of type %s - source was nil", header, field.Name, field.Type.Name())
 			} else {

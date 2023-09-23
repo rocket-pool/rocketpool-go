@@ -30,22 +30,22 @@ type NetworkManager struct {
 // Details for network balances
 type NetworkManagerDetails struct {
 	// Balances
-	BalancesBlock                 core.Parameter[uint64]  `json:"balancesBlock"`
-	TotalETHBalance               *big.Int                `json:"totalEthBalance"`
-	StakingETHBalance             *big.Int                `json:"stakingEthBalance"`
-	TotalRETHSupply               *big.Int                `json:"totalRethSupply"`
-	EthUtilizationRate            core.Parameter[float64] `json:"ethUtilizationRate"`
-	LatestReportableBalancesBlock core.Parameter[uint64]  `json:"latestReportableBalancesBlock"`
+	BalancesBlock                 core.Uint256Parameter[uint64]  `json:"balancesBlock"`
+	TotalETHBalance               *big.Int                       `json:"totalEthBalance"`
+	StakingETHBalance             *big.Int                       `json:"stakingEthBalance"`
+	TotalRETHSupply               *big.Int                       `json:"totalRethSupply"`
+	EthUtilizationRate            core.Uint256Parameter[float64] `json:"ethUtilizationRate"`
+	LatestReportableBalancesBlock core.Uint256Parameter[uint64]  `json:"latestReportableBalancesBlock"`
 
 	// Fees
-	NodeDemand      *big.Int                `json:"nodeDemand"`
-	NodeFee         core.Parameter[float64] `json:"nodeFee"`
-	NodeFeeByDemand core.Parameter[float64] `json:"nodeFeeByDemand"`
+	NodeDemand      *big.Int                       `json:"nodeDemand"`
+	NodeFee         core.Uint256Parameter[float64] `json:"nodeFee"`
+	NodeFeeByDemand core.Uint256Parameter[float64] `json:"nodeFeeByDemand"`
 
 	// Prices
-	PricesBlock                 core.Parameter[uint64]  `json:"pricesBlock"`
-	RplPrice                    core.Parameter[float64] `json:"rplPrice"`
-	LatestReportablePricesBlock core.Parameter[uint64]  `json:"latestReportablePricesBlock"`
+	PricesBlock                 core.Uint256Parameter[uint64]  `json:"pricesBlock"`
+	RplPrice                    core.Uint256Parameter[float64] `json:"rplPrice"`
+	LatestReportablePricesBlock core.Uint256Parameter[uint64]  `json:"latestReportablePricesBlock"`
 }
 
 // ====================

@@ -42,21 +42,21 @@ type MinipoolCommonDetails struct {
 	Version                    uint8                                     `json:"version"`
 	NodeAddress                common.Address                            `json:"nodeAddress"`
 	Status                     core.Uint8Parameter[types.MinipoolStatus] `json:"status"`
-	StatusBlock                core.Parameter[uint64]                    `json:"statusBlock"`
-	StatusTime                 core.Parameter[time.Time]                 `json:"statusTime"`
+	StatusBlock                core.Uint256Parameter[uint64]             `json:"statusBlock"`
+	StatusTime                 core.Uint256Parameter[time.Time]          `json:"statusTime"`
 	IsFinalised                bool                                      `json:"isFinalized"`
-	NodeFee                    core.Parameter[float64]                   `json:"nodeFee"`
+	NodeFee                    core.Uint256Parameter[float64]            `json:"nodeFee"`
 	NodeDepositBalance         *big.Int                                  `json:"nodeDepositBalance"`
 	NodeRefundBalance          *big.Int                                  `json:"nodeRefundBalance"`
 	NodeDepositAssigned        bool                                      `json:"nodeDepositAssigned"`
 	UserDepositBalance         *big.Int                                  `json:"userDepositBalance"`
 	UserDepositAssigned        bool                                      `json:"userDepositAssigned"`
-	UserDepositAssignedTime    core.Parameter[time.Time]                 `json:"userDepositAssignedTime"`
+	UserDepositAssignedTime    core.Uint256Parameter[time.Time]          `json:"userDepositAssignedTime"`
 	IsUseLatestDelegateEnabled bool                                      `json:"IsUseLatestDelegateEnabled"`
 	DelegateAddress            common.Address                            `json:"delegateAddress"`
 	PreviousDelegateAddress    common.Address                            `json:"previousDelegateAddress"`
 	EffectiveDelegateAddress   common.Address                            `json:"effectiveDelegateAddress"`
-	PenaltyCount               core.Parameter[uint64]                    `json:"penaltyCount"`
+	PenaltyCount               core.Uint256Parameter[uint64]             `json:"penaltyCount"`
 
 	// MinipoolManager
 	Exists                bool                                       `json:"exists"`
@@ -66,15 +66,15 @@ type MinipoolCommonDetails struct {
 	DepositType           core.Uint8Parameter[types.MinipoolDeposit] `json:"depositType"`
 
 	// BondReducer
-	IsBondReduceCancelled        bool                      `json:"isBondReduceCancelled"`
-	ReduceBondTime               core.Parameter[time.Time] `json:"reduceBondTime"`
-	ReduceBondValue              *big.Int                  `json:"reduceBondValue"`
-	LastBondReductionTime        core.Parameter[time.Time] `json:"lastBondReductionTime"`
-	LastBondReductionPrevValue   *big.Int                  `json:"lastBondReductionPrevValue"`
-	LastBondReductionPrevNodeFee core.Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
+	IsBondReduceCancelled        bool                             `json:"isBondReduceCancelled"`
+	ReduceBondTime               core.Uint256Parameter[time.Time] `json:"reduceBondTime"`
+	ReduceBondValue              *big.Int                         `json:"reduceBondValue"`
+	LastBondReductionTime        core.Uint256Parameter[time.Time] `json:"lastBondReductionTime"`
+	LastBondReductionPrevValue   *big.Int                         `json:"lastBondReductionPrevValue"`
+	LastBondReductionPrevNodeFee core.Uint256Parameter[float64]   `json:"lastBondReductionPrevNodeFee"`
 
 	// MinipoolQueue
-	QueuePosition core.Parameter[int64] `json:"queuePosition"`
+	QueuePosition core.Uint256Parameter[int64] `json:"queuePosition"`
 }
 
 // The data from a minipool's MinipoolPrestaked event

@@ -52,7 +52,7 @@ func Test_BootstrapAuctionLotMaximumEthValue(t *testing.T) {
 }
 
 func Test_BootstrapAuctionLotDuration(t *testing.T) {
-	newVal := core.Parameter[uint64]{}
+	newVal := core.Uint256Parameter[uint64]{}
 	newVal.Set(tests.PDaoDefaults.Auction.LotDuration.Value.Formatted() + 1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Auction.LotDuration.Value.SetRawValue(newVal.RawValue)
@@ -62,7 +62,7 @@ func Test_BootstrapAuctionLotDuration(t *testing.T) {
 }
 
 func Test_BootstrapAuctionLotStartingPriceRatio(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Auction.LotStartingPriceRatio.Value.Formatted() - 0.2)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Auction.LotStartingPriceRatio.Value.SetRawValue(newVal.RawValue)
@@ -72,7 +72,7 @@ func Test_BootstrapAuctionLotStartingPriceRatio(t *testing.T) {
 }
 
 func Test_BootstrapAuctionLotReservePriceRatio(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Auction.LotReservePriceRatio.Value.Formatted() - 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Auction.LotReservePriceRatio.Value.SetRawValue(newVal.RawValue)
@@ -118,7 +118,7 @@ func Test_BootstrapMaximumDepositPoolSize(t *testing.T) {
 }
 
 func Test_BootstrapMaximumPoolDepositAssignments(t *testing.T) {
-	newVal := core.Parameter[uint64]{}
+	newVal := core.Uint256Parameter[uint64]{}
 	newVal.Set(tests.PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Value.Formatted() + 10)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Deposit.MaximumAssignmentsPerDeposit.Value.SetRawValue(newVal.RawValue)
@@ -128,7 +128,7 @@ func Test_BootstrapMaximumPoolDepositAssignments(t *testing.T) {
 }
 
 func Test_BootstrapMaximumSocialisedPoolDepositAssignments(t *testing.T) {
-	newVal := core.Parameter[uint64]{}
+	newVal := core.Uint256Parameter[uint64]{}
 	newVal.Set(tests.PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.Formatted() + 5)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.SetRawValue(newVal.RawValue)
@@ -138,7 +138,7 @@ func Test_BootstrapMaximumSocialisedPoolDepositAssignments(t *testing.T) {
 }
 
 func Test_BootstrapDepositFee(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.RawValue = big.NewInt(0).Add(tests.PDaoDefaults.Deposit.DepositFee.Value.RawValue, eth.EthToWei(0.1))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Deposit.DepositFee.Value.SetRawValue(newVal.RawValue)
@@ -148,7 +148,7 @@ func Test_BootstrapDepositFee(t *testing.T) {
 }
 
 func Test_BootstrapInflationIntervalRate(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.RawValue = big.NewInt(0).Add(tests.PDaoDefaults.Inflation.IntervalRate.Value.RawValue, eth.EthToWei(1))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Inflation.IntervalRate.Value.SetRawValue(newVal.RawValue)
@@ -158,7 +158,7 @@ func Test_BootstrapInflationIntervalRate(t *testing.T) {
 }
 
 func Test_BootstrapInflationIntervalStartTime(t *testing.T) {
-	newVal := core.Parameter[time.Time]{}
+	newVal := core.Uint256Parameter[time.Time]{}
 	newVal.Set(tests.PDaoDefaults.Inflation.StartTime.Value.Formatted().Add(24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Inflation.StartTime.Value.SetRawValue(newVal.RawValue)
@@ -186,7 +186,7 @@ func Test_BootstrapBondReductionEnabled(t *testing.T) {
 }
 
 func Test_BootstrapMinipoolLaunchTimeout(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Minipool.LaunchTimeout.Value.Formatted() + (24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Minipool.LaunchTimeout.Value.SetRawValue(newVal.RawValue)
@@ -196,7 +196,7 @@ func Test_BootstrapMinipoolLaunchTimeout(t *testing.T) {
 }
 
 func Test_BootstrapMaximumMinipoolCount(t *testing.T) {
-	newVal := core.Parameter[uint64]{}
+	newVal := core.Uint256Parameter[uint64]{}
 	newVal.Set(tests.PDaoDefaults.Minipool.MaximumCount.Value.Formatted() + 1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Minipool.MaximumCount.Value.SetRawValue(newVal.RawValue)
@@ -206,7 +206,7 @@ func Test_BootstrapMaximumMinipoolCount(t *testing.T) {
 }
 
 func Test_BootstrapUserDistributeWindowStart(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowStart.Value.Formatted() + (24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Minipool.UserDistributeWindowStart.Value.SetRawValue(newVal.RawValue)
@@ -216,7 +216,7 @@ func Test_BootstrapUserDistributeWindowStart(t *testing.T) {
 }
 
 func Test_BootstrapUserDistributeWindowLength(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowLength.Value.Formatted() + (24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Minipool.UserDistributeWindowLength.Value.SetRawValue(newVal.RawValue)
@@ -226,7 +226,7 @@ func Test_BootstrapUserDistributeWindowLength(t *testing.T) {
 }
 
 func Test_BootstrapOracleDaoConsensusThreshold(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.OracleDaoConsensusThreshold.Value.Formatted() + 0.15)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.OracleDaoConsensusThreshold.Value.SetRawValue(newVal.RawValue)
@@ -245,7 +245,7 @@ func Test_BootstrapSubmitBalancesEnabled(t *testing.T) {
 }
 
 func Test_BootstrapSubmitBalancesFrequency(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + (24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.SubmitBalancesFrequency.Value.SetRawValue(newVal.RawValue)
@@ -264,7 +264,7 @@ func Test_BootstrapSubmitPricesEnabled(t *testing.T) {
 }
 
 func Test_BootstrapSubmitPricesFrequency(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + (24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.SubmitPricesFrequency.Value.SetRawValue(newVal.RawValue)
@@ -274,7 +274,7 @@ func Test_BootstrapSubmitPricesFrequency(t *testing.T) {
 }
 
 func Test_BootstrapMinimumNodeFee(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.MinimumNodeFee.Value.Formatted() - 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.MinimumNodeFee.Value.SetRawValue(newVal.RawValue)
@@ -284,7 +284,7 @@ func Test_BootstrapMinimumNodeFee(t *testing.T) {
 }
 
 func Test_BootstrapTargetNodeFee(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.TargetNodeFee.Value.Formatted() + 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.TargetNodeFee.Value.SetRawValue(newVal.RawValue)
@@ -294,7 +294,7 @@ func Test_BootstrapTargetNodeFee(t *testing.T) {
 }
 
 func Test_BootstrapMaximumNodeFee(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.MaximumNodeFee.Value.Formatted() + 0.3)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.MaximumNodeFee.Value.SetRawValue(newVal.RawValue)
@@ -313,7 +313,7 @@ func Test_BootstrapNodeFeeDemandRange(t *testing.T) {
 }
 
 func Test_BootstrapTargetRethCollateralRate(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.TargetRethCollateralRate.Value.Formatted() + 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.TargetRethCollateralRate.Value.SetRawValue(newVal.RawValue)
@@ -323,7 +323,7 @@ func Test_BootstrapTargetRethCollateralRate(t *testing.T) {
 }
 
 func Test_BootstrapNodePenaltyThreshold(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.NodePenaltyThreshold.Value.Formatted() + 0.15)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.NodePenaltyThreshold.Value.SetRawValue(newVal.RawValue)
@@ -333,7 +333,7 @@ func Test_BootstrapNodePenaltyThreshold(t *testing.T) {
 }
 
 func Test_BootstrapPerPenaltyRate(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Network.PerPenaltyRate.Value.Formatted() + 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.PerPenaltyRate.Value.SetRawValue(newVal.RawValue)
@@ -343,7 +343,7 @@ func Test_BootstrapPerPenaltyRate(t *testing.T) {
 }
 
 func Test_BootstrapRethDepositDelay(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Network.RethDepositDelay.Value.Formatted() + time.Hour)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.RethDepositDelay.Value.SetRawValue(newVal.RawValue)
@@ -398,7 +398,7 @@ func Test_BootstrapVacantMinipoolsEnabled(t *testing.T) {
 }
 
 func Test_BootstrapMinimumPerMinipoolStake(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Node.MinimumPerMinipoolStake.Value.Formatted() + 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Node.MinimumPerMinipoolStake.Value.SetRawValue(newVal.RawValue)
@@ -408,7 +408,7 @@ func Test_BootstrapMinimumPerMinipoolStake(t *testing.T) {
 }
 
 func Test_BootstrapMaximumPerMinipoolStake(t *testing.T) {
-	newVal := core.Parameter[float64]{}
+	newVal := core.Uint256Parameter[float64]{}
 	newVal.Set(tests.PDaoDefaults.Node.MaximumPerMinipoolStake.Value.Formatted() + 0.1)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Node.MaximumPerMinipoolStake.Value.SetRawValue(newVal.RawValue)
@@ -418,7 +418,7 @@ func Test_BootstrapMaximumPerMinipoolStake(t *testing.T) {
 }
 
 func Test_BootstrapRewardsIntervalTime(t *testing.T) {
-	newVal := core.Parameter[time.Duration]{}
+	newVal := core.Uint256Parameter[time.Duration]{}
 	newVal.Set(tests.PDaoDefaults.Rewards.IntervalTime.Value.Formatted() + (24 * time.Hour))
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Rewards.IntervalTime.Value.SetRawValue(newVal.RawValue)
