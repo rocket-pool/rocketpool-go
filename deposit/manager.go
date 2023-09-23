@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
-	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -17,16 +16,18 @@ import (
 
 // Binding for RocketDepositPool
 type DepositPoolManager struct {
-	*DepositPoolManagerDetails
+	// The deposit pool balance
+	Balance core.SimpleField[*big.Int]
+
+	// The deposit pool balance provided by pool stakers
+	UserBalance core.SimpleField[*big.Int]
+
+	// The excess deposit pool balance
+	ExcessBalance core.SimpleField[*big.Int]
+
+	// === Internal fields ===
 	rp *rocketpool.RocketPool
 	dp *core.Contract
-}
-
-// Details for RocketDepositPool
-type DepositPoolManagerDetails struct {
-	Balance       *big.Int `json:"balance"`
-	UserBalance   *big.Int `json:"userBalance"`
-	ExcessBalance *big.Int `json:"excessBalance"`
 }
 
 // ====================
@@ -42,36 +43,13 @@ func NewDepositPoolManager(rp *rocketpool.RocketPool) (*DepositPoolManager, erro
 	}
 
 	return &DepositPoolManager{
-		DepositPoolManagerDetails: &DepositPoolManagerDetails{},
-		rp:                        rp,
-		dp:                        dp,
+		Balance:       core.SimpleField[*big.Int]{Contract: dp, GetterName: "getBalance"},
+		UserBalance:   core.SimpleField[*big.Int]{Contract: dp, GetterName: "getUserBalance"},
+		ExcessBalance: core.SimpleField[*big.Int]{Contract: dp, GetterName: "getExcessBalance"},
+
+		rp: rp,
+		dp: dp,
 	}, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// Get the deposit pool balance
-func (c *DepositPoolManager) GetBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dp, &c.Balance, "getBalance")
-}
-
-// Get the deposit pool balance provided by pool stakers
-func (c *DepositPoolManager) GetUserBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dp, &c.Balance, "getUserBalance")
-}
-
-// Get the excess deposit pool balance
-func (c *DepositPoolManager) GetExcessBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dp, &c.Balance, "getExcessBalance")
-}
-
-// Get all basic details
-func (c *DepositPoolManager) GetAllDetails(mc *batch.MultiCaller) {
-	c.GetBalance(mc)
-	c.GetUserBalance(mc)
-	c.GetExcessBalance(mc)
 }
 
 // ====================

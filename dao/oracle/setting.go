@@ -14,7 +14,7 @@ import (
 /// ===================
 
 type OracleDaoBoolSetting struct {
-	Value bool
+	value bool
 
 	settingContract *core.Contract
 	odaoMgr         *OracleDaoManager
@@ -29,8 +29,12 @@ func newBoolSetting(settingContract *core.Contract, odaoMgr *OracleDaoManager, p
 	}
 }
 
-func (s *OracleDaoBoolSetting) Get(mc *batch.MultiCaller) {
-	core.AddCall(mc, s.settingContract, &s.Value, "getSettingBool", s.path)
+func (s *OracleDaoBoolSetting) AddToQuery(mc *batch.MultiCaller) {
+	core.AddCall(mc, s.settingContract, &s.value, "getSettingBool", s.path)
+}
+
+func (s *OracleDaoBoolSetting) Get() bool {
+	return s.value
 }
 
 func (s *OracleDaoBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
@@ -39,14 +43,6 @@ func (s *OracleDaoBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (
 
 func (s *OracleDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapBool(rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
-}
-
-func (s *OracleDaoBoolSetting) GetRawValue() bool {
-	return s.Value
-}
-
-func (s *OracleDaoBoolSetting) SetRawValue(value bool) {
-	s.Value = value
 }
 
 /// ===================
@@ -93,7 +89,7 @@ func (s *OracleDaoUintSetting) SetRawValue(value *big.Int) {
 /// === CompoundSetting ===
 /// =======================
 
-type OracleDaoCompoundSetting[DataType core.FormattedType] struct {
+type OracleDaoCompoundSetting[DataType core.FormattedUint256Type] struct {
 	Value core.Uint256Parameter[DataType]
 
 	settingContract *core.Contract
@@ -101,7 +97,7 @@ type OracleDaoCompoundSetting[DataType core.FormattedType] struct {
 	path            string
 }
 
-func newCompoundSetting[DataType core.FormattedType](settingContract *core.Contract, odaoMgr *OracleDaoManager, path string) *OracleDaoCompoundSetting[DataType] {
+func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *core.Contract, odaoMgr *OracleDaoManager, path string) *OracleDaoCompoundSetting[DataType] {
 	s := &OracleDaoCompoundSetting[DataType]{
 		settingContract: settingContract,
 		odaoMgr:         odaoMgr,

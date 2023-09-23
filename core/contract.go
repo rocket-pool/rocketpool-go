@@ -2,7 +2,6 @@ package core
 
 import (
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -12,10 +11,6 @@ import (
 
 type CallReturnType interface {
 	*big.Int | uint8 | bool | string | common.Address | common.Hash | types.ValidatorPubkey | []byte
-}
-
-type FormattedType interface {
-	time.Time | uint64 | int64 | float64 | time.Duration
 }
 
 type FormattedUint8Type interface {

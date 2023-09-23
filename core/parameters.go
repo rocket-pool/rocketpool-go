@@ -10,7 +10,7 @@ import (
 
 // A parameter represented as a uint256 (a *big.Int) in the contracts, but with more useful meaning when
 // properly formatted
-type Uint256Parameter[fType FormattedType] struct {
+type Uint256Parameter[fType FormattedUint256Type] struct {
 	// The raw value stored in the contracts
 	RawValue *big.Int `json:"rawValue"`
 }

@@ -99,7 +99,7 @@ func (s *ProtocolDaoUintSetting) SetRawValue(value *big.Int) {
 /// === CompoundSetting ===
 /// =======================
 
-type ProtocolDaoCompoundSetting[DataType core.FormattedType] struct {
+type ProtocolDaoCompoundSetting[DataType core.FormattedUint256Type] struct {
 	Value core.Uint256Parameter[DataType]
 
 	settingContract *core.Contract
@@ -107,7 +107,7 @@ type ProtocolDaoCompoundSetting[DataType core.FormattedType] struct {
 	path            string
 }
 
-func newCompoundSetting[DataType core.FormattedType](settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoCompoundSetting[DataType] {
+func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoCompoundSetting[DataType] {
 	s := &ProtocolDaoCompoundSetting[DataType]{
 		settingContract: settingContract,
 		pdaoMgr:         pdaoMgr,

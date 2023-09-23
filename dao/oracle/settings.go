@@ -134,7 +134,7 @@ func (s *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 	s.Minipool.ScrubPeriod.Get(mc)
 	s.Minipool.ScrubQuorum.Get(mc)
 	s.Minipool.PromotionScrubPeriod.Get(mc)
-	s.Minipool.IsScrubPenaltyEnabled.Get(mc)
+	s.Minipool.IsScrubPenaltyEnabled.AddToQuery(mc)
 	s.Minipool.BondReductionWindowStart.Get(mc)
 	s.Minipool.BondReductionWindowLength.Get(mc)
 	s.Minipool.BondReductionCancellationQuorum.Get(mc)
