@@ -245,8 +245,8 @@ func Test_BootstrapSubmitBalancesEnabled(t *testing.T) {
 }
 
 func Test_BootstrapSubmitBalancesFrequency(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + (24 * time.Hour))
+	newVal := core.Uint256Parameter[uint64]{}
+	newVal.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + 100)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.SubmitBalancesFrequency.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
@@ -264,8 +264,8 @@ func Test_BootstrapSubmitPricesEnabled(t *testing.T) {
 }
 
 func Test_BootstrapSubmitPricesFrequency(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + (24 * time.Hour))
+	newVal := core.Uint256Parameter[uint64]{}
+	newVal.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + 100)
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
 		newSettings.Network.SubmitPricesFrequency.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
@@ -467,9 +467,9 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	newPdaoSettings.Minipool.UserDistributeWindowLength.Value.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowLength.Value.Formatted() + (24 * time.Hour))
 	newPdaoSettings.Network.OracleDaoConsensusThreshold.Value.Set(tests.PDaoDefaults.Network.OracleDaoConsensusThreshold.Value.Formatted() + 0.15)
 	newPdaoSettings.Network.IsSubmitBalancesEnabled.Value = !tests.PDaoDefaults.Network.IsSubmitBalancesEnabled.Value
-	newPdaoSettings.Network.SubmitBalancesFrequency.Value.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + (24 * time.Hour))
+	newPdaoSettings.Network.SubmitBalancesFrequency.Value.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + 100)
 	newPdaoSettings.Network.IsSubmitPricesEnabled.Value = !tests.PDaoDefaults.Network.IsSubmitPricesEnabled.Value
-	newPdaoSettings.Network.SubmitPricesFrequency.Value.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + (24 * time.Hour))
+	newPdaoSettings.Network.SubmitPricesFrequency.Value.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + 100)
 	newPdaoSettings.Network.MinimumNodeFee.Value.Set(tests.PDaoDefaults.Network.MinimumNodeFee.Value.Formatted() - 0.1)
 	newPdaoSettings.Network.TargetNodeFee.Value.Set(tests.PDaoDefaults.Network.TargetNodeFee.Value.Formatted() + 0.1)
 	newPdaoSettings.Network.MaximumNodeFee.Value.Set(tests.PDaoDefaults.Network.MaximumNodeFee.Value.Formatted() + 0.3)

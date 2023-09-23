@@ -87,14 +87,14 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodePricesParticipa
 
 	// Get the price frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
-		c.pds.GetSubmitPricesFrequency(mc)
+		c.pds.Network.SubmitPricesFrequency.Get(mc)
 		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updatePricesFrequency := c.pds.Network.SubmitPricesFrequency.Formatted()
+	updatePricesFrequency := c.pds.Network.SubmitPricesFrequency.Value.Formatted()
 	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
@@ -193,14 +193,14 @@ func (c *TrustedNodeParticipationCalculator) CalculateTrustedNodeBalancesPartici
 
 	// Get the balance frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
-		c.pds.GetSubmitBalancesFrequency(mc)
+		c.pds.Network.SubmitBalancesFrequency.Get(mc)
 		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updateBalancesFrequency := c.pds.Network.SubmitBalancesFrequency.Formatted()
+	updateBalancesFrequency := c.pds.Network.SubmitBalancesFrequency.Value.Formatted()
 	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get the block of the most recent member join (limiting to 50 intervals)
@@ -300,14 +300,14 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestBalancesPartici
 
 	// Get the price frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
-		c.pds.GetSubmitBalancesFrequency(mc)
+		c.pds.Network.SubmitBalancesFrequency.Get(mc)
 		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updateBalancesFrequency := c.pds.Network.SubmitBalancesFrequency.Formatted()
+	updateBalancesFrequency := c.pds.Network.SubmitBalancesFrequency.Value.Formatted()
 	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get trusted members
@@ -351,14 +351,14 @@ func (c *TrustedNodeParticipationCalculator) GetTrustedNodeLatestPricesParticipa
 
 	// Get the price frequency and member count
 	err := c.rp.Query(func(mc *batch.MultiCaller) error {
-		c.pds.GetSubmitPricesFrequency(mc)
+		c.pds.Network.SubmitPricesFrequency.Get(mc)
 		c.odaoMgr.GetMemberCount(mc)
 		return nil
 	}, opts)
 	if err != nil {
 		return nil, fmt.Errorf("error during initial parameter update: %w", err)
 	}
-	updatePricesFrequency := c.pds.Network.SubmitPricesFrequency.Formatted()
+	updatePricesFrequency := c.pds.Network.SubmitPricesFrequency.Value.Formatted()
 	memberCount := c.odaoMgr.MemberCount.Formatted()
 
 	// Get trusted members

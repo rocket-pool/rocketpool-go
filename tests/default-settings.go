@@ -73,9 +73,9 @@ func CreateDefaults(mgr *TestManager) error {
 		// Network
 		PDaoDefaults.Network.OracleDaoConsensusThreshold.Value.Set(0.51) // 51%
 		PDaoDefaults.Network.IsSubmitBalancesEnabled.Value = true
-		PDaoDefaults.Network.SubmitBalancesFrequency.Value.Set(5760 * time.Second) // ~24 hours
+		PDaoDefaults.Network.SubmitBalancesFrequency.Value.Set(5760) // ~24 hours
 		PDaoDefaults.Network.IsSubmitPricesEnabled.Value = true
-		PDaoDefaults.Network.SubmitPricesFrequency.Value.Set(5760 * time.Second) // ~24 hours
+		PDaoDefaults.Network.SubmitPricesFrequency.Value.Set(5760) // ~24 hours
 		PDaoDefaults.Network.MinimumNodeFee.Value.Set(0.14)
 		PDaoDefaults.Network.TargetNodeFee.Value.Set(0.14)
 		PDaoDefaults.Network.MaximumNodeFee.Value.Set(0.14)

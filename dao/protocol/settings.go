@@ -69,9 +69,9 @@ type ProtocolDaoSettingsDetails struct {
 		NodePenaltyThreshold        *ProtocolDaoCompoundSetting[float64]       `json:"nodePenaltyThreshold"`
 		PerPenaltyRate              *ProtocolDaoCompoundSetting[float64]       `json:"perPenaltyRate"`
 		IsSubmitBalancesEnabled     *ProtocolDaoBoolSetting                    `json:"isSubmitBalancesEnabled"`
-		SubmitBalancesFrequency     *ProtocolDaoCompoundSetting[time.Duration] `json:"submitBalancesFrequency"`
+		SubmitBalancesFrequency     *ProtocolDaoCompoundSetting[uint64]        `json:"submitBalancesFrequency"`
 		IsSubmitPricesEnabled       *ProtocolDaoBoolSetting                    `json:"isSubmitPricesEnabled"`
-		SubmitPricesFrequency       *ProtocolDaoCompoundSetting[time.Duration] `json:"submitPricesFrequency"`
+		SubmitPricesFrequency       *ProtocolDaoCompoundSetting[uint64]        `json:"submitPricesFrequency"`
 		MinimumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"minimumNodeFee"`
 		TargetNodeFee               *ProtocolDaoCompoundSetting[float64]       `json:"targetNodeFee"`
 		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"maximumNodeFee"`
@@ -164,9 +164,9 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Network.NodePenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.threshold")
 	s.Network.PerPenaltyRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.per.rate")
 	s.Network.IsSubmitBalancesEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.balances.enabled")
-	s.Network.SubmitBalancesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.submit.balances.frequency")
+	s.Network.SubmitBalancesFrequency = newCompoundSetting[uint64](s.dps_network, pdaoMgr, "network.submit.balances.frequency")
 	s.Network.IsSubmitPricesEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.prices.enabled")
-	s.Network.SubmitPricesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.submit.prices.frequency")
+	s.Network.SubmitPricesFrequency = newCompoundSetting[uint64](s.dps_network, pdaoMgr, "network.submit.prices.frequency")
 	s.Network.MinimumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.minimum")
 	s.Network.TargetNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.target")
 	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.maximum")
