@@ -108,29 +108,29 @@ func CreateDefaults(mgr *TestManager) error {
 		ODaoDefaults = *odaoMgr.Settings.OracleDaoSettingsDetails
 
 		// Members
-		ODaoDefaults.Members.ChallengeCooldown.Value.Set(7 * 24 * time.Hour) // 7 days
-		ODaoDefaults.Members.ChallengeCost.Value = eth.EthToWei(1)
-		ODaoDefaults.Members.ChallengeWindow.Value.Set(7 * 24 * time.Hour) // 7 days
-		ODaoDefaults.Members.Quorum.Value.Set(0.51)
-		ODaoDefaults.Members.RplBond.Value = eth.EthToWei(1750)
-		ODaoDefaults.Members.UnbondedMinipoolMax.Value.Set(30)
-		ODaoDefaults.Members.UnbondedMinipoolMinFee.Value.Set(0.8)
+		ODaoDefaults.Member.ChallengeCooldown.Value.Set(7 * 24 * time.Hour) // 7 days
+		ODaoDefaults.Member.ChallengeCost.Value = eth.EthToWei(1)
+		ODaoDefaults.Member.ChallengeWindow.Value.Set(7 * 24 * time.Hour) // 7 days
+		ODaoDefaults.Member.Quorum.Value.Set(0.51)
+		ODaoDefaults.Member.RplBond.Value = eth.EthToWei(1750)
+		ODaoDefaults.Member.UnbondedMinipoolMax.Value.Set(30)
+		ODaoDefaults.Member.UnbondedMinipoolMinFee.Value.Set(0.8)
 
 		// Minipools
-		ODaoDefaults.Minipools.BondReductionWindowStart.Value.Set(12 * time.Hour)
-		ODaoDefaults.Minipools.BondReductionWindowLength.Value.Set(2 * 24 * time.Hour)
-		ODaoDefaults.Minipools.IsScrubPenaltyEnabled.Value = true
-		ODaoDefaults.Minipools.ScrubPeriod.Value.Set(12 * time.Hour)
-		ODaoDefaults.Minipools.ScrubQuorum.Value.Set(0.51)
-		ODaoDefaults.Minipools.PromotionScrubPeriod.Value.Set(3 * 24 * time.Hour) // 3 days
-		ODaoDefaults.Minipools.BondReductionCancellationQuorum.Value.Set(0.51)
+		ODaoDefaults.Minipool.BondReductionWindowStart.Value.Set(12 * time.Hour)
+		ODaoDefaults.Minipool.BondReductionWindowLength.Value.Set(2 * 24 * time.Hour)
+		ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Value = true
+		ODaoDefaults.Minipool.ScrubPeriod.Value.Set(12 * time.Hour)
+		ODaoDefaults.Minipool.ScrubQuorum.Value.Set(0.51)
+		ODaoDefaults.Minipool.PromotionScrubPeriod.Value.Set(3 * 24 * time.Hour) // 3 days
+		ODaoDefaults.Minipool.BondReductionCancellationQuorum.Value.Set(0.51)
 
 		// Proposals
-		ODaoDefaults.Proposals.ActionTime.Value.Set(4 * 7 * 24 * time.Hour)  // 4 weeks
-		ODaoDefaults.Proposals.CooldownTime.Value.Set(2 * 24 * time.Hour)    // 2 days
-		ODaoDefaults.Proposals.ExecuteTime.Value.Set(4 * 7 * 24 * time.Hour) // 4 weeks
-		ODaoDefaults.Proposals.VoteTime.Value.Set(2 * 7 * 24 * time.Hour)    // 2 weeks
-		ODaoDefaults.Proposals.VoteDelayTime.Value.Set(7 * 24 * time.Hour)   // 1 week
+		ODaoDefaults.Proposal.ActionTime.Value.Set(4 * 7 * 24 * time.Hour)  // 4 weeks
+		ODaoDefaults.Proposal.CooldownTime.Value.Set(2 * 24 * time.Hour)    // 2 days
+		ODaoDefaults.Proposal.ExecuteTime.Value.Set(4 * 7 * 24 * time.Hour) // 4 weeks
+		ODaoDefaults.Proposal.VoteTime.Value.Set(2 * 7 * 24 * time.Hour)    // 2 weeks
+		ODaoDefaults.Proposal.VoteDelayTime.Value.Set(7 * 24 * time.Hour)   // 1 week
 	})
 
 	return err

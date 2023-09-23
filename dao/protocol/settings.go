@@ -194,7 +194,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 // =============
 
 func (s *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
-	// Auction settings
+	// Auction
 	s.Auction.IsCreateLotEnabled.Get(mc)
 	s.Auction.IsBidOnLotEnabled.Get(mc)
 	s.Auction.LotMinimumEthValue.Get(mc)
@@ -203,7 +203,7 @@ func (s *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 	s.Auction.LotStartingPriceRatio.Get(mc)
 	s.Auction.LotReservePriceRatio.Get(mc)
 
-	// Deposit settings
+	// Deposit
 	s.Deposit.IsDepositingEnabled.Get(mc)
 	s.Deposit.AreDepositAssignmentsEnabled.Get(mc)
 	s.Deposit.MinimumDeposit.Get(mc)

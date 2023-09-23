@@ -16,188 +16,188 @@ import (
 
 func Test_ProposeChallengeCooldown(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Members.ChallengeCooldown.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Member.ChallengeCooldown.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.ChallengeCooldown.Value.SetRawValue(newVal.RawValue)
+		newSettings.Member.ChallengeCooldown.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.ChallengeCooldown.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.ChallengeCooldown.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeChallengeCost(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.ODaoDefaults.Members.ChallengeCost.Value, eth.EthToWei(1))
+	newVal := big.NewInt(0).Add(tests.ODaoDefaults.Member.ChallengeCost.Value, eth.EthToWei(1))
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.ChallengeCost.Value = newVal
+		newSettings.Member.ChallengeCost.Value = newVal
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.ChallengeCost.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.ChallengeCost.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeChallengeWindow(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Members.ChallengeWindow.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Member.ChallengeWindow.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.ChallengeWindow.Value.SetRawValue(newVal.RawValue)
+		newSettings.Member.ChallengeWindow.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.ChallengeWindow.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.ChallengeWindow.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeQuorum(t *testing.T) {
 	newVal := core.Parameter[float64]{}
-	newVal.Set(tests.ODaoDefaults.Members.Quorum.Value.Formatted() + 0.15)
+	newVal.Set(tests.ODaoDefaults.Member.Quorum.Value.Formatted() + 0.15)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.Quorum.Value.SetRawValue(newVal.RawValue)
+		newSettings.Member.Quorum.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.Quorum.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.Quorum.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeRplBond(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.ODaoDefaults.Members.RplBond.Value, eth.EthToWei(1))
+	newVal := big.NewInt(0).Add(tests.ODaoDefaults.Member.RplBond.Value, eth.EthToWei(1))
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.RplBond.Value = newVal
+		newSettings.Member.RplBond.Value = newVal
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.RplBond.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.RplBond.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeUnbondedMinipoolMax(t *testing.T) {
 	newVal := core.Parameter[uint64]{}
-	newVal.Set(tests.ODaoDefaults.Members.UnbondedMinipoolMax.Value.Formatted() + 1)
+	newVal.Set(tests.ODaoDefaults.Member.UnbondedMinipoolMax.Value.Formatted() + 1)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.UnbondedMinipoolMax.Value.SetRawValue(newVal.RawValue)
+		newSettings.Member.UnbondedMinipoolMax.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.UnbondedMinipoolMax.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.UnbondedMinipoolMax.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeUnbondedMinipoolMinFee(t *testing.T) {
 	newVal := core.Parameter[float64]{}
-	newVal.Set(tests.ODaoDefaults.Members.UnbondedMinipoolMinFee.Value.Formatted() + 0.01)
+	newVal.Set(tests.ODaoDefaults.Member.UnbondedMinipoolMinFee.Value.Formatted() + 0.01)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Members.UnbondedMinipoolMinFee.Value.SetRawValue(newVal.RawValue)
+		newSettings.Member.UnbondedMinipoolMinFee.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Members.UnbondedMinipoolMinFee.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Member.UnbondedMinipoolMinFee.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeBondReductionCancellationQuorum(t *testing.T) {
 	newVal := core.Parameter[float64]{}
-	newVal.Set(tests.ODaoDefaults.Minipools.BondReductionCancellationQuorum.Value.Formatted() + 0.15)
+	newVal.Set(tests.ODaoDefaults.Minipool.BondReductionCancellationQuorum.Value.Formatted() + 0.15)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.BondReductionCancellationQuorum.Value.SetRawValue(newVal.RawValue)
+		newSettings.Minipool.BondReductionCancellationQuorum.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.BondReductionCancellationQuorum.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeBondReductionWindowLength(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Minipools.BondReductionWindowLength.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Minipool.BondReductionWindowLength.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.BondReductionWindowLength.Value.SetRawValue(newVal.RawValue)
+		newSettings.Minipool.BondReductionWindowLength.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.BondReductionWindowLength.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.BondReductionWindowLength.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeBondReductionWindowStart(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Minipools.BondReductionWindowStart.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Minipool.BondReductionWindowStart.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.BondReductionWindowStart.Value.SetRawValue(newVal.RawValue)
+		newSettings.Minipool.BondReductionWindowStart.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.BondReductionWindowStart.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.BondReductionWindowStart.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeScrubPenaltyEnabled(t *testing.T) {
-	newVal := !tests.ODaoDefaults.Minipools.IsScrubPenaltyEnabled.Value
+	newVal := !tests.ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Value
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.IsScrubPenaltyEnabled.Value = newVal
+		newSettings.Minipool.IsScrubPenaltyEnabled.Value = newVal
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.IsScrubPenaltyEnabled.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.IsScrubPenaltyEnabled.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposePromotionScrubPeriod(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Minipools.PromotionScrubPeriod.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Minipool.PromotionScrubPeriod.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.PromotionScrubPeriod.Value.SetRawValue(newVal.RawValue)
+		newSettings.Minipool.PromotionScrubPeriod.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.PromotionScrubPeriod.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.PromotionScrubPeriod.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeScrubPeriod(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Minipools.ScrubPeriod.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Minipool.ScrubPeriod.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.ScrubPeriod.Value.SetRawValue(newVal.RawValue)
+		newSettings.Minipool.ScrubPeriod.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.ScrubPeriod.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.ScrubPeriod.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeScrubQuorum(t *testing.T) {
 	newVal := core.Parameter[float64]{}
-	newVal.Set(tests.ODaoDefaults.Minipools.ScrubQuorum.Value.Formatted() + 0.15)
+	newVal.Set(tests.ODaoDefaults.Minipool.ScrubQuorum.Value.Formatted() + 0.15)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Minipools.ScrubQuorum.Value.SetRawValue(newVal.RawValue)
+		newSettings.Minipool.ScrubQuorum.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Minipools.ScrubQuorum.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Minipool.ScrubQuorum.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeProposalActionTime(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Proposals.ActionTime.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Proposal.ActionTime.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Proposals.ActionTime.Value.SetRawValue(newVal.RawValue)
+		newSettings.Proposal.ActionTime.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Proposals.ActionTime.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Proposal.ActionTime.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeProposalCooldownTime(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Proposals.CooldownTime.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Proposal.CooldownTime.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Proposals.CooldownTime.Value.SetRawValue(newVal.RawValue)
+		newSettings.Proposal.CooldownTime.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Proposals.CooldownTime.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Proposal.CooldownTime.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeProposalExecuteTime(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Proposals.ExecuteTime.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Proposal.ExecuteTime.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Proposals.ExecuteTime.Value.SetRawValue(newVal.RawValue)
+		newSettings.Proposal.ExecuteTime.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Proposals.ExecuteTime.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Proposal.ExecuteTime.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeVoteDelayTime(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Proposals.VoteDelayTime.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Proposal.VoteDelayTime.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Proposals.VoteDelayTime.Value.SetRawValue(newVal.RawValue)
+		newSettings.Proposal.VoteDelayTime.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Proposals.VoteDelayTime.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Proposal.VoteDelayTime.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
 func Test_ProposeVoteTime(t *testing.T) {
 	newVal := core.Parameter[time.Duration]{}
-	newVal.Set(tests.ODaoDefaults.Proposals.VoteTime.Value.Formatted() + time.Hour)
+	newVal.Set(tests.ODaoDefaults.Proposal.VoteTime.Value.Formatted() + time.Hour)
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettingsDetails) {
-		newSettings.Proposals.VoteTime.Value.SetRawValue(newVal.RawValue)
+		newSettings.Proposal.VoteTime.Value.SetRawValue(newVal.RawValue)
 	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Proposals.VoteTime.ProposeSet(newVal, odao1.Transactor)
+		return odaoMgr.Settings.Proposal.VoteTime.ProposeSet(newVal, odao1.Transactor)
 	})
 }
 
@@ -286,7 +286,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	t.Logf("Got prop with ID %d: %s", prop.ID.Formatted(), prop.Message)
 
 	// Skip enough time to allow voting
-	voteDelayTime := settings.Proposals.VoteDelayTime.Value.Formatted()
+	voteDelayTime := settings.Proposal.VoteDelayTime.Value.Formatted()
 	waitSeconds := int(voteDelayTime.Seconds())
 	err = mgr.IncreaseTime(waitSeconds)
 	if err != nil {

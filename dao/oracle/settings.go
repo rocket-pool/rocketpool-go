@@ -28,8 +28,8 @@ type OracleDaoSettings struct {
 
 // Details for Oracle DAO settings
 type OracleDaoSettingsDetails struct {
-	// Members
-	Members struct {
+	// Member
+	Member struct {
 		Quorum                 *OracleDaoCompoundSetting[float64]       `json:"quorum"`
 		RplBond                *OracleDaoUintSetting                    `json:"rplBond"`
 		UnbondedMinipoolMax    *OracleDaoCompoundSetting[uint64]        `json:"unbondedMinipoolMax"`
@@ -39,8 +39,8 @@ type OracleDaoSettingsDetails struct {
 		ChallengeCost          *OracleDaoUintSetting                    `json:"challengeCost"`
 	} `json:"members"`
 
-	// Minipools
-	Minipools struct {
+	// Minipool
+	Minipool struct {
 		ScrubPeriod                     *OracleDaoCompoundSetting[time.Duration] `json:"scrubPeriod"`
 		ScrubQuorum                     *OracleDaoCompoundSetting[float64]       `json:"scrubQuorum"`
 		PromotionScrubPeriod            *OracleDaoCompoundSetting[time.Duration] `json:"promotionScrubPeriod"`
@@ -50,8 +50,8 @@ type OracleDaoSettingsDetails struct {
 		BondReductionCancellationQuorum *OracleDaoCompoundSetting[float64]       `json:"bondReductionCancellationQuorum"`
 	} `json:"minipools"`
 
-	// Proposals
-	Proposals struct {
+	// Proposal
+	Proposal struct {
 		CooldownTime  *OracleDaoCompoundSetting[time.Duration] `json:"cooldownTime"`
 		VoteTime      *OracleDaoCompoundSetting[time.Duration] `json:"voteTime"`
 		VoteDelayTime *OracleDaoCompoundSetting[time.Duration] `json:"voteDelayTime"`
@@ -88,30 +88,30 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 		dnts_rewards:   contracts[3],
 	}
 
-	// Member settings
-	s.Members.Quorum = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.quorum")
-	s.Members.RplBond = newUintSetting(s.dnts_members, odaoMgr, "members.rplbond")
-	s.Members.UnbondedMinipoolMax = newCompoundSetting[uint64](s.dnts_members, odaoMgr, "members.minipool.unbonded.max")
-	s.Members.UnbondedMinipoolMinFee = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.minipool.unbonded.min.fee")
-	s.Members.ChallengeCooldown = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.cooldown")
-	s.Members.ChallengeWindow = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.window")
-	s.Members.ChallengeCost = newUintSetting(s.dnts_members, odaoMgr, "members.challenge.cost")
+	// Member
+	s.Member.Quorum = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.quorum")
+	s.Member.RplBond = newUintSetting(s.dnts_members, odaoMgr, "members.rplbond")
+	s.Member.UnbondedMinipoolMax = newCompoundSetting[uint64](s.dnts_members, odaoMgr, "members.minipool.unbonded.max")
+	s.Member.UnbondedMinipoolMinFee = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.minipool.unbonded.min.fee")
+	s.Member.ChallengeCooldown = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.cooldown")
+	s.Member.ChallengeWindow = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.window")
+	s.Member.ChallengeCost = newUintSetting(s.dnts_members, odaoMgr, "members.challenge.cost")
 
-	// Minipool settings
-	s.Minipools.ScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.scrub.period")
-	s.Minipools.ScrubQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, "minipool.scrub.quorum")
-	s.Minipools.PromotionScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.promotion.scrub.period")
-	s.Minipools.IsScrubPenaltyEnabled = newBoolSetting(s.dnts_minipool, odaoMgr, "minipool.scrub.penalty.enabled")
-	s.Minipools.BondReductionWindowStart = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.bond.reduction.window.start")
-	s.Minipools.BondReductionWindowLength = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.bond.reduction.window.length")
-	s.Minipools.BondReductionCancellationQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, "minipool.cancel.bond.reduction.quorum")
+	// Minipool
+	s.Minipool.ScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.scrub.period")
+	s.Minipool.ScrubQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, "minipool.scrub.quorum")
+	s.Minipool.PromotionScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.promotion.scrub.period")
+	s.Minipool.IsScrubPenaltyEnabled = newBoolSetting(s.dnts_minipool, odaoMgr, "minipool.scrub.penalty.enabled")
+	s.Minipool.BondReductionWindowStart = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.bond.reduction.window.start")
+	s.Minipool.BondReductionWindowLength = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.bond.reduction.window.length")
+	s.Minipool.BondReductionCancellationQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, "minipool.cancel.bond.reduction.quorum")
 
-	// Proposal settings
-	s.Proposals.CooldownTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.cooldown.time")
-	s.Proposals.VoteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.vote.time")
-	s.Proposals.VoteDelayTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.vote.delay.time")
-	s.Proposals.ExecuteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.execute.time")
-	s.Proposals.ActionTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.action.time")
+	// Proposal
+	s.Proposal.CooldownTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.cooldown.time")
+	s.Proposal.VoteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.vote.time")
+	s.Proposal.VoteDelayTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.vote.delay.time")
+	s.Proposal.ExecuteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.execute.time")
+	s.Proposal.ActionTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.action.time")
 
 	return s, nil
 }
@@ -121,30 +121,30 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 // =============
 
 func (s *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
-	// Members
-	s.Members.Quorum.Get(mc)
-	s.Members.RplBond.Get(mc)
-	s.Members.UnbondedMinipoolMax.Get(mc)
-	s.Members.UnbondedMinipoolMinFee.Get(mc)
-	s.Members.ChallengeCooldown.Get(mc)
-	s.Members.ChallengeWindow.Get(mc)
-	s.Members.ChallengeCost.Get(mc)
+	// Member
+	s.Member.Quorum.Get(mc)
+	s.Member.RplBond.Get(mc)
+	s.Member.UnbondedMinipoolMax.Get(mc)
+	s.Member.UnbondedMinipoolMinFee.Get(mc)
+	s.Member.ChallengeCooldown.Get(mc)
+	s.Member.ChallengeWindow.Get(mc)
+	s.Member.ChallengeCost.Get(mc)
 
-	/// Minipools
-	s.Minipools.ScrubPeriod.Get(mc)
-	s.Minipools.ScrubQuorum.Get(mc)
-	s.Minipools.PromotionScrubPeriod.Get(mc)
-	s.Minipools.IsScrubPenaltyEnabled.Get(mc)
-	s.Minipools.BondReductionWindowStart.Get(mc)
-	s.Minipools.BondReductionWindowLength.Get(mc)
-	s.Minipools.BondReductionCancellationQuorum.Get(mc)
+	/// Minipool
+	s.Minipool.ScrubPeriod.Get(mc)
+	s.Minipool.ScrubQuorum.Get(mc)
+	s.Minipool.PromotionScrubPeriod.Get(mc)
+	s.Minipool.IsScrubPenaltyEnabled.Get(mc)
+	s.Minipool.BondReductionWindowStart.Get(mc)
+	s.Minipool.BondReductionWindowLength.Get(mc)
+	s.Minipool.BondReductionCancellationQuorum.Get(mc)
 
-	// Proposals
-	s.Proposals.CooldownTime.Get(mc)
-	s.Proposals.VoteTime.Get(mc)
-	s.Proposals.VoteDelayTime.Get(mc)
-	s.Proposals.ExecuteTime.Get(mc)
-	s.Proposals.ActionTime.Get(mc)
+	// Proposal
+	s.Proposal.CooldownTime.Get(mc)
+	s.Proposal.VoteTime.Get(mc)
+	s.Proposal.VoteDelayTime.Get(mc)
+	s.Proposal.ExecuteTime.Get(mc)
+	s.Proposal.ActionTime.Get(mc)
 }
 
 // === RocketDAONodeTrustedSettingsRewards ===

@@ -14,12 +14,12 @@ func Test_ChallengeAndKick(t *testing.T) {
 	account, _ := prepChallenge(t)
 
 	// Wait the challenge period
-	secondsToWait := int(odaoMgr.Settings.Members.ChallengeWindow.Value.Formatted().Seconds())
+	secondsToWait := int(odaoMgr.Settings.Member.ChallengeWindow.Value.Formatted().Seconds())
 	err := mgr.IncreaseTime(secondsToWait)
 	if err != nil {
-		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Members.ChallengeWindow.Value.Formatted(), err.Error())
+		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Member.ChallengeWindow.Value.Formatted(), err.Error())
 	}
-	t.Logf("Time increased by %s", odaoMgr.Settings.Members.ChallengeWindow.Value.Formatted())
+	t.Logf("Time increased by %s", odaoMgr.Settings.Member.ChallengeWindow.Value.Formatted())
 
 	// Decide it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
@@ -171,7 +171,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	// Query some state
 	err = rp.Query(func(mc *batchquery.MultiCaller) error {
 		member.GetIsChallenged(mc)
-		odaoMgr.Settings.Members.ChallengeWindow.Get(mc)
+		odaoMgr.Settings.Member.ChallengeWindow.Get(mc)
 		return nil
 	}, nil)
 	if err != nil {
