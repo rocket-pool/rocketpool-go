@@ -85,8 +85,7 @@ deploy_other() {
 
 # Run tests
 run_tests() {
-    go clean -testcache
-    go test -p 1 ./...
+    go clean -testcache && go test -p 1 ./...
 }
 
 

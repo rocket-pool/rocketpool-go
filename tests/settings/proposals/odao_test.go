@@ -211,7 +211,11 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	})
 
 	// Get the original settings
-	var settings oracle.OracleDaoSettingsDetails
+	odaoMgr, err := oracle.NewOracleDaoManager(mgr.RocketPool)
+	if err != nil {
+		t.Fatal("error creating oracle DAO manager: %w", err)
+	}
+	settings := *odaoMgr.Settings.OracleDaoSettingsDetails
 	settings_test.Clone(t, &tests.ODaoDefaults, &settings)
 	pass := settings_test.EnsureSameDetails(t.Errorf, &tests.ODaoDefaults, &settings)
 	if !pass {
@@ -228,7 +232,7 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	t.Log("Applied new setting")
 
 	// Make sure there aren't any proposals
-	err := rp.Query(func(mc *batch.MultiCaller) error {
+	err = rp.Query(func(mc *batch.MultiCaller) error {
 		dpm.GetProposalCount(mc)
 		return nil
 	}, nil)

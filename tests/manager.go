@@ -242,7 +242,7 @@ func (m *TestManager) initializeImpl(odaoMgr *oracle.OracleDaoManager) error {
 	// Bootstrap all of the relevant parameters
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.BootstrapNodeRegistrationEnabled(true, owner.Transactor)
+			return pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(true, owner.Transactor)
 		},
 	}, true, owner.Transactor)
 	if err != nil {

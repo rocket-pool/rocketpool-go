@@ -41,6 +41,14 @@ func (s *OracleDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*
 	return s.odaoMgr.BootstrapBool(rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
 }
 
+func (s *OracleDaoBoolSetting) GetRawValue() bool {
+	return s.Value
+}
+
+func (s *OracleDaoBoolSetting) SetRawValue(value bool) {
+	s.Value = value
+}
+
 /// ===================
 /// === UintSetting ===
 /// ===================
@@ -71,6 +79,14 @@ func (s *OracleDaoUintSetting) ProposeSet(value *big.Int, opts *bind.TransactOpt
 
 func (s *OracleDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapUint(rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
+}
+
+func (s *OracleDaoUintSetting) GetRawValue() *big.Int {
+	return s.Value
+}
+
+func (s *OracleDaoUintSetting) SetRawValue(value *big.Int) {
+	s.Value = big.NewInt(0).Set(value)
 }
 
 /// =======================
@@ -105,4 +121,12 @@ func (s *OracleDaoCompoundSetting[DataType]) ProposeSet(value core.Parameter[Dat
 
 func (s *OracleDaoCompoundSetting[DataType]) Bootstrap(value core.Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapUint(rocketpool.ContractName(s.settingContract.Name), s.path, s.Value.RawValue, opts)
+}
+
+func (s *OracleDaoCompoundSetting[DataType]) GetRawValue() *big.Int {
+	return s.Value.GetRawValue()
+}
+
+func (s *OracleDaoCompoundSetting[DataType]) SetRawValue(value *big.Int) {
+	s.Value.SetRawValue(value)
 }

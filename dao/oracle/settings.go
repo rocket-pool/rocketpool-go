@@ -120,31 +120,31 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 // === Calls ===
 // =============
 
-func (c *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
+func (s *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
 	// Members
-	c.Members.Quorum.Get(mc)
-	c.Members.RplBond.Get(mc)
-	c.Members.UnbondedMinipoolMax.Get(mc)
-	c.Members.UnbondedMinipoolMinFee.Get(mc)
-	c.Members.ChallengeCooldown.Get(mc)
-	c.Members.ChallengeWindow.Get(mc)
-	c.Members.ChallengeCost.Get(mc)
+	s.Members.Quorum.Get(mc)
+	s.Members.RplBond.Get(mc)
+	s.Members.UnbondedMinipoolMax.Get(mc)
+	s.Members.UnbondedMinipoolMinFee.Get(mc)
+	s.Members.ChallengeCooldown.Get(mc)
+	s.Members.ChallengeWindow.Get(mc)
+	s.Members.ChallengeCost.Get(mc)
 
 	/// Minipools
-	c.Minipools.ScrubPeriod.Get(mc)
-	c.Minipools.ScrubQuorum.Get(mc)
-	c.Minipools.PromotionScrubPeriod.Get(mc)
-	c.Minipools.IsScrubPenaltyEnabled.Get(mc)
-	c.Minipools.BondReductionWindowStart.Get(mc)
-	c.Minipools.BondReductionWindowLength.Get(mc)
-	c.Minipools.BondReductionCancellationQuorum.Get(mc)
+	s.Minipools.ScrubPeriod.Get(mc)
+	s.Minipools.ScrubQuorum.Get(mc)
+	s.Minipools.PromotionScrubPeriod.Get(mc)
+	s.Minipools.IsScrubPenaltyEnabled.Get(mc)
+	s.Minipools.BondReductionWindowStart.Get(mc)
+	s.Minipools.BondReductionWindowLength.Get(mc)
+	s.Minipools.BondReductionCancellationQuorum.Get(mc)
 
 	// Proposals
-	c.Proposals.CooldownTime.Get(mc)
-	c.Proposals.VoteTime.Get(mc)
-	c.Proposals.VoteDelayTime.Get(mc)
-	c.Proposals.ExecuteTime.Get(mc)
-	c.Proposals.ActionTime.Get(mc)
+	s.Proposals.CooldownTime.Get(mc)
+	s.Proposals.VoteTime.Get(mc)
+	s.Proposals.VoteDelayTime.Get(mc)
+	s.Proposals.ExecuteTime.Get(mc)
+	s.Proposals.ActionTime.Get(mc)
 }
 
 // === RocketDAONodeTrustedSettingsRewards ===

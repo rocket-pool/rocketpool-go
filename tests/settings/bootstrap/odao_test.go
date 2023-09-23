@@ -212,7 +212,11 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 	})
 
 	// Create new settings
-	newOdaoSettings := oracle.OracleDaoSettingsDetails{}
+	odaoMgr, err := oracle.NewOracleDaoManager(mgr.RocketPool)
+	if err != nil {
+		t.Fatal("error creating oracle DAO manager: %w", err)
+	}
+	newOdaoSettings := *odaoMgr.Settings.OracleDaoSettingsDetails
 	newOdaoSettings.Members.ChallengeCooldown.Value.Set(tests.ODaoDefaults.Members.ChallengeCooldown.Value.Formatted() + time.Hour)
 	newOdaoSettings.Members.ChallengeCost.Value = big.NewInt(0).Add(tests.ODaoDefaults.Members.ChallengeCost.Value, eth.EthToWei(1))
 	newOdaoSettings.Members.ChallengeWindow.Value.Set(tests.ODaoDefaults.Members.ChallengeWindow.Value.Formatted() + time.Hour)
@@ -354,7 +358,11 @@ func testOdaoParameterBootstrap(t *testing.T, setter func(*oracle.OracleDaoSetti
 	})
 
 	// Get the original settings
-	var settings oracle.OracleDaoSettingsDetails
+	odaoMgr, err := oracle.NewOracleDaoManager(mgr.RocketPool)
+	if err != nil {
+		t.Fatal("error creating oracle DAO manager: %w", err)
+	}
+	settings := *odaoMgr.Settings.OracleDaoSettingsDetails
 	settings_test.Clone(t, &tests.ODaoDefaults, &settings)
 	pass := settings_test.EnsureSameDetails(t.Errorf, &tests.ODaoDefaults, &settings)
 	if !pass {
