@@ -3,6 +3,7 @@ package bootstrap_test
 import (
 	"fmt"
 	"math/big"
+	"runtime/debug"
 	"testing"
 	"time"
 
@@ -16,414 +17,389 @@ import (
 )
 
 func Test_BootstrapCreateAuctionLotEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Auction.IsCreateLotEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.IsCreateLotEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Auction.IsCreateLotEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.IsCreateLotEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Auction.IsCreateLotEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapBidOnAuctionLotEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Auction.IsBidOnLotEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.IsBidOnLotEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Auction.IsBidOnLotEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.IsBidOnLotEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Auction.IsBidOnLotEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapAuctionLotMinimumEthValue(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMinimumEthValue.Value, eth.EthToWei(1))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotMinimumEthValue.Value = newVal
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMinimumEthValue.Get(), eth.EthToWei(1))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.LotMinimumEthValue.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Auction.LotMinimumEthValue.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapAuctionLotMaximumEthValue(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMaximumEthValue.Value, eth.EthToWei(1))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotMaximumEthValue.Value = newVal
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMaximumEthValue.Get(), eth.EthToWei(1))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.LotMaximumEthValue.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Auction.LotMaximumEthValue.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapAuctionLotDuration(t *testing.T) {
-	newVal := core.Uint256Parameter[uint64]{}
-	newVal.Set(tests.PDaoDefaults.Auction.LotDuration.Value.Formatted() + 1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotDuration.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Auction.LotDuration.Formatted() + 1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.LotDuration.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Auction.LotDuration.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Auction.LotDuration.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapAuctionLotStartingPriceRatio(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Auction.LotStartingPriceRatio.Value.Formatted() - 0.2)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotStartingPriceRatio.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Auction.LotStartingPriceRatio.Formatted() - 0.2
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.LotStartingPriceRatio.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Auction.LotStartingPriceRatio.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Auction.LotStartingPriceRatio.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapAuctionLotReservePriceRatio(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Auction.LotReservePriceRatio.Value.Formatted() - 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Auction.LotReservePriceRatio.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Auction.LotReservePriceRatio.Formatted() - 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Auction.LotReservePriceRatio.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Auction.LotReservePriceRatio.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Auction.LotReservePriceRatio.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapPoolDepositEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Deposit.IsDepositingEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.IsDepositingEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Deposit.IsDepositingEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.IsDepositingEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Deposit.IsDepositingEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapAssignPoolDepositsEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Deposit.AreDepositAssignmentsEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.AreDepositAssignmentsEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Deposit.AreDepositAssignmentsEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.AreDepositAssignmentsEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Deposit.AreDepositAssignmentsEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapMinimumPoolDeposit(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MinimumDeposit.Value, eth.EthToWei(0.01))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.MinimumDeposit.Value = newVal
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MinimumDeposit.Get(), eth.EthToWei(0.01))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.MinimumDeposit.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Deposit.MinimumDeposit.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapMaximumDepositPoolSize(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MaximumDepositPoolSize.Value, eth.EthToWei(100))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.MaximumDepositPoolSize.Value = newVal
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MaximumDepositPoolSize.Get(), eth.EthToWei(100))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.MaximumDepositPoolSize.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Deposit.MaximumDepositPoolSize.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapMaximumPoolDepositAssignments(t *testing.T) {
-	newVal := core.Uint256Parameter[uint64]{}
-	newVal.Set(tests.PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Value.Formatted() + 10)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.MaximumAssignmentsPerDeposit.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Formatted() + 10
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.MaximumAssignmentsPerDeposit.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Deposit.MaximumAssignmentsPerDeposit.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Deposit.MaximumAssignmentsPerDeposit.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapMaximumSocialisedPoolDepositAssignments(t *testing.T) {
-	newVal := core.Uint256Parameter[uint64]{}
-	newVal.Set(tests.PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.Formatted() + 5)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Formatted() + 5
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapDepositFee(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.RawValue = big.NewInt(0).Add(tests.PDaoDefaults.Deposit.DepositFee.Value.RawValue, eth.EthToWei(0.1))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Deposit.DepositFee.Value.SetRawValue(newVal.RawValue)
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Deposit.DepositFee.Raw(), eth.EthToWei(0.1))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Deposit.DepositFee.SetRawValue(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Deposit.DepositFee.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapInflationIntervalRate(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.RawValue = big.NewInt(0).Add(tests.PDaoDefaults.Inflation.IntervalRate.Value.RawValue, eth.EthToWei(1))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Inflation.IntervalRate.Value.SetRawValue(newVal.RawValue)
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Inflation.IntervalRate.Raw(), eth.EthToWei(1))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Inflation.IntervalRate.SetRawValue(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Inflation.IntervalRate.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapInflationIntervalStartTime(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Time]{}
-	newVal.Set(tests.PDaoDefaults.Inflation.StartTime.Value.Formatted().Add(24 * time.Hour))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Inflation.StartTime.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Inflation.StartTime.Formatted().Add(24 * time.Hour)
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Inflation.StartTime.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Inflation.StartTime.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Inflation.StartTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapSubmitWithdrawableEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Minipool.IsSubmitWithdrawableEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Minipool.IsSubmitWithdrawableEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Minipool.IsSubmitWithdrawableEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Minipool.IsSubmitWithdrawableEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Minipool.IsSubmitWithdrawableEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapBondReductionEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Minipool.IsBondReductionEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Minipool.IsBondReductionEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Minipool.IsBondReductionEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Minipool.IsBondReductionEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Minipool.IsBondReductionEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapMinipoolLaunchTimeout(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Minipool.LaunchTimeout.Value.Formatted() + (24 * time.Hour))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Minipool.LaunchTimeout.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Minipool.LaunchTimeout.Formatted() + (24 * time.Hour)
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Minipool.LaunchTimeout.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Minipool.LaunchTimeout.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Minipool.LaunchTimeout.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapMaximumMinipoolCount(t *testing.T) {
-	newVal := core.Uint256Parameter[uint64]{}
-	newVal.Set(tests.PDaoDefaults.Minipool.MaximumCount.Value.Formatted() + 1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Minipool.MaximumCount.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Minipool.MaximumCount.Formatted() + 1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Minipool.MaximumCount.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Minipool.MaximumCount.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Minipool.MaximumCount.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapUserDistributeWindowStart(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowStart.Value.Formatted() + (24 * time.Hour))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Minipool.UserDistributeWindowStart.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Minipool.UserDistributeWindowStart.Formatted() + (24 * time.Hour)
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Minipool.UserDistributeWindowStart.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Minipool.UserDistributeWindowStart.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Minipool.UserDistributeWindowStart.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapUserDistributeWindowLength(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowLength.Value.Formatted() + (24 * time.Hour))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Minipool.UserDistributeWindowLength.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Minipool.UserDistributeWindowLength.Formatted() + (24 * time.Hour)
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Minipool.UserDistributeWindowLength.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Minipool.UserDistributeWindowLength.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Minipool.UserDistributeWindowLength.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapOracleDaoConsensusThreshold(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.OracleDaoConsensusThreshold.Value.Formatted() + 0.15)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.OracleDaoConsensusThreshold.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.OracleDaoConsensusThreshold.Formatted() + 0.15
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.OracleDaoConsensusThreshold.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.OracleDaoConsensusThreshold.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.OracleDaoConsensusThreshold.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapSubmitBalancesEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Network.IsSubmitBalancesEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.IsSubmitBalancesEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Network.IsSubmitBalancesEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.IsSubmitBalancesEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Network.IsSubmitBalancesEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapSubmitBalancesFrequency(t *testing.T) {
-	newVal := core.Uint256Parameter[uint64]{}
-	newVal.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + 100)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.SubmitBalancesFrequency.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.SubmitBalancesFrequency.Formatted() + 100
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.SubmitBalancesFrequency.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.SubmitBalancesFrequency.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.SubmitBalancesFrequency.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapSubmitPricesEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Network.IsSubmitPricesEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.IsSubmitPricesEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Network.IsSubmitPricesEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.IsSubmitPricesEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Network.IsSubmitPricesEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapSubmitPricesFrequency(t *testing.T) {
-	newVal := core.Uint256Parameter[uint64]{}
-	newVal.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + 100)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.SubmitPricesFrequency.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.SubmitPricesFrequency.Formatted() + 100
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.SubmitPricesFrequency.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapMinimumNodeFee(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.MinimumNodeFee.Value.Formatted() - 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.MinimumNodeFee.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.MinimumNodeFee.Formatted() - 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.MinimumNodeFee.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.MinimumNodeFee.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.MinimumNodeFee.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapTargetNodeFee(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.TargetNodeFee.Value.Formatted() + 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.TargetNodeFee.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.TargetNodeFee.Formatted() + 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.TargetNodeFee.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.TargetNodeFee.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.TargetNodeFee.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapMaximumNodeFee(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.MaximumNodeFee.Value.Formatted() + 0.3)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.MaximumNodeFee.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.MaximumNodeFee.Formatted() + 0.3
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.MaximumNodeFee.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.MaximumNodeFee.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.MaximumNodeFee.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapNodeFeeDemandRange(t *testing.T) {
-	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Network.NodeFeeDemandRange.Value, eth.EthToWei(100))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.NodeFeeDemandRange.Value = newVal
+	newVal := big.NewInt(0).Add(tests.PDaoDefaults.Network.NodeFeeDemandRange.Get(), eth.EthToWei(100))
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.NodeFeeDemandRange.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Network.NodeFeeDemandRange.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapTargetRethCollateralRate(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.TargetRethCollateralRate.Value.Formatted() + 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.TargetRethCollateralRate.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.TargetRethCollateralRate.Formatted() + 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.TargetRethCollateralRate.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.TargetRethCollateralRate.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.TargetRethCollateralRate.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapNodePenaltyThreshold(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.NodePenaltyThreshold.Value.Formatted() + 0.15)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.NodePenaltyThreshold.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.NodePenaltyThreshold.Formatted() + 0.15
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.NodePenaltyThreshold.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.NodePenaltyThreshold.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.NodePenaltyThreshold.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapPerPenaltyRate(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Network.PerPenaltyRate.Value.Formatted() + 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.PerPenaltyRate.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.PerPenaltyRate.Formatted() + 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.PerPenaltyRate.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapRethDepositDelay(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Network.RethDepositDelay.Value.Formatted() + time.Hour)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.RethDepositDelay.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Network.RethDepositDelay.Formatted() + time.Hour
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.RethDepositDelay.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.RethDepositDelay.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Network.RethDepositDelay.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapSubmitRewardsEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Network.IsSubmitRewardsEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Network.IsSubmitRewardsEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Network.IsSubmitRewardsEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Network.IsSubmitRewardsEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Network.IsSubmitRewardsEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapNodeRegistrationEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Node.IsRegistrationEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Node.IsRegistrationEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Node.IsRegistrationEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Node.IsRegistrationEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapSmoothingPoolRegistrationEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Node.IsSmoothingPoolRegistrationEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Node.IsSmoothingPoolRegistrationEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Node.IsSmoothingPoolRegistrationEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapNodeDepositEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Node.IsDepositingEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Node.IsDepositingEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Node.IsDepositingEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Node.IsDepositingEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Node.IsDepositingEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapVacantMinipoolsEnabled(t *testing.T) {
-	newVal := !tests.PDaoDefaults.Node.AreVacantMinipoolsEnabled.Value
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Node.AreVacantMinipoolsEnabled.Value = newVal
+	newVal := !tests.PDaoDefaults.Node.AreVacantMinipoolsEnabled.Get()
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Node.AreVacantMinipoolsEnabled.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
 		return pdaoMgr.Settings.Node.AreVacantMinipoolsEnabled.Bootstrap(newVal, opts)
 	})
 }
 
 func Test_BootstrapMinimumPerMinipoolStake(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Node.MinimumPerMinipoolStake.Value.Formatted() + 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Node.MinimumPerMinipoolStake.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Node.MinimumPerMinipoolStake.Formatted() + 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Node.MinimumPerMinipoolStake.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Node.MinimumPerMinipoolStake.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Node.MinimumPerMinipoolStake.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapMaximumPerMinipoolStake(t *testing.T) {
-	newVal := core.Uint256Parameter[float64]{}
-	newVal.Set(tests.PDaoDefaults.Node.MaximumPerMinipoolStake.Value.Formatted() + 0.1)
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Node.MaximumPerMinipoolStake.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Node.MaximumPerMinipoolStake.Formatted() + 0.1
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Node.MaximumPerMinipoolStake.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
 func Test_BootstrapRewardsIntervalTime(t *testing.T) {
-	newVal := core.Uint256Parameter[time.Duration]{}
-	newVal.Set(tests.PDaoDefaults.Rewards.IntervalTime.Value.Formatted() + (24 * time.Hour))
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettingsDetails) {
-		newSettings.Rewards.IntervalTime.Value.SetRawValue(newVal.RawValue)
+	newVal := tests.PDaoDefaults.Rewards.IntervalTime.Formatted() + (24 * time.Hour)
+	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
+		newSettings.Rewards.IntervalTime.Set(newVal)
 	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(newVal, opts)
+		return pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
@@ -435,6 +411,18 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 			t.Fatal(fmt.Errorf("error reverting to baseline snapshot: %w", err))
 		}
 	})
+	defer func() {
+		r := recover()
+		if r != nil {
+			t.Logf("Recovered from panic: %s\nReverting to baseline...", r)
+			err := mgr.RevertToBaseline()
+			if err != nil {
+				t.Fatal(fmt.Errorf("error reverting to baseline snapshot: %w", err))
+			}
+			debug.PrintStack()
+			t.FailNow()
+		}
+	}()
 
 	// Create new settings
 	pdaoMgr, err := protocol.NewProtocolDaoManager(mgr.RocketPool)
@@ -442,50 +430,50 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 		err = fmt.Errorf("error creating protocol DAO manager: %w", err)
 		return
 	}
-	newPdaoSettings := *pdaoMgr.Settings.ProtocolDaoSettingsDetails
-	newPdaoSettings.Auction.IsCreateLotEnabled.Value = !tests.PDaoDefaults.Auction.IsCreateLotEnabled.Value
-	newPdaoSettings.Auction.IsBidOnLotEnabled.Value = !tests.PDaoDefaults.Auction.IsBidOnLotEnabled.Value
-	newPdaoSettings.Auction.LotMinimumEthValue.Value = big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMinimumEthValue.Value, eth.EthToWei(1))
-	newPdaoSettings.Auction.LotMaximumEthValue.Value = big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMaximumEthValue.Value, eth.EthToWei(1))
-	newPdaoSettings.Auction.LotDuration.Value.Set(tests.PDaoDefaults.Auction.LotDuration.Value.Formatted() + 1)
-	newPdaoSettings.Auction.LotStartingPriceRatio.Value.Set(tests.PDaoDefaults.Auction.LotReservePriceRatio.Value.Formatted() - 0.2)
-	newPdaoSettings.Auction.LotReservePriceRatio.Value.Set(tests.PDaoDefaults.Auction.LotReservePriceRatio.Value.Formatted() - 0.1)
-	newPdaoSettings.Deposit.IsDepositingEnabled.Value = !tests.PDaoDefaults.Deposit.IsDepositingEnabled.Value
-	newPdaoSettings.Deposit.AreDepositAssignmentsEnabled.Value = !tests.PDaoDefaults.Deposit.AreDepositAssignmentsEnabled.Value
-	newPdaoSettings.Deposit.MinimumDeposit.Value = big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MinimumDeposit.Value, eth.EthToWei(0.01))
-	newPdaoSettings.Deposit.MaximumDepositPoolSize.Value = big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MaximumDepositPoolSize.Value, eth.EthToWei(100))
-	newPdaoSettings.Deposit.MaximumAssignmentsPerDeposit.Value.Set(tests.PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Value.Formatted() + 10)
-	newPdaoSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.Set(tests.PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.Formatted() + 5)
-	newPdaoSettings.Deposit.DepositFee.Value.RawValue = big.NewInt(0).Add(tests.PDaoDefaults.Deposit.DepositFee.Value.RawValue, eth.EthToWei(0.1))
-	newPdaoSettings.Inflation.IntervalRate.Value.RawValue = big.NewInt(0).Add(tests.PDaoDefaults.Inflation.IntervalRate.Value.RawValue, eth.EthToWei(1))
-	newPdaoSettings.Inflation.StartTime.Value.Set(tests.PDaoDefaults.Inflation.StartTime.Value.Formatted().Add(24 * time.Hour))
-	newPdaoSettings.Minipool.IsSubmitWithdrawableEnabled.Value = !tests.PDaoDefaults.Minipool.IsSubmitWithdrawableEnabled.Value
-	newPdaoSettings.Minipool.IsBondReductionEnabled.Value = !tests.PDaoDefaults.Minipool.IsBondReductionEnabled.Value
-	newPdaoSettings.Minipool.LaunchTimeout.Value.Set(tests.PDaoDefaults.Minipool.LaunchTimeout.Value.Formatted() + (24 * time.Hour))
-	newPdaoSettings.Minipool.MaximumCount.Value.Set(tests.PDaoDefaults.Minipool.MaximumCount.Value.Formatted() + 1)
-	newPdaoSettings.Minipool.UserDistributeWindowStart.Value.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowStart.Value.Formatted() + (24 * time.Hour))
-	newPdaoSettings.Minipool.UserDistributeWindowLength.Value.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowLength.Value.Formatted() + (24 * time.Hour))
-	newPdaoSettings.Network.OracleDaoConsensusThreshold.Value.Set(tests.PDaoDefaults.Network.OracleDaoConsensusThreshold.Value.Formatted() + 0.15)
-	newPdaoSettings.Network.IsSubmitBalancesEnabled.Value = !tests.PDaoDefaults.Network.IsSubmitBalancesEnabled.Value
-	newPdaoSettings.Network.SubmitBalancesFrequency.Value.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Value.Formatted() + 100)
-	newPdaoSettings.Network.IsSubmitPricesEnabled.Value = !tests.PDaoDefaults.Network.IsSubmitPricesEnabled.Value
-	newPdaoSettings.Network.SubmitPricesFrequency.Value.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Value.Formatted() + 100)
-	newPdaoSettings.Network.MinimumNodeFee.Value.Set(tests.PDaoDefaults.Network.MinimumNodeFee.Value.Formatted() - 0.1)
-	newPdaoSettings.Network.TargetNodeFee.Value.Set(tests.PDaoDefaults.Network.TargetNodeFee.Value.Formatted() + 0.1)
-	newPdaoSettings.Network.MaximumNodeFee.Value.Set(tests.PDaoDefaults.Network.MaximumNodeFee.Value.Formatted() + 0.3)
-	newPdaoSettings.Network.NodeFeeDemandRange.Value = big.NewInt(0).Add(tests.PDaoDefaults.Network.NodeFeeDemandRange.Value, eth.EthToWei(100))
-	newPdaoSettings.Network.TargetRethCollateralRate.Value.Set(tests.PDaoDefaults.Network.TargetRethCollateralRate.Value.Formatted() + 0.1)
-	newPdaoSettings.Network.NodePenaltyThreshold.Value.Set(tests.PDaoDefaults.Network.NodePenaltyThreshold.Value.Formatted() + 0.15)
-	newPdaoSettings.Network.PerPenaltyRate.Value.Set(tests.PDaoDefaults.Network.PerPenaltyRate.Value.Formatted() + 0.1)
-	newPdaoSettings.Network.RethDepositDelay.Value.Set(tests.PDaoDefaults.Network.RethDepositDelay.Value.Formatted() + time.Hour)
-	newPdaoSettings.Network.IsSubmitRewardsEnabled.Value = !tests.PDaoDefaults.Network.IsSubmitRewardsEnabled.Value
-	newPdaoSettings.Node.IsRegistrationEnabled.Value = !tests.PDaoDefaults.Node.IsRegistrationEnabled.Value
-	newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Value = !tests.PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Value
-	newPdaoSettings.Node.IsDepositingEnabled.Value = !tests.PDaoDefaults.Node.IsDepositingEnabled.Value
-	newPdaoSettings.Node.AreVacantMinipoolsEnabled.Value = !tests.PDaoDefaults.Node.AreVacantMinipoolsEnabled.Value
-	newPdaoSettings.Node.MinimumPerMinipoolStake.Value.Set(tests.PDaoDefaults.Node.MinimumPerMinipoolStake.Value.Formatted() + 0.1)
-	newPdaoSettings.Node.MaximumPerMinipoolStake.Value.Set(tests.PDaoDefaults.Node.MaximumPerMinipoolStake.Value.Formatted() + 0.1)
-	newPdaoSettings.Rewards.IntervalTime.Value.Set(tests.PDaoDefaults.Rewards.IntervalTime.Value.Formatted() + (24 * time.Hour))
+	newPdaoSettings := *pdaoMgr.Settings
+	newPdaoSettings.Auction.IsCreateLotEnabled.Set(!tests.PDaoDefaults.Auction.IsCreateLotEnabled.Get())
+	newPdaoSettings.Auction.IsBidOnLotEnabled.Set(!tests.PDaoDefaults.Auction.IsBidOnLotEnabled.Get())
+	newPdaoSettings.Auction.LotMinimumEthValue.Set(big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMinimumEthValue.Get(), eth.EthToWei(1)))
+	newPdaoSettings.Auction.LotMaximumEthValue.Set(big.NewInt(0).Add(tests.PDaoDefaults.Auction.LotMaximumEthValue.Get(), eth.EthToWei(1)))
+	newPdaoSettings.Auction.LotDuration.Set(tests.PDaoDefaults.Auction.LotDuration.Formatted() + 1)
+	newPdaoSettings.Auction.LotStartingPriceRatio.Set(tests.PDaoDefaults.Auction.LotReservePriceRatio.Formatted() - 0.2)
+	newPdaoSettings.Auction.LotReservePriceRatio.Set(tests.PDaoDefaults.Auction.LotReservePriceRatio.Formatted() - 0.1)
+	newPdaoSettings.Deposit.IsDepositingEnabled.Set(!tests.PDaoDefaults.Deposit.IsDepositingEnabled.Get())
+	newPdaoSettings.Deposit.AreDepositAssignmentsEnabled.Set(!tests.PDaoDefaults.Deposit.AreDepositAssignmentsEnabled.Get())
+	newPdaoSettings.Deposit.MinimumDeposit.Set(big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MinimumDeposit.Get(), eth.EthToWei(0.01)))
+	newPdaoSettings.Deposit.MaximumDepositPoolSize.Set(big.NewInt(0).Add(tests.PDaoDefaults.Deposit.MaximumDepositPoolSize.Get(), eth.EthToWei(100)))
+	newPdaoSettings.Deposit.MaximumAssignmentsPerDeposit.Set(tests.PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Formatted() + 10)
+	newPdaoSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Set(tests.PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Formatted() + 5)
+	newPdaoSettings.Deposit.DepositFee.SetRawValue(big.NewInt(0).Add(tests.PDaoDefaults.Deposit.DepositFee.Raw(), eth.EthToWei(0.1)))
+	newPdaoSettings.Inflation.IntervalRate.SetRawValue(big.NewInt(0).Add(tests.PDaoDefaults.Inflation.IntervalRate.Raw(), eth.EthToWei(1)))
+	newPdaoSettings.Inflation.StartTime.Set(tests.PDaoDefaults.Inflation.StartTime.Formatted().Add(24 * time.Hour))
+	newPdaoSettings.Minipool.IsSubmitWithdrawableEnabled.Set(!tests.PDaoDefaults.Minipool.IsSubmitWithdrawableEnabled.Get())
+	newPdaoSettings.Minipool.IsBondReductionEnabled.Set(!tests.PDaoDefaults.Minipool.IsBondReductionEnabled.Get())
+	newPdaoSettings.Minipool.LaunchTimeout.Set(tests.PDaoDefaults.Minipool.LaunchTimeout.Formatted() + (24 * time.Hour))
+	newPdaoSettings.Minipool.MaximumCount.Set(tests.PDaoDefaults.Minipool.MaximumCount.Formatted() + 1)
+	newPdaoSettings.Minipool.UserDistributeWindowStart.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowStart.Formatted() + (24 * time.Hour))
+	newPdaoSettings.Minipool.UserDistributeWindowLength.Set(tests.PDaoDefaults.Minipool.UserDistributeWindowLength.Formatted() + (24 * time.Hour))
+	newPdaoSettings.Network.OracleDaoConsensusThreshold.Set(tests.PDaoDefaults.Network.OracleDaoConsensusThreshold.Formatted() + 0.15)
+	newPdaoSettings.Network.IsSubmitBalancesEnabled.Set(!tests.PDaoDefaults.Network.IsSubmitBalancesEnabled.Get())
+	newPdaoSettings.Network.SubmitBalancesFrequency.Set(tests.PDaoDefaults.Network.SubmitBalancesFrequency.Formatted() + 100)
+	newPdaoSettings.Network.IsSubmitPricesEnabled.Set(!tests.PDaoDefaults.Network.IsSubmitPricesEnabled.Get())
+	newPdaoSettings.Network.SubmitPricesFrequency.Set(tests.PDaoDefaults.Network.SubmitPricesFrequency.Formatted() + 100)
+	newPdaoSettings.Network.MinimumNodeFee.Set(tests.PDaoDefaults.Network.MinimumNodeFee.Formatted() - 0.1)
+	newPdaoSettings.Network.TargetNodeFee.Set(tests.PDaoDefaults.Network.TargetNodeFee.Formatted() + 0.1)
+	newPdaoSettings.Network.MaximumNodeFee.Set(tests.PDaoDefaults.Network.MaximumNodeFee.Formatted() + 0.3)
+	newPdaoSettings.Network.NodeFeeDemandRange.Set(big.NewInt(0).Add(tests.PDaoDefaults.Network.NodeFeeDemandRange.Get(), eth.EthToWei(100)))
+	newPdaoSettings.Network.TargetRethCollateralRate.Set(tests.PDaoDefaults.Network.TargetRethCollateralRate.Formatted() + 0.1)
+	newPdaoSettings.Network.NodePenaltyThreshold.Set(tests.PDaoDefaults.Network.NodePenaltyThreshold.Formatted() + 0.15)
+	newPdaoSettings.Network.PerPenaltyRate.Set(tests.PDaoDefaults.Network.PerPenaltyRate.Formatted() + 0.1)
+	newPdaoSettings.Network.RethDepositDelay.Set(tests.PDaoDefaults.Network.RethDepositDelay.Formatted() + time.Hour)
+	newPdaoSettings.Network.IsSubmitRewardsEnabled.Set(!tests.PDaoDefaults.Network.IsSubmitRewardsEnabled.Get())
+	newPdaoSettings.Node.IsRegistrationEnabled.Set(!tests.PDaoDefaults.Node.IsRegistrationEnabled.Get())
+	newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Set(!tests.PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Get())
+	newPdaoSettings.Node.IsDepositingEnabled.Set(!tests.PDaoDefaults.Node.IsDepositingEnabled.Get())
+	newPdaoSettings.Node.AreVacantMinipoolsEnabled.Set(!tests.PDaoDefaults.Node.AreVacantMinipoolsEnabled.Get())
+	newPdaoSettings.Node.MinimumPerMinipoolStake.Set(tests.PDaoDefaults.Node.MinimumPerMinipoolStake.Formatted() + 0.1)
+	newPdaoSettings.Node.MaximumPerMinipoolStake.Set(tests.PDaoDefaults.Node.MaximumPerMinipoolStake.Formatted() + 0.1)
+	newPdaoSettings.Rewards.IntervalTime.Set(tests.PDaoDefaults.Rewards.IntervalTime.Formatted() + (24 * time.Hour))
 
 	// Ensure they're all different from the default
 	settings_test.EnsureDifferentDetails(t.Fatalf, &tests.PDaoDefaults, &newPdaoSettings)
@@ -495,133 +483,133 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	txInfos := []*core.TransactionInfo{}
 	bootstrappers := []func() (*core.TransactionInfo, error){
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.IsCreateLotEnabled.Bootstrap(newPdaoSettings.Auction.IsCreateLotEnabled.Value, opts)
+			return pdaoMgr.Settings.Auction.IsCreateLotEnabled.Bootstrap(newPdaoSettings.Auction.IsCreateLotEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.IsBidOnLotEnabled.Bootstrap(newPdaoSettings.Auction.IsBidOnLotEnabled.Value, opts)
+			return pdaoMgr.Settings.Auction.IsBidOnLotEnabled.Bootstrap(newPdaoSettings.Auction.IsBidOnLotEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotMinimumEthValue.Bootstrap(newPdaoSettings.Auction.LotMinimumEthValue.Value, opts)
+			return pdaoMgr.Settings.Auction.LotMinimumEthValue.Bootstrap(newPdaoSettings.Auction.LotMinimumEthValue.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotMaximumEthValue.Bootstrap(newPdaoSettings.Auction.LotMaximumEthValue.Value, opts)
+			return pdaoMgr.Settings.Auction.LotMaximumEthValue.Bootstrap(newPdaoSettings.Auction.LotMaximumEthValue.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotDuration.Bootstrap(newPdaoSettings.Auction.LotDuration.Value, opts)
+			return pdaoMgr.Settings.Auction.LotDuration.Bootstrap(newPdaoSettings.Auction.LotDuration.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotStartingPriceRatio.Bootstrap(newPdaoSettings.Auction.LotStartingPriceRatio.Value, opts)
+			return pdaoMgr.Settings.Auction.LotStartingPriceRatio.Bootstrap(newPdaoSettings.Auction.LotStartingPriceRatio.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotReservePriceRatio.Bootstrap(newPdaoSettings.Auction.LotReservePriceRatio.Value, opts)
+			return pdaoMgr.Settings.Auction.LotReservePriceRatio.Bootstrap(newPdaoSettings.Auction.LotReservePriceRatio.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.IsDepositingEnabled.Bootstrap(newPdaoSettings.Deposit.IsDepositingEnabled.Value, opts)
+			return pdaoMgr.Settings.Deposit.IsDepositingEnabled.Bootstrap(newPdaoSettings.Deposit.IsDepositingEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.AreDepositAssignmentsEnabled.Bootstrap(newPdaoSettings.Deposit.AreDepositAssignmentsEnabled.Value, opts)
+			return pdaoMgr.Settings.Deposit.AreDepositAssignmentsEnabled.Bootstrap(newPdaoSettings.Deposit.AreDepositAssignmentsEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MinimumDeposit.Bootstrap(newPdaoSettings.Deposit.MinimumDeposit.Value, opts)
+			return pdaoMgr.Settings.Deposit.MinimumDeposit.Bootstrap(newPdaoSettings.Deposit.MinimumDeposit.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MaximumDepositPoolSize.Bootstrap(newPdaoSettings.Deposit.MaximumDepositPoolSize.Value, opts)
+			return pdaoMgr.Settings.Deposit.MaximumDepositPoolSize.Bootstrap(newPdaoSettings.Deposit.MaximumDepositPoolSize.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MaximumAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumAssignmentsPerDeposit.Value, opts)
+			return pdaoMgr.Settings.Deposit.MaximumAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumAssignmentsPerDeposit.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value, opts)
+			return pdaoMgr.Settings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.DepositFee.Bootstrap(newPdaoSettings.Deposit.DepositFee.Value, opts)
+			return pdaoMgr.Settings.Deposit.DepositFee.Bootstrap(newPdaoSettings.Deposit.DepositFee.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Inflation.IntervalRate.Bootstrap(newPdaoSettings.Inflation.IntervalRate.Value, opts)
+			return pdaoMgr.Settings.Inflation.IntervalRate.Bootstrap(newPdaoSettings.Inflation.IntervalRate.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Inflation.StartTime.Bootstrap(newPdaoSettings.Inflation.StartTime.Value, opts)
+			return pdaoMgr.Settings.Inflation.StartTime.Bootstrap(newPdaoSettings.Inflation.StartTime.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.IsSubmitWithdrawableEnabled.Bootstrap(newPdaoSettings.Minipool.IsSubmitWithdrawableEnabled.Value, opts)
+			return pdaoMgr.Settings.Minipool.IsSubmitWithdrawableEnabled.Bootstrap(newPdaoSettings.Minipool.IsSubmitWithdrawableEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.IsBondReductionEnabled.Bootstrap(newPdaoSettings.Minipool.IsBondReductionEnabled.Value, opts)
+			return pdaoMgr.Settings.Minipool.IsBondReductionEnabled.Bootstrap(newPdaoSettings.Minipool.IsBondReductionEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.LaunchTimeout.Bootstrap(newPdaoSettings.Minipool.LaunchTimeout.Value, opts)
+			return pdaoMgr.Settings.Minipool.LaunchTimeout.Bootstrap(newPdaoSettings.Minipool.LaunchTimeout.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.MaximumCount.Bootstrap(newPdaoSettings.Minipool.MaximumCount.Value, opts)
+			return pdaoMgr.Settings.Minipool.MaximumCount.Bootstrap(newPdaoSettings.Minipool.MaximumCount.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.UserDistributeWindowStart.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowStart.Value, opts)
+			return pdaoMgr.Settings.Minipool.UserDistributeWindowStart.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowStart.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.UserDistributeWindowLength.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowLength.Value, opts)
+			return pdaoMgr.Settings.Minipool.UserDistributeWindowLength.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowLength.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.OracleDaoConsensusThreshold.Bootstrap(newPdaoSettings.Network.OracleDaoConsensusThreshold.Value, opts)
+			return pdaoMgr.Settings.Network.OracleDaoConsensusThreshold.Bootstrap(newPdaoSettings.Network.OracleDaoConsensusThreshold.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.IsSubmitBalancesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitBalancesEnabled.Value, opts)
+			return pdaoMgr.Settings.Network.IsSubmitBalancesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitBalancesEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Value, opts)
+			return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.IsSubmitPricesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitPricesEnabled.Value, opts)
+			return pdaoMgr.Settings.Network.IsSubmitPricesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitPricesEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Value, opts)
+			return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.MinimumNodeFee.Bootstrap(newPdaoSettings.Network.MinimumNodeFee.Value, opts)
+			return pdaoMgr.Settings.Network.MinimumNodeFee.Bootstrap(newPdaoSettings.Network.MinimumNodeFee.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.TargetNodeFee.Bootstrap(newPdaoSettings.Network.TargetNodeFee.Value, opts)
+			return pdaoMgr.Settings.Network.TargetNodeFee.Bootstrap(newPdaoSettings.Network.TargetNodeFee.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.MaximumNodeFee.Bootstrap(newPdaoSettings.Network.MaximumNodeFee.Value, opts)
+			return pdaoMgr.Settings.Network.MaximumNodeFee.Bootstrap(newPdaoSettings.Network.MaximumNodeFee.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.NodeFeeDemandRange.Bootstrap(newPdaoSettings.Network.NodeFeeDemandRange.Value, opts)
+			return pdaoMgr.Settings.Network.NodeFeeDemandRange.Bootstrap(newPdaoSettings.Network.NodeFeeDemandRange.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.TargetRethCollateralRate.Bootstrap(newPdaoSettings.Network.TargetRethCollateralRate.Value, opts)
+			return pdaoMgr.Settings.Network.TargetRethCollateralRate.Bootstrap(newPdaoSettings.Network.TargetRethCollateralRate.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.NodePenaltyThreshold.Bootstrap(newPdaoSettings.Network.NodePenaltyThreshold.Value, opts)
+			return pdaoMgr.Settings.Network.NodePenaltyThreshold.Bootstrap(newPdaoSettings.Network.NodePenaltyThreshold.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(newPdaoSettings.Network.PerPenaltyRate.Value, opts)
+			return pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(newPdaoSettings.Network.PerPenaltyRate.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.RethDepositDelay.Bootstrap(newPdaoSettings.Network.RethDepositDelay.Value, opts)
+			return pdaoMgr.Settings.Network.RethDepositDelay.Bootstrap(newPdaoSettings.Network.RethDepositDelay.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.IsSubmitRewardsEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitRewardsEnabled.Value, opts)
+			return pdaoMgr.Settings.Network.IsSubmitRewardsEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitRewardsEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsRegistrationEnabled.Value, opts)
+			return pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsRegistrationEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.IsSmoothingPoolRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Value, opts)
+			return pdaoMgr.Settings.Node.IsSmoothingPoolRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.IsDepositingEnabled.Bootstrap(newPdaoSettings.Node.IsDepositingEnabled.Value, opts)
+			return pdaoMgr.Settings.Node.IsDepositingEnabled.Bootstrap(newPdaoSettings.Node.IsDepositingEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.AreVacantMinipoolsEnabled.Bootstrap(newPdaoSettings.Node.AreVacantMinipoolsEnabled.Value, opts)
+			return pdaoMgr.Settings.Node.AreVacantMinipoolsEnabled.Bootstrap(newPdaoSettings.Node.AreVacantMinipoolsEnabled.Get(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.MinimumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MinimumPerMinipoolStake.Value, opts)
+			return pdaoMgr.Settings.Node.MinimumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MinimumPerMinipoolStake.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MaximumPerMinipoolStake.Value, opts)
+			return pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MaximumPerMinipoolStake.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(newPdaoSettings.Rewards.IntervalTime.Value, opts)
+			return pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(newPdaoSettings.Rewards.IntervalTime.Raw(), opts)
 		},
 	}
 	for i, bootstrapper := range bootstrappers {
@@ -660,17 +648,17 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 
 	// Get new values and make sure they match
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		pdaoMgr.Settings.GetAllDetails(mc)
+		core.QueryAllFields(pdaoMgr.Settings, mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error querying all updated details: %w", err))
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &newPdaoSettings, pdaoMgr.Settings.ProtocolDaoSettingsDetails)
+	settings_test.EnsureSameDetails(t.Fatalf, &newPdaoSettings, pdaoMgr.Settings)
 	t.Log("New settings match expected settings")
 }
 
-func testPdaoParameterBootstrap(t *testing.T, setter func(*protocol.ProtocolDaoSettingsDetails), bootstrapper func() (*core.TransactionInfo, error)) {
+func testPdaoParameterBootstrap(t *testing.T, setter func(*protocol.ProtocolDaoSettings), bootstrapper func() (*core.TransactionInfo, error)) {
 	// Revert to the baseline at the end of the test
 	t.Cleanup(func() {
 		err := mgr.RevertToBaseline()
@@ -678,6 +666,18 @@ func testPdaoParameterBootstrap(t *testing.T, setter func(*protocol.ProtocolDaoS
 			t.Fatal(fmt.Errorf("error reverting to baseline snapshot: %w", err))
 		}
 	})
+	defer func() {
+		r := recover()
+		if r != nil {
+			t.Logf("Recovered from panic: %s\nReverting to baseline...", r)
+			err := mgr.RevertToBaseline()
+			if err != nil {
+				t.Fatal(fmt.Errorf("error reverting to baseline snapshot: %w", err))
+			}
+			debug.PrintStack()
+			t.FailNow()
+		}
+	}()
 
 	// Get the original settings
 	pdaoMgr, err := protocol.NewProtocolDaoManager(mgr.RocketPool)
@@ -685,7 +685,7 @@ func testPdaoParameterBootstrap(t *testing.T, setter func(*protocol.ProtocolDaoS
 		err = fmt.Errorf("error creating protocol DAO manager: %w", err)
 		return
 	}
-	settings := *pdaoMgr.Settings.ProtocolDaoSettingsDetails
+	settings := *pdaoMgr.Settings
 	settings_test.Clone(t, &tests.PDaoDefaults, &settings)
 	pass := settings_test.EnsureSameDetails(t.Errorf, &tests.PDaoDefaults, &settings)
 	if !pass {
@@ -726,12 +726,12 @@ func testPdaoParameterBootstrap(t *testing.T, setter func(*protocol.ProtocolDaoS
 
 	// Get new values and make sure they match
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		pdaoMgr.Settings.GetAllDetails(mc)
+		core.QueryAllFields(pdaoMgr.Settings, mc)
 		return nil
 	}, nil)
 	if err != nil {
 		t.Fatal(fmt.Errorf("error querying all updated details: %w", err))
 	}
-	settings_test.EnsureSameDetails(t.Fatalf, &settings, pdaoMgr.Settings.ProtocolDaoSettingsDetails)
+	settings_test.EnsureSameDetails(t.Fatalf, &settings, pdaoMgr.Settings)
 	t.Log("New settings match expected settings")
 }

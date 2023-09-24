@@ -107,8 +107,8 @@ func NewAuctionLot(rp *rocketpool.RocketPool, index uint64) (*AuctionLot, error)
 // =============
 
 // Get the price of the lot at the given block
-func (c *AuctionLot) GetLotPriceAtBlock(mc *batch.MultiCaller, out *core.Uint256Parameter[float64], blockNumber uint64) {
-	core.AddCall(mc, c.am, &out.RawValue, "getLotPriceAtBlock", c.indexBig, big.NewInt(int64(blockNumber)))
+func (c *AuctionLot) GetLotPriceAtBlock(mc *batch.MultiCaller, out **big.Int, blockNumber uint64) {
+	core.AddCall(mc, c.am, out, "getLotPriceAtBlock", c.indexBig, big.NewInt(int64(blockNumber)))
 }
 
 // Get the ETH amount bid on the lot by an address

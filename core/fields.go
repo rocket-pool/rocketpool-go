@@ -105,9 +105,9 @@ func (f *FormattedUint256Field[ValueType]) Formatted() ValueType {
 	return out
 }
 
-// =============================
+// ===========================
 // === FormattedUint8Field ===
-// =============================
+// ===========================
 
 // A collection of legal types for FormattedUint8Field
 type FormattedUint8Type interface {

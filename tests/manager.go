@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
@@ -109,10 +108,7 @@ func (m *TestManager) InitializeDeployment() error {
 	}
 
 	// Get some contract state
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		odaoMgr.GetMemberCount(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, odaoMgr.MemberCount)
 	if err != nil {
 		return fmt.Errorf("error getting network info: %w", err)
 	}
@@ -264,10 +260,7 @@ func (m *TestManager) initializeImpl(odaoMgr *oracle.OracleDaoManager) error {
 	}
 
 	// Make sure they're on it
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		odaoMgr.GetMemberCount(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, odaoMgr.MemberCount)
 	if err != nil {
 		return fmt.Errorf("error getting oDAO member count: %w", err)
 	}

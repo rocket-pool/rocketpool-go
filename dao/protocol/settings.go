@@ -14,21 +14,6 @@ import (
 
 // Binding for Protocol DAO settings
 type ProtocolDaoSettings struct {
-	*ProtocolDaoSettingsDetails
-	dps_auction   *core.Contract
-	dps_deposit   *core.Contract
-	dps_inflation *core.Contract
-	dps_minipool  *core.Contract
-	dps_network   *core.Contract
-	dps_node      *core.Contract
-	dps_rewards   *core.Contract
-
-	rp      *rocketpool.RocketPool
-	pdaoMgr *ProtocolDaoManager
-}
-
-// Details for Protocol DAO settings
-type ProtocolDaoSettingsDetails struct {
 	Auction struct {
 		IsCreateLotEnabled    *ProtocolDaoBoolSetting              `json:"isCreateLotEnabled"`
 		IsBidOnLotEnabled     *ProtocolDaoBoolSetting              `json:"isBidOnLotEnabled"`
@@ -92,6 +77,17 @@ type ProtocolDaoSettingsDetails struct {
 	Rewards struct {
 		IntervalTime *ProtocolDaoCompoundSetting[time.Duration] `json:"intervalTime"`
 	} `json:"rewards"`
+
+	// === Internal fields ===
+	rp            *rocketpool.RocketPool
+	pdaoMgr       *ProtocolDaoManager
+	dps_auction   *core.Contract
+	dps_deposit   *core.Contract
+	dps_inflation *core.Contract
+	dps_minipool  *core.Contract
+	dps_network   *core.Contract
+	dps_node      *core.Contract
+	dps_rewards   *core.Contract
 }
 
 // ====================
@@ -115,9 +111,8 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	}
 
 	s := &ProtocolDaoSettings{
-		ProtocolDaoSettingsDetails: &ProtocolDaoSettingsDetails{},
-		rp:                         pdaoMgr.rp,
-		pdaoMgr:                    pdaoMgr,
+		rp:      pdaoMgr.rp,
+		pdaoMgr: pdaoMgr,
 
 		dps_auction:   contracts[0],
 		dps_deposit:   contracts[1],

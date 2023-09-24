@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/node"
@@ -73,15 +72,11 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 
 	// Get the amount of RPL to mint
 	oSettings := odaoMgr.Settings
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		odaoMgr.GetMemberCount(mc)
-		oSettings.Member.RplBond.Get(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, odaoMgr.MemberCount, oSettings.Member.RplBond)
 	if err != nil {
 		return nil, fmt.Errorf("error getting network info: %w", err)
 	}
-	rplBond := oSettings.Member.RplBond.Value
+	rplBond := oSettings.Member.RplBond.Get()
 
 	// Bootstrap it and mint RPL for it
 	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){

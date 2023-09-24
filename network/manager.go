@@ -118,8 +118,8 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 // === NetworkFees ===
 
 // Get the network node fee for a node demand value
-func (c *NetworkManager) GetNodeFeeByDemand(mc *batch.MultiCaller, fee_Out *core.Uint256Parameter[float64], demand *big.Int) {
-	core.AddCall(mc, c.networkFees, &fee_Out.RawValue, "getNodeFeeByDemand", demand)
+func (c *NetworkManager) GetNodeFeeByDemand(mc *batch.MultiCaller, out **big.Int, demand *big.Int) {
+	core.AddCall(mc, c.networkFees, out, "getNodeFeeByDemand", demand)
 }
 
 // ====================

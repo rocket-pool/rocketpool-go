@@ -24,16 +24,37 @@ func AddQueryablesToMulticall(mc *batch.MultiCaller, queryables ...IQueryable) {
 
 // Adds all of the object's fields that implement IQueryable to the provided multicaller
 func QueryAllFields(object any, mc *batch.MultiCaller) error {
-	objectValue := reflect.ValueOf(object).Elem()
+	objectValue := reflect.ValueOf(object)
+	objectType := reflect.TypeOf(object)
+	if objectType.Kind() == reflect.Pointer {
+		// If this is a pointer, switch to what it's pointing at
+		objectValue = objectValue.Elem()
+		objectType = objectType.Elem()
+	}
 
 	// Run through each field
-	for i := 0; i < objectValue.NumField(); i++ {
+	for i := 0; i < objectType.NumField(); i++ {
 		field := objectValue.Field(i)
-
-		// If it's IQueryable, run it
-		fieldAsQueryable, isQueryable := field.Interface().(IQueryable)
-		if isQueryable {
-			fieldAsQueryable.AddToQuery(mc)
+		typeField := objectType.Field(i)
+		if typeField.IsExported() {
+			fieldAsQueryable, isQueryable := field.Interface().(IQueryable)
+			if isQueryable {
+				// If it's IQueryable, run it
+				fieldAsQueryable.AddToQuery(mc)
+			} else if typeField.Type.Kind() == reflect.Pointer &&
+				typeField.Type.Elem().Kind() == reflect.Struct {
+				// If it's a pointer to a struct, recurse
+				err := QueryAllFields(field.Interface(), mc)
+				if err != nil {
+					return err
+				}
+			} else if typeField.Type.Kind() == reflect.Struct {
+				// If it's a struct, recurse
+				err := QueryAllFields(field.Interface(), mc)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 

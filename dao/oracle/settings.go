@@ -16,19 +16,6 @@ import (
 
 // Binding for Oracle DAO settings
 type OracleDaoSettings struct {
-	*OracleDaoSettingsDetails
-	dnts_members   *core.Contract
-	dnts_minipool  *core.Contract
-	dnts_proposals *core.Contract
-	dnts_rewards   *core.Contract
-
-	// === Internal fields ===
-	rp      *rocketpool.RocketPool
-	odaoMgr *OracleDaoManager
-}
-
-// Details for Oracle DAO settings
-type OracleDaoSettingsDetails struct {
 	// Member
 	Member struct {
 		Quorum                 *OracleDaoCompoundSetting[float64]
@@ -59,6 +46,14 @@ type OracleDaoSettingsDetails struct {
 		ExecuteTime   *OracleDaoCompoundSetting[time.Duration]
 		ActionTime    *OracleDaoCompoundSetting[time.Duration]
 	}
+
+	// === Internal fields ===
+	rp             *rocketpool.RocketPool
+	odaoMgr        *OracleDaoManager
+	dnts_members   *core.Contract
+	dnts_minipool  *core.Contract
+	dnts_proposals *core.Contract
+	dnts_rewards   *core.Contract
 }
 
 // ====================
@@ -79,9 +74,8 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 	}
 
 	s := &OracleDaoSettings{
-		OracleDaoSettingsDetails: &OracleDaoSettingsDetails{},
-		rp:                       odaoMgr.rp,
-		odaoMgr:                  odaoMgr,
+		rp:      odaoMgr.rp,
+		odaoMgr: odaoMgr,
 
 		dnts_members:   contracts[0],
 		dnts_minipool:  contracts[1],

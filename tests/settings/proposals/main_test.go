@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/proposals"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
@@ -57,8 +58,8 @@ func TestMain(m *testing.M) {
 
 	// Get all of the current settings
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		odaoMgr.Settings.GetAllDetails(mc)
-		pdaoMgr.Settings.GetAllDetails(mc)
+		core.QueryAllFields(odaoMgr.Settings, mc)
+		core.QueryAllFields(pdaoMgr.Settings, mc)
 		return nil
 	}, nil)
 	if err != nil {
@@ -66,8 +67,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// Verify details
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, odaoMgr.Settings.OracleDaoSettingsDetails)
-	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, pdaoMgr.Settings.ProtocolDaoSettingsDetails)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, odaoMgr.Settings)
+	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, pdaoMgr.Settings)
 
 	// Initialize the network
 	err = mgr.InitializeDeployment()

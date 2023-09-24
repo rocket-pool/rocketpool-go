@@ -14,8 +14,8 @@ import (
 )
 
 var once sync.Once
-var PDaoDefaults protocol.ProtocolDaoSettingsDetails
-var ODaoDefaults oracle.OracleDaoSettingsDetails
+var PDaoDefaults protocol.ProtocolDaoSettings
+var ODaoDefaults oracle.OracleDaoSettings
 
 func CreateDefaults(mgr *TestManager) error {
 	var err error
@@ -38,64 +38,64 @@ func CreateDefaults(mgr *TestManager) error {
 			err = fmt.Errorf("error creating protocol DAO manager: %w", err)
 			return
 		}
-		PDaoDefaults = *pdaoMgr.Settings.ProtocolDaoSettingsDetails
+		PDaoDefaults = *pdaoMgr.Settings
 
 		// Auction
-		PDaoDefaults.Auction.IsCreateLotEnabled.Value = true
-		PDaoDefaults.Auction.IsBidOnLotEnabled.Value = true
-		PDaoDefaults.Auction.LotMinimumEthValue.Value = eth.EthToWei(1)
-		PDaoDefaults.Auction.LotMaximumEthValue.Value = eth.EthToWei(10)
-		PDaoDefaults.Auction.LotDuration.Value.Set(40320)
-		PDaoDefaults.Auction.LotStartingPriceRatio.Value.Set(1)  // 100%
-		PDaoDefaults.Auction.LotReservePriceRatio.Value.Set(0.5) // 50%
+		PDaoDefaults.Auction.IsCreateLotEnabled.Set(true)
+		PDaoDefaults.Auction.IsBidOnLotEnabled.Set(true)
+		PDaoDefaults.Auction.LotMinimumEthValue.Set(eth.EthToWei(1))
+		PDaoDefaults.Auction.LotMaximumEthValue.Set(eth.EthToWei(10))
+		PDaoDefaults.Auction.LotDuration.Set(40320)
+		PDaoDefaults.Auction.LotStartingPriceRatio.Set(1)  // 100%
+		PDaoDefaults.Auction.LotReservePriceRatio.Set(0.5) // 50%
 
 		// Deposit
-		PDaoDefaults.Deposit.IsDepositingEnabled.Value = false
-		PDaoDefaults.Deposit.AreDepositAssignmentsEnabled.Value = true
-		PDaoDefaults.Deposit.MinimumDeposit.Value = eth.EthToWei(0.01)
-		PDaoDefaults.Deposit.MaximumDepositPoolSize.Value = eth.EthToWei(160)
-		PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Value.Set(90)
-		PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Value.Set(2)
-		PDaoDefaults.Deposit.DepositFee.Value.RawValue = big.NewInt(int64(1e18 * 5 / 10000)) // Set to approx. 1 day of rewards at 18.25% APR; supposed to be 0.0005 but have to do it via integer math cause of floating point errors
+		PDaoDefaults.Deposit.IsDepositingEnabled.Set(false)
+		PDaoDefaults.Deposit.AreDepositAssignmentsEnabled.Set(true)
+		PDaoDefaults.Deposit.MinimumDeposit.Set(eth.EthToWei(0.01))
+		PDaoDefaults.Deposit.MaximumDepositPoolSize.Set(eth.EthToWei(160))
+		PDaoDefaults.Deposit.MaximumAssignmentsPerDeposit.Set(90)
+		PDaoDefaults.Deposit.MaximumSocialisedAssignmentsPerDeposit.Set(2)
+		PDaoDefaults.Deposit.DepositFee.SetRawValue(big.NewInt(int64(1e18 * 5 / 10000))) // Set to approx. 1 day of rewards at 18.25% APR; supposed to be 0.0005 but have to do it via integer math cause of floating point errors
 
 		// Inflation
-		PDaoDefaults.Inflation.IntervalRate.Value.RawValue = big.NewInt(1000133680617113500) // 5% annual calculated on a daily interval - Calculate in js example: let dailyInflation = web3.utils.toBN((1 + 0.05) ** (1 / (365)) * 1e18);
-		PDaoDefaults.Inflation.StartTime.Value.Set(startTime.Add(24 * time.Hour))            // Set the default start date for inflation to begin as 1 day after deployment
+		PDaoDefaults.Inflation.IntervalRate.SetRawValue(big.NewInt(1000133680617113500)) // 5% annual calculated on a daily interval - Calculate in js example: let dailyInflation = web3.utils.toBN((1 + 0.05) ** (1 / (365)) * 1e18);
+		PDaoDefaults.Inflation.StartTime.Set(startTime.Add(24 * time.Hour))              // Set the default start date for inflation to begin as 1 day after deployment
 
 		// Minipool
-		PDaoDefaults.Minipool.IsSubmitWithdrawableEnabled.Value = false
-		PDaoDefaults.Minipool.IsBondReductionEnabled.Value = true
-		PDaoDefaults.Minipool.LaunchTimeout.Value.Set(72 * time.Hour)
-		PDaoDefaults.Minipool.MaximumCount.Value.Set(14)
-		PDaoDefaults.Minipool.UserDistributeWindowStart.Value.Set(90 * 24 * time.Hour) // 90 days
-		PDaoDefaults.Minipool.UserDistributeWindowLength.Value.Set(2 * 24 * time.Hour) // 2 days
+		PDaoDefaults.Minipool.IsSubmitWithdrawableEnabled.Set(false)
+		PDaoDefaults.Minipool.IsBondReductionEnabled.Set(true)
+		PDaoDefaults.Minipool.LaunchTimeout.Set(72 * time.Hour)
+		PDaoDefaults.Minipool.MaximumCount.Set(14)
+		PDaoDefaults.Minipool.UserDistributeWindowStart.Set(90 * 24 * time.Hour) // 90 days
+		PDaoDefaults.Minipool.UserDistributeWindowLength.Set(2 * 24 * time.Hour) // 2 days
 
 		// Network
-		PDaoDefaults.Network.OracleDaoConsensusThreshold.Value.Set(0.51) // 51%
-		PDaoDefaults.Network.IsSubmitBalancesEnabled.Value = true
-		PDaoDefaults.Network.SubmitBalancesFrequency.Value.Set(5760) // ~24 hours
-		PDaoDefaults.Network.IsSubmitPricesEnabled.Value = true
-		PDaoDefaults.Network.SubmitPricesFrequency.Value.Set(5760) // ~24 hours
-		PDaoDefaults.Network.MinimumNodeFee.Value.Set(0.14)
-		PDaoDefaults.Network.TargetNodeFee.Value.Set(0.14)
-		PDaoDefaults.Network.MaximumNodeFee.Value.Set(0.14)
-		PDaoDefaults.Network.NodeFeeDemandRange.Value = eth.EthToWei(160)
-		PDaoDefaults.Network.TargetRethCollateralRate.Value.Set(0.1)
-		PDaoDefaults.Network.NodePenaltyThreshold.Value.Set(0.51) // Consensus for penalties requires 51% vote
-		PDaoDefaults.Network.PerPenaltyRate.Value.Set(0.1)        // 10% per penalty
-		PDaoDefaults.Network.RethDepositDelay.Value.Set(0)
-		PDaoDefaults.Network.IsSubmitRewardsEnabled.Value = true
+		PDaoDefaults.Network.OracleDaoConsensusThreshold.Set(0.51) // 51%
+		PDaoDefaults.Network.IsSubmitBalancesEnabled.Set(true)
+		PDaoDefaults.Network.SubmitBalancesFrequency.Set(5760) // ~24 hours
+		PDaoDefaults.Network.IsSubmitPricesEnabled.Set(true)
+		PDaoDefaults.Network.SubmitPricesFrequency.Set(5760) // ~24 hours
+		PDaoDefaults.Network.MinimumNodeFee.Set(0.14)
+		PDaoDefaults.Network.TargetNodeFee.Set(0.14)
+		PDaoDefaults.Network.MaximumNodeFee.Set(0.14)
+		PDaoDefaults.Network.NodeFeeDemandRange.Set(eth.EthToWei(160))
+		PDaoDefaults.Network.TargetRethCollateralRate.Set(0.1)
+		PDaoDefaults.Network.NodePenaltyThreshold.Set(0.51) // Consensus for penalties requires 51% vote
+		PDaoDefaults.Network.PerPenaltyRate.Set(0.1)        // 10% per penalty
+		PDaoDefaults.Network.RethDepositDelay.Set(0)
+		PDaoDefaults.Network.IsSubmitRewardsEnabled.Set(true)
 
 		// Node
-		PDaoDefaults.Node.IsRegistrationEnabled.Value = false
-		PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Value = true
-		PDaoDefaults.Node.IsDepositingEnabled.Value = false
-		PDaoDefaults.Node.AreVacantMinipoolsEnabled.Value = true
-		PDaoDefaults.Node.MinimumPerMinipoolStake.Value.Set(0.1) // 10% of user ETH value (matched ETH)
-		PDaoDefaults.Node.MaximumPerMinipoolStake.Value.Set(1.5) // 150% of node ETH value (provided ETH)
+		PDaoDefaults.Node.IsRegistrationEnabled.Set(false)
+		PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Set(true)
+		PDaoDefaults.Node.IsDepositingEnabled.Set(false)
+		PDaoDefaults.Node.AreVacantMinipoolsEnabled.Set(true)
+		PDaoDefaults.Node.MinimumPerMinipoolStake.Set(0.1) // 10% of user ETH value (matched ETH)
+		PDaoDefaults.Node.MaximumPerMinipoolStake.Set(1.5) // 150% of node ETH value (provided ETH)
 
 		// Rewards
-		PDaoDefaults.Rewards.IntervalTime.Value.Set(28 * 24 * time.Hour) // 28 days
+		PDaoDefaults.Rewards.IntervalTime.Set(28 * 24 * time.Hour) // 28 days
 
 		// ==================
 		// === Oracle DAO ===
@@ -105,32 +105,32 @@ func CreateDefaults(mgr *TestManager) error {
 			err = fmt.Errorf("error creating oracle DAO manager: %w", err)
 			return
 		}
-		ODaoDefaults = *odaoMgr.Settings.OracleDaoSettingsDetails
+		ODaoDefaults = *odaoMgr.Settings
 
 		// Members
-		ODaoDefaults.Member.ChallengeCooldown.Value.Set(7 * 24 * time.Hour) // 7 days
-		ODaoDefaults.Member.ChallengeCost.Value = eth.EthToWei(1)
-		ODaoDefaults.Member.ChallengeWindow.Value.Set(7 * 24 * time.Hour) // 7 days
-		ODaoDefaults.Member.Quorum.Value.Set(0.51)
-		ODaoDefaults.Member.RplBond.Value = eth.EthToWei(1750)
-		ODaoDefaults.Member.UnbondedMinipoolMax.Value.Set(30)
-		ODaoDefaults.Member.UnbondedMinipoolMinFee.Value.Set(0.8)
+		ODaoDefaults.Member.ChallengeCooldown.Set(7 * 24 * time.Hour) // 7 days
+		ODaoDefaults.Member.ChallengeCost.Set(eth.EthToWei(1))
+		ODaoDefaults.Member.ChallengeWindow.Set(7 * 24 * time.Hour) // 7 days
+		ODaoDefaults.Member.Quorum.Set(0.51)
+		ODaoDefaults.Member.RplBond.Set(eth.EthToWei(1750))
+		ODaoDefaults.Member.UnbondedMinipoolMax.Set(30)
+		ODaoDefaults.Member.UnbondedMinipoolMinFee.Set(0.8)
 
 		// Minipools
-		ODaoDefaults.Minipool.BondReductionWindowStart.Value.Set(12 * time.Hour)
-		ODaoDefaults.Minipool.BondReductionWindowLength.Value.Set(2 * 24 * time.Hour)
-		ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Value = true
-		ODaoDefaults.Minipool.ScrubPeriod.Value.Set(12 * time.Hour)
-		ODaoDefaults.Minipool.ScrubQuorum.Value.Set(0.51)
-		ODaoDefaults.Minipool.PromotionScrubPeriod.Value.Set(3 * 24 * time.Hour) // 3 days
-		ODaoDefaults.Minipool.BondReductionCancellationQuorum.Value.Set(0.51)
+		ODaoDefaults.Minipool.BondReductionWindowStart.Set(12 * time.Hour)
+		ODaoDefaults.Minipool.BondReductionWindowLength.Set(2 * 24 * time.Hour)
+		ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Set(true)
+		ODaoDefaults.Minipool.ScrubPeriod.Set(12 * time.Hour)
+		ODaoDefaults.Minipool.ScrubQuorum.Set(0.51)
+		ODaoDefaults.Minipool.PromotionScrubPeriod.Set(3 * 24 * time.Hour) // 3 days
+		ODaoDefaults.Minipool.BondReductionCancellationQuorum.Set(0.51)
 
 		// Proposals
-		ODaoDefaults.Proposal.ActionTime.Value.Set(4 * 7 * 24 * time.Hour)  // 4 weeks
-		ODaoDefaults.Proposal.CooldownTime.Value.Set(2 * 24 * time.Hour)    // 2 days
-		ODaoDefaults.Proposal.ExecuteTime.Value.Set(4 * 7 * 24 * time.Hour) // 4 weeks
-		ODaoDefaults.Proposal.VoteTime.Value.Set(2 * 7 * 24 * time.Hour)    // 2 weeks
-		ODaoDefaults.Proposal.VoteDelayTime.Value.Set(7 * 24 * time.Hour)   // 1 week
+		ODaoDefaults.Proposal.ActionTime.Set(4 * 7 * 24 * time.Hour)  // 4 weeks
+		ODaoDefaults.Proposal.CooldownTime.Set(2 * 24 * time.Hour)    // 2 days
+		ODaoDefaults.Proposal.ExecuteTime.Set(4 * 7 * 24 * time.Hour) // 4 weeks
+		ODaoDefaults.Proposal.VoteTime.Set(2 * 7 * 24 * time.Hour)    // 2 weeks
+		ODaoDefaults.Proposal.VoteDelayTime.Set(7 * 24 * time.Hour)   // 1 week
 	})
 
 	return err

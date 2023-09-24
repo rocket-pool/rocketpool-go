@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	batchquery "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/tests"
@@ -14,12 +13,12 @@ func Test_ChallengeAndKick(t *testing.T) {
 	account, _ := prepChallenge(t)
 
 	// Wait the challenge period
-	secondsToWait := int(odaoMgr.Settings.Member.ChallengeWindow.Value.Formatted().Seconds())
+	secondsToWait := int(odaoMgr.Settings.Member.ChallengeWindow.Formatted().Seconds())
 	err := mgr.IncreaseTime(secondsToWait)
 	if err != nil {
-		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Member.ChallengeWindow.Value.Formatted(), err.Error())
+		t.Fatalf("error waiting %s for challenge window: %s", odaoMgr.Settings.Member.ChallengeWindow.Formatted(), err.Error())
 	}
-	t.Logf("Time increased by %s", odaoMgr.Settings.Member.ChallengeWindow.Value.Formatted())
+	t.Logf("Time increased by %s", odaoMgr.Settings.Member.ChallengeWindow.Formatted())
 
 	// Decide it
 	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
@@ -31,10 +30,7 @@ func Test_ChallengeAndKick(t *testing.T) {
 	t.Logf("Challenge completed")
 
 	// Get the oDAO member count
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		odaoMgr.GetMemberCount(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, odaoMgr.MemberCount)
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
@@ -67,10 +63,7 @@ func Test_ChallengeResolve(t *testing.T) {
 	t.Logf("Challenge completed")
 
 	// Get the oDAO member count
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		odaoMgr.GetMemberCount(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, odaoMgr.MemberCount)
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
@@ -95,16 +88,13 @@ func Test_ChallengeResolve(t *testing.T) {
 	}
 
 	// Query some state
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		member.GetIsChallenged(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, member.IsChallenged)
 	if err != nil {
 		t.Fatalf("error getting contract state: %s", err.Error())
 	}
 
 	// Make sure it's not challenged anymore
-	if member.IsChallenged {
+	if member.IsChallenged.Get() {
 		t.Fatalf("member is challenged, but should not be")
 	}
 	t.Logf("Challenge resolved!")
@@ -132,10 +122,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	t.Logf("Bootstrapped node %s onto the oDAO", account.Address.Hex())
 
 	// Verify it's on the oDAO
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		odaoMgr.GetMemberCount(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, odaoMgr.MemberCount)
 	if err != nil {
 		t.Fatalf("error getting oDAO member count: %s", err.Error())
 	}
@@ -169,17 +156,13 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	t.Logf("Challenge issued")
 
 	// Query some state
-	err = rp.Query(func(mc *batchquery.MultiCaller) error {
-		member.GetIsChallenged(mc)
-		odaoMgr.Settings.Member.ChallengeWindow.Get(mc)
-		return nil
-	}, nil)
+	err = rp.Query(nil, nil, member.IsChallenged, odaoMgr.Settings.Member.ChallengeWindow)
 	if err != nil {
 		t.Fatalf("error getting contract state: %s", err.Error())
 	}
 
 	// Make sure the challenge is visible
-	if !member.IsChallenged {
+	if !member.IsChallenged.Get() {
 		t.Fatalf("member is not challenged, but should be")
 	}
 	t.Logf("Challenge is visible")
