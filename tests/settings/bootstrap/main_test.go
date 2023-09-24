@@ -65,40 +65,7 @@ func TestMain(m *testing.M) {
 	// Verify details
 	settings_test.EnsureSameDetails(log.Fatalf, &tests.ODaoDefaults, odaoMgr.Settings)
 	settings_test.EnsureSameDetails(log.Fatalf, &tests.PDaoDefaults, pdaoMgr.Settings)
-	log.Printf("Stock details are correct!")
-	log.Println("Defaults:")
-	printOdao(&tests.ODaoDefaults)
-	log.Println()
-	log.Println("Chain:")
-	printOdao(odaoMgr.Settings)
 
 	// Run tests
 	os.Exit(m.Run())
-}
-
-func printOdao(settings *oracle.OracleDaoSettings) {
-	log.Println("Member:")
-	log.Printf("\tQuorum: %s\n", settings.Member.Quorum.Raw().String())
-	log.Printf("\tRplBond: %s\n", settings.Member.RplBond.Get().String())
-	log.Printf("\tUnbondedMinipoolMax: %s\n", settings.Member.UnbondedMinipoolMax.Raw().String())
-	log.Printf("\tUnbondedMinipoolMinFee: %s\n", settings.Member.UnbondedMinipoolMinFee.Raw().String())
-	log.Printf("\tChallengeCooldown: %s\n", settings.Member.ChallengeCooldown.Raw().String())
-	log.Printf("\tChallengeWindow: %s\n", settings.Member.ChallengeWindow.Raw().String())
-	log.Printf("\tChallengeCost: %s\n", settings.Member.ChallengeCost.Get().String())
-	log.Println()
-	log.Println("Minipool:")
-	log.Printf("\tScrubPeriod: %s\n", settings.Minipool.ScrubPeriod.Raw().String())
-	log.Printf("\tScrubQuorum: %s\n", settings.Minipool.ScrubQuorum.Raw().String())
-	log.Printf("\tPromotionScrubPeriod: %s\n", settings.Minipool.PromotionScrubPeriod.Raw().String())
-	log.Printf("\tIsScrubPenaltyEnabled: %t\n", settings.Minipool.IsScrubPenaltyEnabled.Get())
-	log.Printf("\tBondReductionWindowStart: %s\n", settings.Minipool.BondReductionWindowStart.Raw().String())
-	log.Printf("\tBondReductionWindowLength: %s\n", settings.Minipool.BondReductionWindowLength.Raw().String())
-	log.Printf("\tBondReductionCancellationQuorum: %s\n", settings.Minipool.BondReductionCancellationQuorum.Raw().String())
-	log.Println()
-	log.Println("Proposal:")
-	log.Printf("\tCooldownTime: %s\n", settings.Proposal.CooldownTime.Raw().String())
-	log.Printf("\tVoteTime: %s\n", settings.Proposal.VoteTime.Raw().String())
-	log.Printf("\tVoteDelayTime: %s\n", settings.Proposal.VoteDelayTime.Raw().String())
-	log.Printf("\tExecuteTime: %s\n", settings.Proposal.ExecuteTime.Raw().String())
-	log.Printf("\tActionTime: %s\n", settings.Proposal.ActionTime.Raw().String())
 }

@@ -39,7 +39,7 @@ func (s *OracleDaoBoolSetting) Copy(other core.ICopyable) {
 	if !ok {
 		panic(fmt.Sprintf("wrong type; expected %s, got %s", reflect.TypeOf(s), reflect.TypeOf(other)))
 	}
-	castedOther.SimpleField.Copy(s.SimpleField)
+	s.SimpleField.Copy(castedOther.SimpleField)
 }
 
 func (s *OracleDaoUintSetting) Copy(other core.ICopyable) {
@@ -47,7 +47,7 @@ func (s *OracleDaoUintSetting) Copy(other core.ICopyable) {
 	if !ok {
 		panic(fmt.Sprintf("wrong type; expected %s, got %s", reflect.TypeOf(s), reflect.TypeOf(other)))
 	}
-	castedOther.SimpleField.Copy(s.SimpleField)
+	s.SimpleField.Copy(castedOther.SimpleField)
 }
 
 func (s *OracleDaoCompoundSetting[DataType]) Copy(other core.ICopyable) {
@@ -55,5 +55,5 @@ func (s *OracleDaoCompoundSetting[DataType]) Copy(other core.ICopyable) {
 	if !ok {
 		panic(fmt.Sprintf("wrong type; expected %s, got %s", reflect.TypeOf(s), reflect.TypeOf(other)))
 	}
-	castedOther.FormattedUint256Field.Copy(s.FormattedUint256Field)
+	s.FormattedUint256Field.Copy(castedOther.FormattedUint256Field)
 }
