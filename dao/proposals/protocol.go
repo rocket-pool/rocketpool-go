@@ -55,12 +55,12 @@ func GetProposalAsProtocol(proposal IProposal) (*ProtocolDaoProposal, bool) {
 // =============
 
 // Get the basic details
-func (c *ProtocolDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
-	c.ProposalCommon.QueryAllDetails(mc)
+func (c *ProtocolDaoProposal) QueryAllFields(mc *batch.MultiCaller) {
+	core.QueryAllFields(c.ProposalCommon, mc)
 }
 
 // Get the common fields
-func (c *ProtocolDaoProposal) GetProposalCommon() *ProposalCommon {
+func (c *ProtocolDaoProposal) Common() *ProposalCommon {
 	return c.ProposalCommon
 }
 

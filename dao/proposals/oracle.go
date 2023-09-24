@@ -55,12 +55,12 @@ func GetProposalAsOracle(proposal IProposal) (*OracleDaoProposal, bool) {
 // =============
 
 // Get the basic details
-func (c *OracleDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
-	c.ProposalCommon.QueryAllDetails(mc)
+func (c *OracleDaoProposal) QueryAllFields(mc *batch.MultiCaller) {
+	core.QueryAllFields(c.ProposalCommon, mc)
 }
 
 // Get the common fields
-func (c *OracleDaoProposal) GetProposalCommon() *ProposalCommon {
+func (c *OracleDaoProposal) Common() *ProposalCommon {
 	return c.ProposalCommon
 }
 

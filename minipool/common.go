@@ -27,44 +27,80 @@ const (
 
 // Basic binding for version-agnostic RocketMinipool contracts
 type MinipoolCommon struct {
-	// Core parameters
-	Address                    common.Address
-	Version                    *core.SimpleField[uint8]
-	NodeAddress                *core.SimpleField[common.Address]
-	Status                     *core.FormattedUint8Field[types.MinipoolStatus]
-	StatusBlock                *core.FormattedUint256Field[uint64]
-	StatusTime                 *core.FormattedUint256Field[time.Time]
-	IsFinalised                *core.SimpleField[bool]
-	NodeFee                    *core.FormattedUint256Field[float64]
-	NodeDepositBalance         *core.SimpleField[*big.Int]
-	NodeRefundBalance          *core.SimpleField[*big.Int]
-	NodeDepositAssigned        *core.SimpleField[bool]
-	UserDepositBalance         *core.SimpleField[*big.Int]
-	UserDepositAssigned        *core.SimpleField[bool]
-	UserDepositAssignedTime    *core.FormattedUint256Field[time.Time]
+	// The address of the minipool contract
+	Address common.Address
+
+	// The version of the minipool
+	Version uint8
+
+	// The address of the node that owns this minipool
+	NodeAddress *core.SimpleField[common.Address]
+
+	// The minipool's status
+	Status *core.FormattedUint8Field[types.MinipoolStatus]
+
+	// The block that the minipool's status last changed
+	StatusBlock *core.FormattedUint256Field[uint64]
+
+	// The time that the minipool's status last changed
+	StatusTime *core.FormattedUint256Field[time.Time]
+
+	// True if the minipool has been finalised
+	IsFinalised *core.SimpleField[bool]
+
+	// The minipool's commission rate
+	NodeFee *core.FormattedUint256Field[float64]
+
+	// The balance the node has deposited to the minipool
+	NodeDepositBalance *core.SimpleField[*big.Int]
+
+	// The amount of ETH ready to be refunded to the node
+	NodeRefundBalance *core.SimpleField[*big.Int]
+
+	// True if the node deposit has been assigned to the minipool
+	NodeDepositAssigned *core.SimpleField[bool]
+
+	// The balance the pool stakers have deposited to the minipool
+	UserDepositBalance *core.SimpleField[*big.Int]
+
+	// True if the pool staker deposits has been assigned to the minipool
+	UserDepositAssigned *core.SimpleField[bool]
+
+	// The time at which the pool stakers were assigned to the minipool
+	UserDepositAssignedTime *core.FormattedUint256Field[time.Time]
+
+	// True if the "use latest delegate" flag is enabled
 	IsUseLatestDelegateEnabled *core.SimpleField[bool]
-	DelegateAddress            *core.SimpleField[common.Address]
-	PreviousDelegateAddress    *core.SimpleField[common.Address]
-	EffectiveDelegateAddress   *core.SimpleField[common.Address]
-	PenaltyCount               *core.FormattedUint256Field[uint64]
 
-	// MinipoolManager
-	Exists                *core.SimpleField[bool]
-	Pubkey                *core.SimpleField[types.ValidatorPubkey]
+	// The address of the current delegate the minipool has recorded
+	DelegateAddress *core.SimpleField[common.Address]
+
+	// The address of the previous delegate the minipool will use after a rollback
+	PreviousDelegateAddress *core.SimpleField[common.Address]
+
+	// The address of the delegate the minipool will use (may be different than DelegateAddress if UseLatestDelegate is enabled)
+	EffectiveDelegateAddress *core.SimpleField[common.Address]
+
+	// The minipool's penalty count
+	PenaltyCount *core.FormattedUint256Field[uint64]
+
+	// True if a minipool exists (i.e. there is a minipool with this contract address)
+	Exists *core.SimpleField[bool]
+
+	// The pubkey of the validator on the Beacon Chain managed by this minipool
+	Pubkey *core.SimpleField[types.ValidatorPubkey]
+
+	// The minipool's 0x01-based withdrawal credentials
 	WithdrawalCredentials *core.SimpleField[common.Hash]
-	RplSlashed            *core.SimpleField[bool]
-	DepositType           core.Uint8Parameter[types.MinipoolDeposit] `json:"depositType"`
 
-	// BondReducer
-	IsBondReduceCancelled        *core.SimpleField[bool]
-	ReduceBondTime               core.Uint256Parameter[time.Time] `json:"reduceBondTime"`
-	ReduceBondValue              *core.SimpleField[*big.Int]
-	LastBondReductionTime        core.Uint256Parameter[time.Time] `json:"lastBondReductionTime"`
-	LastBondReductionPrevValue   *core.SimpleField[*big.Int]
-	LastBondReductionPrevNodeFee core.Uint256Parameter[float64] `json:"lastBondReductionPrevNodeFee"`
+	// True if the minipool's RPL has been slashed
+	RplSlashed *core.SimpleField[bool]
 
-	// MinipoolQueue
-	QueuePosition core.Uint256Parameter[int64] `json:"queuePosition"`
+	// The minipool's deposit type
+	DepositType *core.FormattedUint8Field[types.MinipoolDeposit]
+
+	// The queue position of the minipool (-1 means not in the queue, otherwise 0-indexed)
+	QueuePosition *core.FormattedUint256Field[int64]
 
 	// === Internal fields ===
 	contract *core.Contract
@@ -115,8 +151,40 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 		return nil, fmt.Errorf("error getting minipool status contract: %w", err)
 	}
 
+	address := *contract.Address
+	penaltyCountKey := crypto.Keccak256Hash([]byte("network.penalties.penalty"), address.Bytes())
 	return &MinipoolCommon{
-		Address: *contract.Address,
+		Address: address,
+		Version: version,
+
+		// Minipool
+		PenaltyCount:               core.NewFormattedUint256Field[uint64](rp.Storage.Contract, "getUint", penaltyCountKey),
+		Status:                     core.NewFormattedUint8Field[types.MinipoolStatus](contract, "getStatus"),
+		StatusBlock:                core.NewFormattedUint256Field[uint64](contract, "getStatusBlock"),
+		StatusTime:                 core.NewFormattedUint256Field[time.Time](contract, "getStatusTime"),
+		IsFinalised:                core.NewSimpleField[bool](contract, "getFinalised"),
+		NodeAddress:                core.NewSimpleField[common.Address](contract, "getNodeAddress"),
+		NodeFee:                    core.NewFormattedUint256Field[float64](contract, "getNodeFee"),
+		NodeDepositBalance:         core.NewSimpleField[*big.Int](contract, "getNodeDepositBalance"),
+		NodeRefundBalance:          core.NewSimpleField[*big.Int](contract, "getNodeRefundBalance"),
+		NodeDepositAssigned:        core.NewSimpleField[bool](contract, "getNodeDepositAssigned"),
+		UserDepositBalance:         core.NewSimpleField[*big.Int](contract, "getUserDepositBalance"),
+		UserDepositAssigned:        core.NewSimpleField[bool](contract, "getUserDepositAssigned"),
+		UserDepositAssignedTime:    core.NewFormattedUint256Field[time.Time](contract, "getUserDepositAssignedTime"),
+		IsUseLatestDelegateEnabled: core.NewSimpleField[bool](contract, "getUseLatestDelegate"),
+		DelegateAddress:            core.NewSimpleField[common.Address](contract, "getDelegate"),
+		PreviousDelegateAddress:    core.NewSimpleField[common.Address](contract, "getPreviousDelegate"),
+		EffectiveDelegateAddress:   core.NewSimpleField[common.Address](contract, "getEffectiveDelegate"),
+
+		// MinipoolManager
+		Exists:                core.NewSimpleField[bool](mpMgr, "getMinipoolExists", address),
+		Pubkey:                core.NewSimpleField[types.ValidatorPubkey](mpMgr, "getMinipoolPubkey", address),
+		WithdrawalCredentials: core.NewSimpleField[common.Hash](mpMgr, "getMinipoolWithdrawalCredentials", address),
+		RplSlashed:            core.NewSimpleField[bool](mpMgr, "getMinipoolRPLSlashed", address),
+		DepositType:           core.NewFormattedUint8Field[types.MinipoolDeposit](mpMgr, "getMinipoolDepositType", address),
+
+		// MinipoolQueue
+		QueuePosition: core.NewFormattedUint256Field[int64](mpQueue, "getMinipoolPosition", address),
 
 		rp:       rp,
 		contract: contract,
@@ -130,159 +198,14 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 // === Calls ===
 // =============
 
+// Gets the common binding for all minipool types
+func (c *MinipoolCommon) Common() *MinipoolCommon {
+	return c
+}
+
 // Gets the underlying minipool's contract
 func (c *MinipoolCommon) GetContract() *core.Contract {
 	return c.contract
-}
-
-// === Minipool ===
-
-// Get the minipool's penalty count
-func (c *MinipoolCommon) GetPenaltyCount(mc *batch.MultiCaller) {
-	// This isn't in the manager, it's in RocketStorage
-	key := crypto.Keccak256Hash([]byte("network.penalties.penalty"), c.Address.Bytes())
-	c.rp.Storage.GetUint(mc, &c.PenaltyCount.RawValue, key)
-}
-
-// Get the minipool's status
-func (c *MinipoolCommon) GetStatus(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.Status.RawValue, "getStatus")
-}
-
-// Get the block that the minipool's status last changed
-func (c *MinipoolCommon) GetStatusBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.StatusBlock.RawValue, "getStatusBlock")
-}
-
-// Get the time that the minipool's status last changed
-func (c *MinipoolCommon) GetStatusTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.StatusTime.RawValue, "getStatusTime")
-}
-
-// Check if the minipool has been finalised
-func (c *MinipoolCommon) GetFinalised(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.IsFinalised, "getFinalised")
-}
-
-// Get the minipool's node address
-func (c *MinipoolCommon) GetNodeAddress(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeAddress, "getNodeAddress")
-}
-
-// Get the minipool's commission rate
-func (c *MinipoolCommon) GetNodeFee(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeFee.RawValue, "getNodeFee")
-}
-
-// Get the balance the node has deposited to the minipool
-func (c *MinipoolCommon) GetNodeDepositBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeDepositBalance, "getNodeDepositBalance")
-}
-
-// Get the amount of ETH ready to be refunded to the node
-func (c *MinipoolCommon) GetNodeRefundBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeRefundBalance, "getNodeRefundBalance")
-}
-
-// Check if the node deposit has been assigned to the minipool
-func (c *MinipoolCommon) GetNodeDepositAssigned(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeDepositAssigned, "getNodeDepositAssigned")
-}
-
-// Get the balance the pool stakers have deposited to the minipool
-func (c *MinipoolCommon) GetUserDepositBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.UserDepositBalance, "getUserDepositBalance")
-}
-
-// Check if the pool staker deposits has been assigned to the minipool
-func (c *MinipoolCommon) GetUserDepositAssigned(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.UserDepositAssigned, "getUserDepositAssigned")
-}
-
-// Get the time at which the pool stakers were assigned to the minipool
-func (c *MinipoolCommon) GetUserDepositAssignedTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.UserDepositAssignedTime.RawValue, "getUserDepositAssignedTime")
-}
-
-// Check if the "use latest delegate" flag is enabled
-func (c *MinipoolCommon) GetUseLatestDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.IsUseLatestDelegateEnabled, "getUseLatestDelegate")
-}
-
-// Get the address of the current delegate the minipool has recorded
-func (c *MinipoolCommon) GetDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.DelegateAddress, "getDelegate")
-}
-
-// Get the address of the previous delegate the minipool will use after a rollback
-func (c *MinipoolCommon) GetPreviousDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.PreviousDelegateAddress, "getPreviousDelegate")
-}
-
-// Get the address of the delegate the minipool will use (may be different than DelegateAddress if UseLatestDelegate is enabled)
-func (c *MinipoolCommon) GetEffectiveDelegate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.EffectiveDelegateAddress, "getEffectiveDelegate")
-}
-
-// === MinipoolManager ===
-
-// Check if a minipool exists
-func (c *MinipoolCommon) GetExists(mc *batch.MultiCaller) {
-	// TODO: Is this really necessary?
-	core.AddCall(mc, c.mpMgr, &c.Exists, "getMinipoolExists", c.Address)
-}
-
-// Get the minipool's pubkey
-func (c *MinipoolCommon) GetPubkey(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.Pubkey, "getMinipoolPubkey", c.Address)
-}
-
-// Get the minipool's 0x01-based withdrawal credentials
-func (c *MinipoolCommon) GetWithdrawalCredentials(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.WithdrawalCredentials, "getMinipoolWithdrawalCredentials", c.Address)
-}
-
-// Check if the minipool's RPL has been slashed
-func (c *MinipoolCommon) GetRplSlashed(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.WithdrawalCredentials, "getMinipoolRPLSlashed", c.Address)
-}
-
-// Get the minipool's deposit type
-func (c *MinipoolCommon) GetDepositType(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.DepositType.RawValue, "getMinipoolDepositType", c.Address)
-}
-
-// === MinipoolQueue ===
-
-// Get queue position of the minipool (-1 means not in the queue, otherwise 0-indexed).
-func (c *MinipoolCommon) GetQueuePosition(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpQueue, &c.QueuePosition.RawValue, "getMinipoolPosition", c.Address)
-}
-
-// Get the basic details
-func (c *MinipoolCommon) QueryAllDetails(mc *batch.MultiCaller) {
-	c.GetPenaltyCount(mc)
-	c.GetStatus(mc)
-	c.GetStatusBlock(mc)
-	c.GetStatusTime(mc)
-	c.GetFinalised(mc)
-	c.GetNodeAddress(mc)
-	c.GetNodeFee(mc)
-	c.GetNodeDepositBalance(mc)
-	c.GetNodeRefundBalance(mc)
-	c.GetNodeDepositAssigned(mc)
-	c.GetUserDepositBalance(mc)
-	c.GetUserDepositAssigned(mc)
-	c.GetUserDepositAssignedTime(mc)
-	c.GetUseLatestDelegate(mc)
-	c.GetDelegate(mc)
-	c.GetPreviousDelegate(mc)
-	c.GetEffectiveDelegate(mc)
-	c.GetExists(mc)
-	c.GetPubkey(mc)
-	c.GetWithdrawalCredentials(mc)
-	c.GetRplSlashed(mc)
-	c.GetDepositType(mc)
 }
 
 // ====================

@@ -10,8 +10,8 @@ import (
 
 type IProposal interface {
 	// Get all of the proposal's details
-	QueryAllDetails(mc *batch.MultiCaller)
+	QueryAllFields(mc *batch.MultiCaller)
 
-	// Get all of the details common across each type of proposal
-	GetProposalCommon() *ProposalCommon
+	// Get the binding common across each type of proposal
+	Common() *ProposalCommon
 }

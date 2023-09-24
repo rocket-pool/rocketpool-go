@@ -153,7 +153,7 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 	// Get all details if requested
 	if includeDetails {
 		err = c.rp.BatchQuery(int(proposalCount), proposalBatchSize, func(mc *batch.MultiCaller, index int) error {
-			totalProps[index].QueryAllDetails(mc)
+			totalProps[index].QueryAllFields(mc)
 			return nil
 		}, opts)
 		if err != nil {

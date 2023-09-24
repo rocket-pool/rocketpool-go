@@ -24,11 +24,7 @@ var minipoolV2Abi *abi.ABI
 // ===============
 
 type MinipoolV2 struct {
-	*minipoolCommon
-	*MinipoolV2Details
-}
-
-type MinipoolV2Details struct {
+	*MinipoolCommon
 }
 
 // ====================
@@ -59,8 +55,7 @@ func newMinipool_v2(rp *rocketpool.RocketPool, address common.Address) (*Minipoo
 
 	// Create and return
 	return &MinipoolV2{
-		minipoolCommon:    base,
-		MinipoolV2Details: &MinipoolV2Details{},
+		MinipoolCommon: base,
 	}, nil
 }
 
@@ -78,8 +73,8 @@ func GetMinipoolAsV2(mp IMinipool) (*MinipoolV2, bool) {
 // =============
 
 // Query all of the minipool details
-func (c *MinipoolV2) QueryAllDetails(mc *batch.MultiCaller) {
-	c.minipoolCommon.QueryAllDetails(mc)
+func (c *MinipoolV2) QueryAllFields(mc *batch.MultiCaller) {
+	core.QueryAllFields(c.MinipoolCommon, mc)
 }
 
 // ====================

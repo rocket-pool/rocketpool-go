@@ -105,25 +105,6 @@ func newProposalCommon(rp *rocketpool.RocketPool, id uint64) (*ProposalCommon, e
 // === Calls ===
 // =============
 
-// Get all of the proposal's details
-func (c *ProposalCommon) QueryAllDetails(mc *batch.MultiCaller) {
-	core.AddQueryablesToMulticall(mc,
-		c.ProposerAddress,
-		c.Message,
-		c.CreatedTime,
-		c.StartTime,
-		c.EndTime,
-		c.ExpiryTime,
-		c.VotesRequired,
-		c.VotesFor,
-		c.VotesAgainst,
-		c.IsCancelled,
-		c.IsExecuted,
-		c.Payload,
-		c.State,
-	)
-}
-
 // Check if a node has voted on the proposal
 func (c *ProposalCommon) GetMemberHasVoted(mc *batch.MultiCaller, out *bool, address common.Address) {
 	core.AddCall(mc, c.dp, out, "getReceiptHasVoted", c.idBig, address)
