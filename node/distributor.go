@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
-	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -18,17 +17,21 @@ import (
 
 // Binding for RocketNodeDistributorDelegate
 type NodeDistributor struct {
-	*NodeDistributorDetails
+	// The address of the distributor
+	DistributorAddress common.Address
+
+	// The address of the node that owns this distributor
+	NodeAddress common.Address
+
+	// The node share of the distributor's current balance
+	NodeShare *core.SimpleField[*big.Int]
+
+	// The user share of the distributor's current balance
+	UserShare *core.SimpleField[*big.Int]
+
+	// === Internal fields ===
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
-}
-
-// Details for RocketNodeDistributorDelegate
-type NodeDistributorDetails struct {
-	NodeAddress        common.Address `json:"nodeAddress"`
-	DistributorAddress common.Address `json:"distributorAddress"`
-	NodeShare          *big.Int       `json:"nodeShare"`
-	UserShare          *big.Int       `json:"userShare"`
 }
 
 // ====================
@@ -44,33 +47,14 @@ func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, d
 	}
 
 	return &NodeDistributor{
-		NodeDistributorDetails: &NodeDistributorDetails{
-			NodeAddress:        nodeAddress,
-			DistributorAddress: distributorAddress,
-		},
+		NodeAddress:        nodeAddress,
+		DistributorAddress: distributorAddress,
+		NodeShare:          core.NewSimpleField[*big.Int](contract, "getNodeShare"),
+		UserShare:          core.NewSimpleField[*big.Int](contract, "getUserShare"),
+
 		rp:       rp,
 		contract: contract,
 	}, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// Gets the node share of the distributor's current balance
-func (c *NodeDistributor) GetNodeShare(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.NodeShare, "getNodeShare")
-}
-
-// Gets the user share of the distributor's current balance
-func (c *NodeDistributor) GetUserShare(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.contract, &c.UserShare, "getUserShare")
-}
-
-// Get all basic details
-func (c *NodeDistributor) GetAllDetails(mc *batch.MultiCaller) {
-	c.GetNodeShare(mc)
-	c.GetUserShare(mc)
 }
 
 // ====================

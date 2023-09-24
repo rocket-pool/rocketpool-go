@@ -19,33 +19,45 @@ import (
 
 // Binding for the Network Manager
 type NetworkManager struct {
-	*NetworkManagerDetails
+	// The block number which network balances are current for
+	BalancesBlock *core.FormattedUint256Field[uint64]
+
+	// The current network total ETH balance
+	TotalEthBalance *core.SimpleField[*big.Int]
+
+	// The current network staking ETH balance
+	StakingEthBalance *core.SimpleField[*big.Int]
+
+	// The current network total rETH supply
+	TotalRethSupply *core.SimpleField[*big.Int]
+
+	// The current network ETH utilization rate
+	EthUtilizationRate *core.FormattedUint256Field[float64]
+
+	// The latest block number that oracles should be reporting balances for
+	LatestReportableBalancesBlock *core.FormattedUint256Field[uint64]
+
+	// The current network node demand in ETH
+	NodeDemand *core.SimpleField[*big.Int]
+
+	// The current network node commission rate
+	NodeFee *core.FormattedUint256Field[float64]
+
+	// The block number which network prices are current for
+	PricesBlock *core.FormattedUint256Field[uint64]
+
+	// The current network RPL price in ETH
+	RplPrice *core.FormattedUint256Field[float64]
+
+	// The latest block number that oracles should be reporting prices for
+	LatestReportablePricesBlock *core.FormattedUint256Field[uint64]
+
+	// === Internal fields ===
 	rp               *rocketpool.RocketPool
 	networkBalances  *core.Contract
 	networkFees      *core.Contract
 	networkPenalties *core.Contract
 	networkPrices    *core.Contract
-}
-
-// Details for network balances
-type NetworkManagerDetails struct {
-	// Balances
-	BalancesBlock                 core.Uint256Parameter[uint64]  `json:"balancesBlock"`
-	TotalETHBalance               *big.Int                       `json:"totalEthBalance"`
-	StakingETHBalance             *big.Int                       `json:"stakingEthBalance"`
-	TotalRETHSupply               *big.Int                       `json:"totalRethSupply"`
-	EthUtilizationRate            core.Uint256Parameter[float64] `json:"ethUtilizationRate"`
-	LatestReportableBalancesBlock core.Uint256Parameter[uint64]  `json:"latestReportableBalancesBlock"`
-
-	// Fees
-	NodeDemand      *big.Int                       `json:"nodeDemand"`
-	NodeFee         core.Uint256Parameter[float64] `json:"nodeFee"`
-	NodeFeeByDemand core.Uint256Parameter[float64] `json:"nodeFeeByDemand"`
-
-	// Prices
-	PricesBlock                 core.Uint256Parameter[uint64]  `json:"pricesBlock"`
-	RplPrice                    core.Uint256Parameter[float64] `json:"rplPrice"`
-	LatestReportablePricesBlock core.Uint256Parameter[uint64]  `json:"latestReportablePricesBlock"`
 }
 
 // ====================
@@ -74,12 +86,28 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 	}
 
 	return &NetworkManager{
-		NetworkManagerDetails: &NetworkManagerDetails{},
-		rp:                    rp,
-		networkBalances:       networkBalances,
-		networkFees:           networkFees,
-		networkPenalties:      networkPenalties,
-		networkPrices:         networkPrices,
+		// NetworkBalances
+		BalancesBlock:                 core.NewFormattedUint256Field[uint64](networkBalances, "getBalancesBlock"),
+		TotalEthBalance:               core.NewSimpleField[*big.Int](networkBalances, "getTotalETHBalance"),
+		StakingEthBalance:             core.NewSimpleField[*big.Int](networkBalances, "getStakingETHBalance"),
+		TotalRethSupply:               core.NewSimpleField[*big.Int](networkBalances, "getTotalRETHSupply"),
+		EthUtilizationRate:            core.NewFormattedUint256Field[float64](networkBalances, "getETHUtilizationRate"),
+		LatestReportableBalancesBlock: core.NewFormattedUint256Field[uint64](networkBalances, "getLatestReportableBlock"),
+
+		// NetworkFees
+		NodeDemand: core.NewSimpleField[*big.Int](networkFees, "getNodeDemand"),
+		NodeFee:    core.NewFormattedUint256Field[float64](networkFees, "getNodeFee"),
+
+		// NetworkPrices
+		PricesBlock:                 core.NewFormattedUint256Field[uint64](networkPrices, "getPricesBlock"),
+		RplPrice:                    core.NewFormattedUint256Field[float64](networkPrices, "getRPLPrice"),
+		LatestReportablePricesBlock: core.NewFormattedUint256Field[uint64](networkPrices, "getLatestReportableBlock"),
+
+		rp:               rp,
+		networkBalances:  networkBalances,
+		networkFees:      networkFees,
+		networkPenalties: networkPenalties,
+		networkPrices:    networkPrices,
 	}, nil
 }
 
@@ -87,77 +115,11 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 // === Calls ===
 // =============
 
-// === NetworkBalance ===
-
-// Get the block number which network balances are current for
-func (c *NetworkManager) GetBalancesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkBalances, &c.BalancesBlock.RawValue, "getBalancesBlock")
-}
-
-// Get the current network total ETH balance
-func (c *NetworkManager) GetTotalETHBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkBalances, &c.TotalETHBalance, "getTotalETHBalance")
-}
-
-// Get the current network staking ETH balance
-func (c *NetworkManager) GetStakingETHBalance(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkBalances, &c.StakingETHBalance, "getStakingETHBalance")
-}
-
-// Get the current network total rETH supply
-func (c *NetworkManager) GetTotalRETHSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkBalances, &c.TotalRETHSupply, "getTotalRETHSupply")
-}
-
-// Get the current network ETH utilization rate
-func (c *NetworkManager) GetEthUtilizationRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkBalances, &c.EthUtilizationRate.RawValue, "getETHUtilizationRate")
-}
-
-// Returns the latest block number that oracles should be reporting balances for
-func (c *NetworkManager) GetLatestReportableBalancesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkBalances, &c.LatestReportableBalancesBlock.RawValue, "getLatestReportableBlock")
-}
-
 // === NetworkFees ===
 
-// Get the current network node demand in ETH
-func (c *NetworkManager) GetNodeDemand(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkFees, &c.NodeDemand, "getNodeDemand")
-}
-
-// Get the current network node commission rate
-func (c *NetworkManager) GetNodeFee(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkFees, &c.NodeFee.RawValue, "getNodeFee")
-}
-
 // Get the network node fee for a node demand value
-func (c *NetworkManager) GetNodeFeeByDemand(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkFees, &c.NodeFeeByDemand.RawValue, "getNodeFeeByDemand")
-}
-
-// === NetworkPenalties ===
-
-// Get info for minipool penalty submission
-func (c *NetworkManager) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkPenalties, "submitPenalty", opts, minipoolAddress, block)
-}
-
-// === NetworkPrices ===
-
-// Get the block number which network prices are current for
-func (c *NetworkManager) GetPricesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkPrices, &c.PricesBlock.RawValue, "getPricesBlock")
-}
-
-// Get the current network RPL price in ETH
-func (c *NetworkManager) GetRplPrice(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkPrices, &c.RplPrice.RawValue, "getRPLPrice")
-}
-
-// Returns the latest block number that oracles should be reporting prices for
-func (c *NetworkManager) GetLatestReportablePricesBlock(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.networkPrices, &c.LatestReportablePricesBlock.RawValue, "getLatestReportableBlock")
+func (c *NetworkManager) GetNodeFeeByDemand(mc *batch.MultiCaller, fee_Out *core.Uint256Parameter[float64], demand *big.Int) {
+	core.AddCall(mc, c.networkFees, &fee_Out.RawValue, "getNodeFeeByDemand", demand)
 }
 
 // ====================
@@ -169,6 +131,13 @@ func (c *NetworkManager) GetLatestReportablePricesBlock(mc *batch.MultiCaller) {
 // Get info for network balance submission
 func (c *NetworkManager) SubmitBalances(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.networkBalances, "submitBalances", opts, block, totalEth, stakingEth, rethSupply)
+}
+
+// === NetworkPenalties ===
+
+// Get info for minipool penalty submission
+func (c *NetworkManager) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.networkPenalties, "submitPenalty", opts, minipoolAddress, block)
 }
 
 // === NetworkPrices ===

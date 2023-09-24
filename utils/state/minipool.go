@@ -194,12 +194,13 @@ func CalculateCompleteMinipoolShares(rp *rocketpool.RocketPool, contracts *Netwo
 				if err != nil {
 					return err
 				}
+				mpCommon := mp.Common()
 
 				// Calculate the Beacon shares
 				beaconBalance := big.NewInt(0).Set(beaconBalances[j])
 				if beaconBalance.Cmp(zero) > 0 {
-					mp.CalculateNodeShare(mc, &details.NodeShareOfBeaconBalance, beaconBalance)
-					mp.CalculateUserShare(mc, &details.UserShareOfBeaconBalance, beaconBalance)
+					mpCommon.CalculateNodeShare(mc, &details.NodeShareOfBeaconBalance, beaconBalance)
+					mpCommon.CalculateUserShare(mc, &details.UserShareOfBeaconBalance, beaconBalance)
 				} else {
 					details.NodeShareOfBeaconBalance = big.NewInt(0)
 					details.UserShareOfBeaconBalance = big.NewInt(0)
@@ -212,8 +213,8 @@ func CalculateCompleteMinipoolShares(rp *rocketpool.RocketPool, contracts *Netwo
 
 				// Calculate the node and user shares
 				if totalBalance.Cmp(zero) > 0 {
-					mp.CalculateNodeShare(mc, &details.NodeShareOfBalanceIncludingBeacon, totalBalance)
-					mp.CalculateUserShare(mc, &details.UserShareOfBalanceIncludingBeacon, totalBalance)
+					mpCommon.CalculateNodeShare(mc, &details.NodeShareOfBalanceIncludingBeacon, totalBalance)
+					mpCommon.CalculateUserShare(mc, &details.UserShareOfBalanceIncludingBeacon, totalBalance)
 				} else {
 					details.NodeShareOfBalanceIncludingBeacon = big.NewInt(0)
 					details.UserShareOfBalanceIncludingBeacon = big.NewInt(0)
@@ -244,14 +245,11 @@ func getNodeMinipoolAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkC
 	}
 
 	// Get minipool count
-	var minipoolCount uint64
-	err = rp.Query(func(mc *batch.MultiCaller) error {
-		node.GetMinipoolCount(mc)
-		return nil
-	}, opts)
+	err = rp.Query(nil, opts, node.MinipoolCount)
 	if err != nil {
 		return []common.Address{}, err
 	}
+	minipoolCount := node.MinipoolCount.Formatted()
 
 	// Sync
 	var wg errgroup.Group
@@ -301,10 +299,7 @@ func getAllMinipoolAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkCo
 
 	// Get minipool count
 	var minipoolCount uint64
-	err = rp.Query(func(mc *batch.MultiCaller) error {
-		mgr.GetMinipoolCount(mc)
-		return nil
-	}, opts)
+	err = rp.Query(nil, opts, mgr.MinipoolCount)
 	if err != nil {
 		return []common.Address{}, err
 	}

@@ -25,16 +25,16 @@ const (
 
 // Binding for RocketNodeManager
 type NodeManager struct {
-	*NodeManagerDetails
+	// The number of nodes in the network
+	NodeCount *core.FormattedUint256Field[uint64]
+
+	// The total RPL staked in the network
+	TotalRplStake *core.SimpleField[*big.Int]
+
+	// === Internal fields ===
 	rp      *rocketpool.RocketPool
 	nodeMgr *core.Contract
 	ns      *core.Contract
-}
-
-// Details for RocketNodeManager
-type NodeManagerDetails struct {
-	NodeCount     core.Uint256Parameter[uint64] `json:"nodeCount"`
-	TotalRplStake *big.Int                      `json:"totalRplStake"`
 }
 
 // Count of nodes belonging to a timezone
@@ -60,29 +60,16 @@ func NewNodeManager(rp *rocketpool.RocketPool) (*NodeManager, error) {
 	}
 
 	return &NodeManager{
-		NodeManagerDetails: &NodeManagerDetails{},
-		rp:                 rp,
-		nodeMgr:            nodeMgr,
-		ns:                 ns,
+		// NodeManager
+		NodeCount: core.NewFormattedUint256Field[uint64](nodeMgr, "getNodeCount"),
+
+		// NodeStaking
+		TotalRplStake: core.NewSimpleField[*big.Int](ns, "getTotalRPLStake"),
+
+		rp:      rp,
+		nodeMgr: nodeMgr,
+		ns:      ns,
 	}, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// === NodeManager ===
-
-// Get the number of nodes in the network
-func (c *NodeManager) GetNodeCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.NodeCount.RawValue, "getNodeCount")
-}
-
-// === NodeStaking ===
-
-// Get the total RPL staked in the network
-func (c *NodeManager) GetTotalRplStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.ns, &c.TotalRplStake, "getTotalRPLStake")
 }
 
 // =================

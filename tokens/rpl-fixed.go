@@ -18,14 +18,16 @@ import (
 
 // Binding for RocketTokenRPLFixedSupply
 type TokenRplFixedSupply struct {
-	*TokenRplFixedSupplyDetails
+	// The fixed-supply RPL total supply
+	TotalSupply *core.SimpleField[*big.Int]
+
+	// === Internal fields ===
 	rp    *rocketpool.RocketPool
 	fsrpl *core.Contract
 }
 
 // Details for RocketTokenRPLFixedSupply
 type TokenRplFixedSupplyDetails struct {
-	TotalSupply *big.Int `json:"totalSupply"`
 }
 
 // ====================
@@ -41,9 +43,10 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 	}
 
 	return &TokenRplFixedSupply{
-		TokenRplFixedSupplyDetails: &TokenRplFixedSupplyDetails{},
-		rp:                         rp,
-		fsrpl:                      fsrpl,
+		TotalSupply: core.NewSimpleField[*big.Int](fsrpl, "totalSupply"),
+
+		rp:    rp,
+		fsrpl: fsrpl,
 	}, nil
 }
 
@@ -52,11 +55,6 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 // =============
 
 // === Core ERC-20 functions ===
-
-// Get the fixed-supply RPL total supply
-func (c *TokenRplFixedSupply) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.fsrpl, &c.TotalSupply, "totalSupply")
-}
 
 // Get the fixed-supply RPL balance of an address
 func (c *TokenRplFixedSupply) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {

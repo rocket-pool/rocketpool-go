@@ -1,7 +1,6 @@
 package tokens
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 
@@ -19,17 +18,21 @@ import (
 
 // Binding for RocketTokenRETH
 type TokenReth struct {
-	*TokenRethDetails
+	// The rETH total supply
+	TotalSupply *core.SimpleField[*big.Int]
+
+	// The current ETH : rETH exchange rate
+	ExchangeRate *core.FormattedUint256Field[float64]
+
+	// The total amount of ETH collateral available for rETH trades
+	TotalCollateral *core.SimpleField[*big.Int]
+
+	// The rETH collateralization rate
+	CollateralRate *core.FormattedUint256Field[float64]
+
+	// === Internal fields ===
 	rp   *rocketpool.RocketPool
 	reth *core.Contract
-}
-
-// Details for RocketTokenRETH
-type TokenRethDetails struct {
-	TotalSupply     *big.Int                       `json:"totalSupply"`
-	ExchangeRate    core.Uint256Parameter[float64] `json:"exchangeRate"`
-	TotalCollateral *big.Int                       `json:"totalCollateral"`
-	CollateralRate  core.Uint256Parameter[float64] `json:"collateralRate"`
 }
 
 // ====================
@@ -45,9 +48,13 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 	}
 
 	return &TokenReth{
-		TokenRethDetails: &TokenRethDetails{},
-		rp:               rp,
-		reth:             reth,
+		TotalSupply:     core.NewSimpleField[*big.Int](reth, "totalSupply"),
+		ExchangeRate:    core.NewFormattedUint256Field[float64](reth, "getExchangeRate"),
+		TotalCollateral: core.NewSimpleField[*big.Int](reth, "getTotalCollateral"),
+		CollateralRate:  core.NewFormattedUint256Field[float64](reth, "getCollateralRate"),
+
+		rp:   rp,
+		reth: reth,
 	}, nil
 }
 
@@ -56,11 +63,6 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 // =============
 
 // === Core ERC-20 functions ===
-
-// Get the rETH total supply
-func (c *TokenReth) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.reth, &c.TotalSupply, "totalSupply")
-}
 
 // Get the rETH balance of an address
 func (c *TokenReth) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
@@ -74,15 +76,6 @@ func (c *TokenReth) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int,
 
 // === rETH functions ===
 
-// Get the ETH balance of the rETH contract
-func (c *TokenReth) GetContractEthBalance(opts *bind.CallOpts) (*big.Int, error) {
-	var blockNumber *big.Int
-	if opts != nil {
-		blockNumber = opts.BlockNumber
-	}
-	return c.rp.Client.BalanceAt(context.Background(), *c.reth.Address, blockNumber)
-}
-
 // Get the ETH value of an amount of rETH
 func (c *TokenReth) GetEthValueOfReth(mc *batch.MultiCaller, value_Out **big.Int, rethAmount *big.Int) {
 	core.AddCall(mc, c.reth, value_Out, "getEthValue", rethAmount)
@@ -91,21 +84,6 @@ func (c *TokenReth) GetEthValueOfReth(mc *batch.MultiCaller, value_Out **big.Int
 // Get the rETH value of an amount of ETH
 func (c *TokenReth) GetRethValueOfEth(mc *batch.MultiCaller, value_Out **big.Int, ethAmount *big.Int) {
 	core.AddCall(mc, c.reth, value_Out, "getRethValue", ethAmount)
-}
-
-// Get the current ETH : rETH exchange rate
-func (c *TokenReth) GetExchangeRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.reth, &c.ExchangeRate.RawValue, "getExchangeRate")
-}
-
-// Get the total amount of ETH collateral available for rETH trades
-func (c *TokenReth) GetTotalCollateral(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.reth, &c.TotalCollateral, "getTotalCollateral")
-}
-
-// Get the rETH collateralization rate
-func (c *TokenReth) GetCollateralRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.reth, &c.CollateralRate.RawValue, "getCollateralRate")
 }
 
 // ====================

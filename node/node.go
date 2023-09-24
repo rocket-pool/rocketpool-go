@@ -20,7 +20,79 @@ import (
 
 // Binding for a Rocket Pool Node
 type Node struct {
-	*NodeDetails
+	// The address of this node
+	Address common.Address
+
+	// True if the node exists (i.e. there is a registered node at this address)
+	Exists *core.SimpleField[bool]
+
+	// The time that the node was registered with the network
+	RegistrationTime *core.FormattedUint256Field[time.Time]
+
+	// The node's timezone location
+	TimezoneLocation *core.SimpleField[string]
+
+	// The network ID for the node's rewards
+	RewardNetwork *core.FormattedUint256Field[uint64]
+
+	// The node's average minipool fee (commission)
+	AverageFee *core.FormattedUint256Field[float64]
+
+	// The node's smoothing pool opt-in status
+	SmoothingPoolRegistrationState *core.SimpleField[bool]
+
+	// The time of the node's last smoothing pool opt-in / opt-out
+	SmoothingPoolRegistrationChanged *core.FormattedUint256Field[time.Time]
+
+	// True if the node's fee distributor has been initialized yet
+	IsFeeDistributorInitialized *core.SimpleField[bool]
+
+	// The node's fee distributor address
+	DistributorAddress *core.SimpleField[common.Address]
+
+	// The amount of ETH in the node's deposit credit bank
+	Credit *core.SimpleField[*big.Int]
+
+	// The node's RPL stake
+	RplStake *core.SimpleField[*big.Int]
+
+	// The node's effective RPL stake
+	EffectiveRplStake *core.SimpleField[*big.Int]
+
+	// The node's minimum RPL stake to collateralize its minipools
+	MinimumRplStake *core.SimpleField[*big.Int]
+
+	// The node's maximum RPL stake to collateralize its minipools
+	MaximumRplStake *core.SimpleField[*big.Int]
+
+	// The time the node last staked RPL
+	RplStakedTime *core.FormattedUint256Field[time.Time]
+
+	// The amount of ETH the node has borrowed from the deposit pool to create its minipools
+	EthMatched *core.SimpleField[*big.Int]
+
+	// The amount of ETH the node can still borrow from the deposit pool to create any new minipools
+	EthMatchedLimit *core.SimpleField[*big.Int]
+
+	// The number of minipools owned by the node count
+	MinipoolCount *core.FormattedUint256Field[uint64]
+
+	// The number of minipools owned by the node that are not finalised
+	ActiveMinipoolCount *core.FormattedUint256Field[uint64]
+
+	// The number of minipools owned by a node that are finalised
+	FinalisedMinipoolCount *core.FormattedUint256Field[uint64]
+
+	// The number of minipools owned by a node that are validating
+	ValidatingMinipoolCount *core.FormattedUint256Field[uint64]
+
+	// The node's withdrawal address
+	WithdrawalAddress *core.SimpleField[common.Address]
+
+	// The node's pending withdrawal address
+	PendingWithdrawalAddress *core.SimpleField[common.Address]
+
+	// === Internal fields ===
 	rp          *rocketpool.RocketPool
 	distFactory *core.Contract
 	nodeDeposit *core.Contract
@@ -29,45 +101,6 @@ type Node struct {
 	mpFactory   *core.Contract
 	mpMgr       *core.Contract
 	storage     *core.Contract
-}
-
-// Details for a Rocket Pool Node
-type NodeDetails struct {
-	// DistributorFactory
-	DistributorAddress common.Address `json:"distributorAddress"`
-
-	// NodeManager
-	Address                          common.Address                   `json:"address"`
-	Exists                           bool                             `json:"exists"`
-	RegistrationTime                 core.Uint256Parameter[time.Time] `json:"registrationTime"`
-	TimezoneLocation                 string                           `json:"timezoneLocation"`
-	RewardNetwork                    core.Uint256Parameter[uint64]    `json:"rewardNetwork"`
-	IsFeeDistributorInitialized      bool                             `json:"isFeeDistributorInitialized"`
-	AverageFee                       core.Uint256Parameter[float64]   `json:"averageFee"`
-	SmoothingPoolRegistrationState   bool                             `json:"smoothingPoolRegistrationState"`
-	SmoothingPoolRegistrationChanged core.Uint256Parameter[time.Time] `json:"smoothingPoolRegistrationChanged"`
-
-	// NodeDeposit
-	Credit *big.Int `json:"credit"`
-
-	// NodeStaking
-	RplStake          *big.Int                         `json:"rplStake"`
-	EffectiveRplStake *big.Int                         `json:"effectiveRplStake"`
-	MinimumRplStake   *big.Int                         `json:"minimumRplStake"`
-	MaximumRplStake   *big.Int                         `json:"maximumRplStake"`
-	RplStakedTime     core.Uint256Parameter[time.Time] `json:"rplStakedTime"`
-	EthMatched        *big.Int                         `json:"ethMatched"`
-	EthMatchedLimit   *big.Int                         `json:"ethMatchedLimit"`
-
-	// MinipoolManager
-	MinipoolCount           core.Uint256Parameter[uint64] `json:"minipoolCount"`
-	ActiveMinipoolCount     core.Uint256Parameter[uint64] `json:"activeMinipoolCount"`
-	FinalisedMinipoolCount  core.Uint256Parameter[uint64] `json:"finalisedMinipoolCount"`
-	ValidatingMinipoolCount core.Uint256Parameter[uint64] `json:"validatingMinipoolCount"`
-
-	// Storage
-	WithdrawalAddress        common.Address `json:"withdrawalAddress"`
-	PendingWithdrawalAddress common.Address `json:"pendingWithdrawalAddress"`
 }
 
 // ====================
@@ -102,9 +135,43 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 	}
 
 	return &Node{
-		NodeDetails: &NodeDetails{
-			Address: address,
-		},
+		Address: address,
+
+		// DistributorFactory
+		DistributorAddress: core.NewSimpleField[common.Address](distFactory, "getProxyAddress", address),
+
+		// NodeDeposit
+		Credit: core.NewSimpleField[*big.Int](nodeDeposit, "getNodeDepositCredit", address),
+
+		// NodeManager
+		Exists:                           core.NewSimpleField[bool](nodeManager, "getNodeExists", address),
+		RegistrationTime:                 core.NewFormattedUint256Field[time.Time](nodeManager, "getNodeRegistrationTime", address),
+		TimezoneLocation:                 core.NewSimpleField[string](nodeManager, "getNodeTimezoneLocation", address),
+		RewardNetwork:                    core.NewFormattedUint256Field[uint64](nodeManager, "getRewardNetwork", address),
+		IsFeeDistributorInitialized:      core.NewSimpleField[bool](nodeManager, "getFeeDistributorInitialised", address),
+		AverageFee:                       core.NewFormattedUint256Field[float64](nodeManager, "getAverageNodeFee", address),
+		SmoothingPoolRegistrationState:   core.NewSimpleField[bool](nodeManager, "getSmoothingPoolRegistrationState", address),
+		SmoothingPoolRegistrationChanged: core.NewFormattedUint256Field[time.Time](nodeManager, "getSmoothingPoolRegistrationChanged", address),
+
+		// NodeStaking
+		RplStake:          core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLStake", address),
+		EffectiveRplStake: core.NewSimpleField[*big.Int](nodeStaking, "getNodeEffectiveRPLStake", address),
+		MinimumRplStake:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeMinimumRPLStake", address),
+		MaximumRplStake:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeMaximumRPLStake", address),
+		RplStakedTime:     core.NewFormattedUint256Field[time.Time](nodeStaking, "getNodeRPLStakedTime", address),
+		EthMatched:        core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatched", address),
+		EthMatchedLimit:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatchedLimit", address),
+
+		// MinipoolManager
+		MinipoolCount:           core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeMinipoolCount", address),
+		ActiveMinipoolCount:     core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeActiveMinipoolCount", address),
+		FinalisedMinipoolCount:  core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeFinalisedMinipoolCount", address),
+		ValidatingMinipoolCount: core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeValidatingMinipoolCount", address),
+
+		// Storage
+		WithdrawalAddress:        core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodeWithdrawalAddress", address),
+		PendingWithdrawalAddress: core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodePendingWithdrawalAddress", address),
+
 		rp:          rp,
 		distFactory: distFactory,
 		nodeDeposit: nodeDeposit,
@@ -114,137 +181,6 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		mpMgr:       minipoolManager,
 		storage:     rp.Storage.Contract,
 	}, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// === DistributorFactory ===
-
-// Get the node's fee distributor address
-func (c *Node) GetDistributorAddress(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.distFactory, &c.DistributorAddress, "getProxyAddress", c.Address)
-}
-
-// === NodeDeposit ===
-
-// Get the amount of ETH in the node's deposit credit bank
-func (c *Node) GetDepositCredit(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeDeposit, &c.Credit, "getNodeDepositCredit", c.Address)
-}
-
-// === NodeManager ===
-
-// Check whether or not the node exists
-func (c *Node) GetExists(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.Exists, "getNodeExists", c.Address)
-}
-
-// Get the time that the user registered
-func (c *Node) GetRegistrationTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.RegistrationTime.RawValue, "getNodeRegistrationTime", c.Address)
-}
-
-// Get the node's timezone location
-func (c *Node) GetTimezoneLocation(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.TimezoneLocation, "getNodeTimezoneLocation", c.Address)
-}
-
-// Get the network ID for the node's rewards
-func (c *Node) GetRewardNetwork(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.RewardNetwork.RawValue, "getRewardNetwork", c.Address)
-}
-
-// Check if the node's fee distributor has been initialized yet
-func (c *Node) GetFeeDistributorInitialized(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.IsFeeDistributorInitialized, "getFeeDistributorInitialised", c.Address)
-}
-
-// Get a node's average minipool fee (commission)
-func (c *Node) GetAverageFee(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.AverageFee.RawValue, "getAverageNodeFee", c.Address)
-}
-
-// Get the node's smoothing pool opt-in status
-func (c *Node) GetSmoothingPoolRegistrationState(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.SmoothingPoolRegistrationState, "getSmoothingPoolRegistrationState", c.Address)
-}
-
-// Get the time of the node's last smoothing pool opt-in / opt-out
-func (c *Node) GetSmoothingPoolRegistrationChanged(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeMgr, &c.SmoothingPoolRegistrationChanged.RawValue, "getSmoothingPoolRegistrationChanged", c.Address)
-}
-
-// === NodeStaking ===
-
-// Get the node's RPL stake
-func (c *Node) GetRplStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.RplStake, "getNodeRPLStake", c.Address)
-}
-
-// Get the node's effective RPL stake
-func (c *Node) GetEffectiveRplStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.EffectiveRplStake, "getNodeEffectiveRPLStake", c.Address)
-}
-
-// Get the node's minimum RPL stake to collateralize its minipools
-func (c *Node) GetMinimumRplStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.MinimumRplStake, "getNodeMinimumRPLStake", c.Address)
-}
-
-// Get the node's maximum RPL stake to collateralize its minipools
-func (c *Node) GetMaximumRplStake(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.MaximumRplStake, "getNodeMaximumRPLStake", c.Address)
-}
-
-// Get the time the node last staked RPL
-func (c *Node) GetRplStakedTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.RplStakedTime.RawValue, "getNodeRPLStakedTime", c.Address)
-}
-
-// Get the amount of ETH the node has borrowed from the deposit pool to create its minipools
-func (c *Node) GetEthMatched(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.EthMatched, "getNodeETHMatched", c.Address)
-}
-
-// Get the amount of ETH the node can still borrow from the deposit pool to create any new minipools
-func (c *Node) GetEthMatchedLimit(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.nodeStaking, &c.EthMatchedLimit, "getNodeETHMatchedLimit", c.Address)
-}
-
-// === MinipoolManager ===
-
-// Get the node's minipool count
-func (c *Node) GetMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.MinipoolCount.RawValue, "getNodeMinipoolCount", c.Address)
-}
-
-// Get the number of minipools owned by a node that are not finalised
-func (c *Node) GetActiveMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.ActiveMinipoolCount.RawValue, "getNodeActiveMinipoolCount", c.Address)
-}
-
-// Get the number of minipools owned by a node that are finalised
-func (c *Node) GetFinalisedMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.FinalisedMinipoolCount.RawValue, "getNodeFinalisedMinipoolCount", c.Address)
-}
-
-// Get the number of minipools owned by a node that are validating
-func (c *Node) GetValidatingMinipoolCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.mpMgr, &c.ValidatingMinipoolCount.RawValue, "getNodeValidatingMinipoolCount", c.Address)
-}
-
-// === Storage ===
-
-// Get the node's withdrawal address
-func (c *Node) GetWithdrawalAddress(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.storage, &c.WithdrawalAddress, "getNodeWithdrawalAddress", c.Address)
-}
-
-// Get the node's pending withdrawal address
-func (c *Node) GetPendingWithdrawalAddress(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.storage, &c.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", c.Address)
 }
 
 // ====================
@@ -342,7 +278,7 @@ func (c *Node) GetNodeDistributor(distributorAddress common.Address, includeDeta
 	// Get details via a multicall query
 	if includeDetails {
 		err = c.rp.Query(func(mc *batch.MultiCaller) error {
-			distributor.GetAllDetails(mc)
+			core.QueryAllFields(distributor, mc)
 			return nil
 		}, opts)
 		if err != nil {

@@ -17,6 +17,7 @@ import (
 
 // Binding for RocketMerkleDistributorMainnet
 type MerkleDistributorMainnet struct {
+	// === Internal fields ===
 	rp   *rocketpool.RocketPool
 	rmdm *core.Contract
 }
@@ -44,7 +45,7 @@ func NewMerkleDistributorMainnet(rp *rocketpool.RocketPool) (*MerkleDistributorM
 // =============
 
 // Check if the given node has already claimed rewards for the given interval
-func (c *MerkleDistributorMainnet) GetTotalRPLBalance(index *big.Int, claimerAddress common.Address, claimed_Out *bool, mc *batch.MultiCaller) {
+func (c *MerkleDistributorMainnet) HasNodeClaimedRewards(index *big.Int, claimerAddress common.Address, claimed_Out *bool, mc *batch.MultiCaller) {
 	core.AddCall(mc, c.rmdm, claimed_Out, "isClaimed", index, claimerAddress)
 }
 

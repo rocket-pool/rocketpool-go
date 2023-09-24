@@ -18,15 +18,15 @@ import (
 
 // Binding for RocketTokenRPL
 type TokenRpl struct {
-	*TokenRplDetails
+	// The RPL total supply
+	TotalSupply *core.SimpleField[*big.Int]
+
+	// The RPL inflation interval rate
+	InflationIntervalRate *core.SimpleField[*big.Int]
+
+	// === Internal fields ===
 	rpl *core.Contract
 	rp  *rocketpool.RocketPool
-}
-
-// Details for RocketTokenRPL
-type TokenRplDetails struct {
-	TotalSupply           *big.Int `json:"totalSupply"`
-	InflationIntervalRate *big.Int `json:"inflationIntervalRate"`
 }
 
 // ====================
@@ -42,9 +42,11 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 	}
 
 	return &TokenRpl{
-		TokenRplDetails: &TokenRplDetails{},
-		rp:              rp,
-		rpl:             rpl,
+		TotalSupply:           core.NewSimpleField[*big.Int](rpl, "totalSupply"),
+		InflationIntervalRate: core.NewSimpleField[*big.Int](rpl, "getInflationIntervalRate"),
+
+		rp:  rp,
+		rpl: rpl,
 	}, nil
 }
 
@@ -54,11 +56,6 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 
 // === Core ERC-20 functions ===
 
-// Get the RPL total supply
-func (c *TokenRpl) GetTotalSupply(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rpl, &c.TotalSupply, "totalSupply")
-}
-
 // Get the RPL balance of an address
 func (c *TokenRpl) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
 	core.AddCall(mc, c.rpl, balance_Out, "balanceOf", address)
@@ -67,13 +64,6 @@ func (c *TokenRpl) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, addr
 // Get the RPL spending allowance of an address and spender
 func (c *TokenRpl) GetAllowance(mc *batch.MultiCaller, allowance_Out **big.Int, owner common.Address, spender common.Address) {
 	core.AddCall(mc, c.rpl, allowance_Out, "allowance", owner, spender)
-}
-
-// === RPL functions ===
-
-// Get the RPL inflation interval rate
-func (c *TokenRpl) GetInflationIntervalRate(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rpl, &c.InflationIntervalRate, "getInflationIntervalRate")
 }
 
 // ====================

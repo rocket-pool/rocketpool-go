@@ -27,21 +27,33 @@ const (
 
 // Binding for RocketRewardsPool
 type RewardsPool struct {
-	*RewardsPoolDetails
+	// The index of the active rewards period
+	RewardIndex *core.FormattedUint256Field[uint64]
+
+	// The timestamp that the current rewards interval started
+	IntervalStart *core.FormattedUint256Field[time.Time]
+
+	// The number of seconds in a claim interval
+	IntervalDuration *core.FormattedUint256Field[time.Duration]
+
+	// The percent of checkpoint rewards that goes to node operators
+	NodeOperatorRewardsPercent *core.FormattedUint256Field[float64]
+
+	// The percent of checkpoint rewards that goes to Ooracle DAO members
+	OracleDaoRewardsPercent *core.FormattedUint256Field[float64]
+
+	// The percent of checkpoint rewards that goes to the Protocol DAO
+	ProtocolDaoRewardsPercent *core.FormattedUint256Field[float64]
+
+	// The amount of RPL rewards that are currently pending distribution
+	PendingRplRewards *core.SimpleField[*big.Int]
+
+	// The amount of ETH rewards that are currently pending distribution
+	PendingEthRewards *core.SimpleField[*big.Int]
+
+	// === Internal fields ===
 	rp          *rocketpool.RocketPool
 	rewardsPool *core.Contract
-}
-
-// Details for RocketRewardsPool
-type RewardsPoolDetails struct {
-	RewardIndex                core.Uint256Parameter[uint64]        `json:"rewardIndex"`
-	IntervalStart              core.Uint256Parameter[time.Time]     `json:"intervalStart"`
-	IntervalDuration           core.Uint256Parameter[time.Duration] `json:"intervalDuration"`
-	NodeOperatorRewardsPercent core.Uint256Parameter[float64]       `json:"nodeOperatorRewardsPercent"`
-	OracleDaoRewardsPercent    core.Uint256Parameter[float64]       `json:"oracleDaoRewardsPercent"`
-	ProtocolDaoRewardsPercent  core.Uint256Parameter[float64]       `json:"protocolDaoRewardsPercent"`
-	PendingRplRewards          *big.Int                             `json:"pendingRplRewards"`
-	PendingEthRewards          *big.Int                             `json:"pendingEthRewards"`
 }
 
 // Info for a rewards snapshot event
@@ -90,55 +102,23 @@ func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 	}
 
 	return &RewardsPool{
-		RewardsPoolDetails: &RewardsPoolDetails{},
-		rp:                 rp,
-		rewardsPool:        rewardsPool,
+		RewardIndex:                core.NewFormattedUint256Field[uint64](rewardsPool, "getRewardIndex"),
+		IntervalStart:              core.NewFormattedUint256Field[time.Time](rewardsPool, "getClaimIntervalTimeStart"),
+		IntervalDuration:           core.NewFormattedUint256Field[time.Duration](rewardsPool, "getClaimIntervalTime"),
+		NodeOperatorRewardsPercent: core.NewFormattedUint256Field[float64](rewardsPool, "getClaimingContractPerc", "rocketClaimNode"),
+		OracleDaoRewardsPercent:    core.NewFormattedUint256Field[float64](rewardsPool, "getClaimingContractPerc", "rocketClaimTrustedNode"),
+		ProtocolDaoRewardsPercent:  core.NewFormattedUint256Field[float64](rewardsPool, "getClaimingContractPerc", "rocketClaimDAO"),
+		PendingRplRewards:          core.NewSimpleField[*big.Int](rewardsPool, "getPendingRPLRewards"),
+		PendingEthRewards:          core.NewSimpleField[*big.Int](rewardsPool, "getPendingETHRewards"),
+
+		rp:          rp,
+		rewardsPool: rewardsPool,
 	}, nil
 }
 
 // =============
 // === Calls ===
 // =============
-
-// Get the index of the active rewards period
-func (c *RewardsPool) GetRewardIndex(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.RewardIndex.RawValue, "getRewardIndex")
-}
-
-// Get the timestamp that the current rewards interval started
-func (c *RewardsPool) GetIntervalStart(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.IntervalStart.RawValue, "getClaimIntervalTimeStart")
-}
-
-// Get the number of seconds in a claim interval
-func (c *RewardsPool) GetIntervalDuration(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.IntervalDuration.RawValue, "getClaimIntervalTime")
-}
-
-// Get the percent of checkpoint rewards that goes to node operators
-func (c *RewardsPool) GetNodeOperatorRewardsPercent(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.NodeOperatorRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimNode")
-}
-
-// Get the percent of checkpoint rewards that goes to Ooracle DAO members
-func (c *RewardsPool) GetOracleDaoRewardsPercent(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.OracleDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimTrustedNode")
-}
-
-// Get the percent of checkpoint rewards that goes to the Protocol DAO
-func (c *RewardsPool) GetProtocolDaoRewardsPercent(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.ProtocolDaoRewardsPercent.RawValue, "getClaimingContractPerc", "rocketClaimDAO")
-}
-
-// Get the amount of RPL rewards that are currently pending distribution
-func (c *RewardsPool) GetPendingRplRewards(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.PendingRplRewards, "getPendingRPLRewards")
-}
-
-// Get the amount of ETH rewards that are currently pending distribution
-func (c *RewardsPool) GetPendingEthRewards(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.rewardsPool, &c.PendingRplRewards, "getPendingETHRewards")
-}
 
 // Check whether or not the given address has submitted for the given rewards interval
 func (c *RewardsPool) GetTrustedNodeSubmitted(mc *batch.MultiCaller, nodeAddress common.Address, rewardsIndex uint64, hasSubmitted_Out *bool, opts *bind.CallOpts) {

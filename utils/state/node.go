@@ -245,10 +245,7 @@ func getNodeAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkContracts
 	}
 
 	// Get node count
-	err = rp.Query(func(mc *batch.MultiCaller) error {
-		nodeMgr.GetNodeCount(mc)
-		return nil
-	}, opts)
+	err = rp.Query(nil, opts, nodeMgr.NodeCount)
 	if err != nil {
 		return []common.Address{}, err
 	}
