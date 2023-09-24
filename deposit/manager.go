@@ -17,13 +17,13 @@ import (
 // Binding for RocketDepositPool
 type DepositPoolManager struct {
 	// The deposit pool balance
-	Balance core.SimpleField[*big.Int]
+	Balance *core.SimpleField[*big.Int]
 
 	// The deposit pool balance provided by pool stakers
-	UserBalance core.SimpleField[*big.Int]
+	UserBalance *core.SimpleField[*big.Int]
 
 	// The excess deposit pool balance
-	ExcessBalance core.SimpleField[*big.Int]
+	ExcessBalance *core.SimpleField[*big.Int]
 
 	// === Internal fields ===
 	rp *rocketpool.RocketPool
@@ -43,9 +43,9 @@ func NewDepositPoolManager(rp *rocketpool.RocketPool) (*DepositPoolManager, erro
 	}
 
 	return &DepositPoolManager{
-		Balance:       core.SimpleField[*big.Int]{Contract: dp, GetterName: "getBalance"},
-		UserBalance:   core.SimpleField[*big.Int]{Contract: dp, GetterName: "getUserBalance"},
-		ExcessBalance: core.SimpleField[*big.Int]{Contract: dp, GetterName: "getExcessBalance"},
+		Balance:       core.NewSimpleField[*big.Int](dp, "getBalance"),
+		UserBalance:   core.NewSimpleField[*big.Int](dp, "getUserBalance"),
+		ExcessBalance: core.NewSimpleField[*big.Int](dp, "getExcessBalance"),
 
 		rp: rp,
 		dp: dp,

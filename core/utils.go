@@ -1,8 +1,59 @@
 package core
 
-import batch "github.com/rocket-pool/batch-query"
+import (
+	"fmt"
+	"math/big"
+	"reflect"
+	"time"
+
+	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/rocketpool-go/utils/eth"
+)
 
 // This is a helper for adding calls to multicall that has strongly-typed output and can take in RP contracts
 func AddCall[OutType CallReturnType](mc *batch.MultiCaller, contract *Contract, output *OutType, method string, args ...any) {
 	mc.AddCall(*contract.Address, contract.ABI, output, method, args...)
+}
+
+// Adds a collection of IQueryable calls to a multicall
+func AddQueryablesToMulticall(mc *batch.MultiCaller, queryables ...IQueryable) {
+	for _, queryable := range queryables {
+		queryable.AddToQuery(mc)
+	}
+}
+
+// Adds all of the object's fields that implement IQueryable to the provided multicaller
+func QueryAllFields(object any, mc *batch.MultiCaller) error {
+	objectValue := reflect.ValueOf(object).Elem()
+
+	// Run through each field
+	for i := 0; i < objectValue.NumField(); i++ {
+		field := objectValue.Field(i)
+
+		// If it's IQueryable, run it
+		fieldAsQueryable, isQueryable := field.Interface().(IQueryable)
+		if isQueryable {
+			fieldAsQueryable.AddToQuery(mc)
+		}
+	}
+
+	return nil
+}
+
+// Converts the value to a *big.Int; useful for transactions that require formattable types
+func GetValueForUint256[ValueType FormattedUint256Type](value ValueType) *big.Int {
+	switch v := any(&value).(type) {
+	case *time.Time:
+		return big.NewInt(v.Unix())
+	case *uint64:
+		return big.NewInt(0).SetUint64(*v)
+	case *int64:
+		return big.NewInt(*v)
+	case *float64:
+		return eth.EthToWei(*v)
+	case *time.Duration:
+		return big.NewInt(int64(v.Seconds()))
+	default:
+		panic(fmt.Sprintf("unexpected type: %s", reflect.TypeOf(value).Name()))
+	}
 }

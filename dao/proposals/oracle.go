@@ -15,14 +15,11 @@ import (
 
 // Binding for Oracle DAO proposals
 type OracleDaoProposal struct {
-	*proposalCommon
-	*OracleDaoProposalDetails
+	*ProposalCommon
+
+	// === Internal fields ===
 	rp   *rocketpool.RocketPool
 	dntp *core.Contract
-}
-
-// Details for proposals
-type OracleDaoProposalDetails struct {
 }
 
 // ====================
@@ -30,7 +27,7 @@ type OracleDaoProposalDetails struct {
 // ====================
 
 // Creates a new OracleDaoProposal contract binding
-func newOracleDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*OracleDaoProposal, error) {
+func newOracleDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*OracleDaoProposal, error) {
 	// Create the contract
 	dntp, err := rp.GetContract(rocketpool.ContractName_RocketDAONodeTrustedProposals)
 	if err != nil {
@@ -38,10 +35,9 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*Ora
 	}
 
 	return &OracleDaoProposal{
-		proposalCommon:           base,
-		OracleDaoProposalDetails: &OracleDaoProposalDetails{},
-		rp:                       rp,
-		dntp:                     dntp,
+		ProposalCommon: base,
+		rp:             rp,
+		dntp:           dntp,
 	}, nil
 }
 
@@ -60,7 +56,12 @@ func GetProposalAsOracle(proposal IProposal) (*OracleDaoProposal, bool) {
 
 // Get the basic details
 func (c *OracleDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
-	c.proposalCommon.QueryAllDetails(mc)
+	c.ProposalCommon.QueryAllDetails(mc)
+}
+
+// Get the common fields
+func (c *OracleDaoProposal) GetProposalCommon() *ProposalCommon {
+	return c.ProposalCommon
 }
 
 // ====================
@@ -69,20 +70,20 @@ func (c *OracleDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
 
 // Get info for cancelling a proposal
 func (c *OracleDaoProposal) Cancel(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "cancel", opts, c.ID.RawValue)
+	return core.NewTransactionInfo(c.dntp, "cancel", opts, c.idBig)
 }
 
 // Get info for voting on a proposal
 func (c *OracleDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "vote", opts, c.ID.RawValue, support)
+	return core.NewTransactionInfo(c.dntp, "vote", opts, c.idBig, support)
 }
 
 // Get info for executing a proposal
 func (c *OracleDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "execute", opts, c.ID.RawValue)
+	return core.NewTransactionInfo(c.dntp, "execute", opts, c.idBig)
 }
 
 // Get the proposal's payload as a string
 func (c *OracleDaoProposal) GetPayloadAsString() (string, error) {
-	return getPayloadAsStringImpl(c.rp, c.dntp, c.Payload)
+	return getPayloadAsStringImpl(c.rp, c.dntp, c.Payload.Get())
 }

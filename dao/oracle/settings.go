@@ -22,6 +22,7 @@ type OracleDaoSettings struct {
 	dnts_proposals *core.Contract
 	dnts_rewards   *core.Contract
 
+	// === Internal fields ===
 	rp      *rocketpool.RocketPool
 	odaoMgr *OracleDaoManager
 }
@@ -30,34 +31,34 @@ type OracleDaoSettings struct {
 type OracleDaoSettingsDetails struct {
 	// Member
 	Member struct {
-		Quorum                 *OracleDaoCompoundSetting[float64]       `json:"quorum"`
-		RplBond                *OracleDaoUintSetting                    `json:"rplBond"`
-		UnbondedMinipoolMax    *OracleDaoCompoundSetting[uint64]        `json:"unbondedMinipoolMax"`
-		UnbondedMinipoolMinFee *OracleDaoCompoundSetting[float64]       `json:"unbondedMinipoolMinFee"`
-		ChallengeCooldown      *OracleDaoCompoundSetting[time.Duration] `json:"challengeCooldown"`
-		ChallengeWindow        *OracleDaoCompoundSetting[time.Duration] `json:"challengeWindow"`
-		ChallengeCost          *OracleDaoUintSetting                    `json:"challengeCost"`
-	} `json:"members"`
+		Quorum                 *OracleDaoCompoundSetting[float64]
+		RplBond                *OracleDaoUintSetting
+		UnbondedMinipoolMax    *OracleDaoCompoundSetting[uint64]
+		UnbondedMinipoolMinFee *OracleDaoCompoundSetting[float64]
+		ChallengeCooldown      *OracleDaoCompoundSetting[time.Duration]
+		ChallengeWindow        *OracleDaoCompoundSetting[time.Duration]
+		ChallengeCost          *OracleDaoUintSetting
+	}
 
 	// Minipool
 	Minipool struct {
-		ScrubPeriod                     *OracleDaoCompoundSetting[time.Duration] `json:"scrubPeriod"`
-		ScrubQuorum                     *OracleDaoCompoundSetting[float64]       `json:"scrubQuorum"`
-		PromotionScrubPeriod            *OracleDaoCompoundSetting[time.Duration] `json:"promotionScrubPeriod"`
-		IsScrubPenaltyEnabled           *OracleDaoBoolSetting                    `json:"isScrubPenaltyEnabled"`
-		BondReductionWindowStart        *OracleDaoCompoundSetting[time.Duration] `json:"bondReductionWindowStart"`
-		BondReductionWindowLength       *OracleDaoCompoundSetting[time.Duration] `json:"bondReductionWindowLength"`
-		BondReductionCancellationQuorum *OracleDaoCompoundSetting[float64]       `json:"bondReductionCancellationQuorum"`
-	} `json:"minipools"`
+		ScrubPeriod                     *OracleDaoCompoundSetting[time.Duration]
+		ScrubQuorum                     *OracleDaoCompoundSetting[float64]
+		PromotionScrubPeriod            *OracleDaoCompoundSetting[time.Duration]
+		IsScrubPenaltyEnabled           *OracleDaoBoolSetting
+		BondReductionWindowStart        *OracleDaoCompoundSetting[time.Duration]
+		BondReductionWindowLength       *OracleDaoCompoundSetting[time.Duration]
+		BondReductionCancellationQuorum *OracleDaoCompoundSetting[float64]
+	}
 
 	// Proposal
 	Proposal struct {
-		CooldownTime  *OracleDaoCompoundSetting[time.Duration] `json:"cooldownTime"`
-		VoteTime      *OracleDaoCompoundSetting[time.Duration] `json:"voteTime"`
-		VoteDelayTime *OracleDaoCompoundSetting[time.Duration] `json:"voteDelayTime"`
-		ExecuteTime   *OracleDaoCompoundSetting[time.Duration] `json:"executeTime"`
-		ActionTime    *OracleDaoCompoundSetting[time.Duration] `json:"actionTime"`
-	} `json:"proposals"`
+		CooldownTime  *OracleDaoCompoundSetting[time.Duration]
+		VoteTime      *OracleDaoCompoundSetting[time.Duration]
+		VoteDelayTime *OracleDaoCompoundSetting[time.Duration]
+		ExecuteTime   *OracleDaoCompoundSetting[time.Duration]
+		ActionTime    *OracleDaoCompoundSetting[time.Duration]
+	}
 }
 
 // ====================
@@ -119,33 +120,6 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 // =============
 // === Calls ===
 // =============
-
-func (s *OracleDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
-	// Member
-	s.Member.Quorum.Get(mc)
-	s.Member.RplBond.Get(mc)
-	s.Member.UnbondedMinipoolMax.Get(mc)
-	s.Member.UnbondedMinipoolMinFee.Get(mc)
-	s.Member.ChallengeCooldown.Get(mc)
-	s.Member.ChallengeWindow.Get(mc)
-	s.Member.ChallengeCost.Get(mc)
-
-	/// Minipool
-	s.Minipool.ScrubPeriod.Get(mc)
-	s.Minipool.ScrubQuorum.Get(mc)
-	s.Minipool.PromotionScrubPeriod.Get(mc)
-	s.Minipool.IsScrubPenaltyEnabled.AddToQuery(mc)
-	s.Minipool.BondReductionWindowStart.Get(mc)
-	s.Minipool.BondReductionWindowLength.Get(mc)
-	s.Minipool.BondReductionCancellationQuorum.Get(mc)
-
-	// Proposal
-	s.Proposal.CooldownTime.Get(mc)
-	s.Proposal.VoteTime.Get(mc)
-	s.Proposal.VoteDelayTime.Get(mc)
-	s.Proposal.ExecuteTime.Get(mc)
-	s.Proposal.ActionTime.Get(mc)
-}
 
 // === RocketDAONodeTrustedSettingsRewards ===
 

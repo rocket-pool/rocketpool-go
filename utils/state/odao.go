@@ -83,10 +83,7 @@ func getOdaoAddresses(rp *rocketpool.RocketPool, contracts *NetworkContracts, op
 	}
 
 	// Get minipool count
-	err = rp.Query(func(mc *batch.MultiCaller) error {
-		mgr.GetMemberCount(mc)
-		return nil
-	}, opts)
+	err = rp.Query(nil, opts, mgr.MemberCount)
 	if err != nil {
 		return []common.Address{}, err
 	}

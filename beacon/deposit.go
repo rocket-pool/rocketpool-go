@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
@@ -17,13 +16,11 @@ import (
 
 // Binding for Beacon Deposit
 type BeaconDeposit struct {
-	*BeaconDepositDetails
-	cd *core.Contract
-}
+	// The deposit root for new deposits
+	DepositRoot *core.SimpleField[common.Hash]
 
-// Details for Beacon Deposit
-type BeaconDepositDetails struct {
-	DepositRoot common.Hash `json:"depositRoot"`
+	// === Internal fields ===
+	cd *core.Contract
 }
 
 // ====================
@@ -39,18 +36,10 @@ func NewBeaconDeposit(rp *rocketpool.RocketPool) (*BeaconDeposit, error) {
 	}
 
 	return &BeaconDeposit{
-		BeaconDepositDetails: &BeaconDepositDetails{},
-		cd:                   cd,
+		DepositRoot: core.NewSimpleField[common.Hash](cd, "get_deposit_root"),
+
+		cd: cd,
 	}, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// Get the deposit root for new deposits
-func (c *BeaconDeposit) GetDepositRoot(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.cd, &c.DepositRoot, "get_deposit_root")
 }
 
 // ====================

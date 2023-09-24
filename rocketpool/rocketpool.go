@@ -275,19 +275,27 @@ func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi 
 // === Multicall Helpers ===
 // =========================
 
-// Run a multicall query that doesn't perform any return type allocation
-func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.CallOpts) error {
+// Run a multicall query that doesn't perform any return type allocation.
+// The 'query' function is an optional general-purpose function you can use to add whatever you want to the multicall
+// before running it. The 'queryables' can be used to simply list a collection of IQueryable objects, each of which will
+// run 'AddToQuery()' on the multicall for convenience.
+func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.CallOpts, queryables ...core.IQueryable) error {
 	// Create the multicaller
 	mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 	if err != nil {
 		return fmt.Errorf("error creating multicaller: %w", err)
 	}
 
-	// Run the query
-	err = query(mc)
-	if err != nil {
-		return fmt.Errorf("error running multicall query: %w", err)
+	// Add the query function
+	if query != nil {
+		err = query(mc)
+		if err != nil {
+			return fmt.Errorf("error running multicall query: %w", err)
+		}
 	}
+
+	// Add the queryables
+	core.AddQueryablesToMulticall(mc, queryables...)
 
 	// Execute the multicall
 	_, err = mc.FlexibleCall(true, opts)
@@ -300,7 +308,10 @@ func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.Cal
 
 // Run a multicall query that doesn't perform any return type allocation
 // Use this if one of the calls is allowed to fail without interrupting the others; the returned result array provides information about the success of each call.
-func (rp *RocketPool) FlexQuery(query func(*batch.MultiCaller) error, opts *bind.CallOpts) ([]bool, error) {
+// The 'query' function is an optional general-purpose function you can use to add whatever you want to the multicall
+// before running it. The 'queryables' can be used to simply list a collection of IQueryable objects, each of which will
+// run 'AddToQuery()' on the multicall for convenience.
+func (rp *RocketPool) FlexQuery(query func(*batch.MultiCaller) error, opts *bind.CallOpts, queryables ...core.IQueryable) ([]bool, error) {
 	// Create the multicaller
 	mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
 	if err != nil {
@@ -308,10 +319,15 @@ func (rp *RocketPool) FlexQuery(query func(*batch.MultiCaller) error, opts *bind
 	}
 
 	// Run the query
-	err = query(mc)
-	if err != nil {
-		return nil, fmt.Errorf("error running multicall query: %w", err)
+	if query != nil {
+		err = query(mc)
+		if err != nil {
+			return nil, fmt.Errorf("error running multicall query: %w", err)
+		}
 	}
+
+	// Add the queryables
+	core.AddQueryablesToMulticall(mc, queryables...)
 
 	// Execute the multicall
 	return mc.FlexibleCall(false, opts)

@@ -18,9 +18,12 @@ import (
 
 // Binding for RocketDAOProtocol
 type ProtocolDaoManager struct {
+	// Settings for the Protocol DAO
 	Settings *ProtocolDaoSettings
-	rp       *rocketpool.RocketPool
-	dp       *core.Contract
+
+	// === Internal fields ===
+	rp *rocketpool.RocketPool
+	dp *core.Contract
 }
 
 // ====================

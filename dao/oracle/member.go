@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -17,25 +16,44 @@ import (
 
 // Binding for Oracle DAO members
 type OracleDaoMember struct {
-	*OracleDaoMemberDetails
-	dnt *core.Contract
-}
+	// The address of this member
+	Address common.Address
 
-// Details for Oracle DAO members
-type OracleDaoMemberDetails struct {
-	Address                common.Address                   `json:"address"`
-	Exists                 bool                             `json:"exists"`
-	ID                     string                           `json:"id"`
-	Url                    string                           `json:"url"`
-	InvitedTime            core.Uint256Parameter[time.Time] `json:"invitedTime"`
-	JoinedTime             core.Uint256Parameter[time.Time] `json:"joinedTime"`
-	ReplacedTime           core.Uint256Parameter[time.Time] `json:"replacedTime"`
-	LeftTime               core.Uint256Parameter[time.Time] `json:"leftTime"`
-	LastProposalTime       core.Uint256Parameter[time.Time] `json:"lastProposalTime"`
-	RplBondAmount          *big.Int                         `json:"rplBondAmount"`
-	ReplacementAddress     common.Address                   `json:"replacementAddress"`
-	IsChallenged           bool                             `json:"isChallenged"`
-	UnbondedValidatorCount core.Uint256Parameter[uint64]    `json:"unbondedValidatorCount"`
+	// True if this member exists (is part of the Oracle DAO)
+	Exists *core.SimpleField[bool]
+
+	// The member's ID
+	ID *core.SimpleField[string]
+
+	// The member's URL
+	Url *core.SimpleField[string]
+
+	// The time the member was invited to the Oracle DAO
+	InvitedTime *core.FormattedUint256Field[time.Time]
+
+	// The time the member joined the Oracle DAO
+	JoinedTime *core.FormattedUint256Field[time.Time]
+
+	// The time the member's address was replaced
+	ReplacedTime *core.FormattedUint256Field[time.Time]
+
+	// The time the member voluntarily left the Oracle DAO
+	LeftTime *core.FormattedUint256Field[time.Time]
+
+	// The time the member last made a proposal
+	LastProposalTime *core.FormattedUint256Field[time.Time]
+
+	// The member's RPL bond amount
+	RplBondAmount *core.SimpleField[*big.Int]
+
+	// The member's replacement address, if a replace proposal is pending
+	ReplacementAddress *core.SimpleField[common.Address]
+
+	// True if the member has an active challenge raised against it
+	IsChallenged *core.SimpleField[bool]
+
+	// === Internal fields ===
+	dnt *core.Contract
 }
 
 // ====================
@@ -51,89 +69,19 @@ func NewOracleDaoMember(rp *rocketpool.RocketPool, address common.Address) (*Ora
 	}
 
 	return &OracleDaoMember{
-		OracleDaoMemberDetails: &OracleDaoMemberDetails{
-			Address: address,
-		},
+		Address:            address,
+		Exists:             core.NewSimpleField[bool](dnt, "getMemberIsValid", address),
+		ID:                 core.NewSimpleField[string](dnt, "getMemberID", address),
+		Url:                core.NewSimpleField[string](dnt, "getMemberUrl", address),
+		InvitedTime:        core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "invited", address),
+		JoinedTime:         core.NewFormattedUint256Field[time.Time](dnt, "getMemberJoinedTime", address),
+		ReplacedTime:       core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "replace", address),
+		LeftTime:           core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "leave", address),
+		LastProposalTime:   core.NewFormattedUint256Field[time.Time](dnt, "getMemberLastProposalTime", address),
+		RplBondAmount:      core.NewSimpleField[*big.Int](dnt, "getMemberRPLBondAmount", address),
+		ReplacementAddress: core.NewSimpleField[common.Address](dnt, "getMemberReplacedAddress", "new", address),
+		IsChallenged:       core.NewSimpleField[bool](dnt, "getMemberIsChallenged", address),
+
 		dnt: dnt,
 	}, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// Check whether or not the member exists
-func (c *OracleDaoMember) GetExists(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.Exists, "getMemberIsValid", c.Address)
-}
-
-// Get the member's ID
-func (c *OracleDaoMember) GetID(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.ID, "getMemberID", c.Address)
-}
-
-// Get the member's URL
-func (c *OracleDaoMember) GetUrl(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.Url, "getMemberUrl", c.Address)
-}
-
-// Get the time the member was invited to the Oracle DAO
-func (c *OracleDaoMember) GetInvitedTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.InvitedTime.RawValue, "getMemberProposalExecutedTime", "invited", c.Address)
-}
-
-// Get the time the member joined the Oracle DAO
-func (c *OracleDaoMember) GetJoinedTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.JoinedTime.RawValue, "getMemberJoinedTime", c.Address)
-}
-
-// Get the time the member's address was replaced
-func (c *OracleDaoMember) GetReplacedTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.ReplacedTime.RawValue, "getMemberProposalExecutedTime", "replace", c.Address)
-}
-
-// Get the time the member voluntarily left the Oracle DAO
-func (c *OracleDaoMember) GetLeftTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.LeftTime.RawValue, "getMemberProposalExecutedTime", "leave", c.Address)
-}
-
-// Get the time the member last made a proposal
-func (c *OracleDaoMember) GetLastProposalTime(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.LastProposalTime.RawValue, "getMemberLastProposalTime", c.Address)
-}
-
-// Get the member's RPL bond amount
-func (c *OracleDaoMember) GetRplBondAmount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.RplBondAmount, "getMemberRPLBondAmount", c.Address)
-}
-
-// Get the member's replacement address if a replace proposal is pending
-func (c *OracleDaoMember) GetReplacementAddress(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.ReplacementAddress, "getMemberReplacedAddress", "new", c.Address)
-}
-
-// Check if the member has been challenged
-func (c *OracleDaoMember) GetIsChallenged(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.IsChallenged, "getMemberIsChallenged", c.Address)
-}
-
-// Get the member's unbonded validator count (defunct; will never be above 0)
-func (c *OracleDaoMember) GetUnbondedValidatorCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.UnbondedValidatorCount.RawValue, "getMemberUnbondedValidatorCount", c.Address)
-}
-
-// Get all basic details
-func (c *OracleDaoMember) GetAllDetails(mc *batch.MultiCaller) {
-	c.GetExists(mc)
-	c.GetID(mc)
-	c.GetUrl(mc)
-	c.GetInvitedTime(mc)
-	c.GetJoinedTime(mc)
-	c.GetReplacedTime(mc)
-	c.GetLeftTime(mc)
-	c.GetLastProposalTime(mc)
-	c.GetRplBondAmount(mc)
-	c.GetReplacementAddress(mc)
-	c.GetIsChallenged(mc)
-	c.GetUnbondedValidatorCount(mc)
 }

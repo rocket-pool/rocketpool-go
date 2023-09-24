@@ -24,18 +24,20 @@ const (
 
 // Binding for RocketDAONodeTrusted
 type OracleDaoManager struct {
-	*OracleDaoManagerDetails
-	Settings *OracleDaoSettings
-	rp       *rocketpool.RocketPool
-	dnt      *core.Contract
-	dnta     *core.Contract
-	dntp     *core.Contract
-}
+	// The number of members in the Oracle DAO
+	MemberCount *core.FormattedUint256Field[uint64]
 
-// Details for OracleDaoManager
-type OracleDaoManagerDetails struct {
-	MemberCount        core.Uint256Parameter[uint64] `json:"memberCount"`
-	MinimumMemberCount core.Uint256Parameter[uint64] `json:"minimumMemberCount"`
+	// The minimum number of members allowed in the Oracle DAO
+	MinimumMemberCount *core.FormattedUint256Field[uint64]
+
+	// Settings for the Oracle DAO
+	Settings *OracleDaoSettings
+
+	// === Internal fields ===
+	rp   *rocketpool.RocketPool
+	dnt  *core.Contract
+	dnta *core.Contract
+	dntp *core.Contract
 }
 
 // ====================
@@ -59,11 +61,13 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 	}
 
 	odaoMgr := &OracleDaoManager{
-		OracleDaoManagerDetails: &OracleDaoManagerDetails{},
-		rp:                      rp,
-		dnt:                     dnt,
-		dnta:                    dnta,
-		dntp:                    dntp,
+		MemberCount:        core.NewFormattedUint256Field[uint64](dnt, "getMemberCount"),
+		MinimumMemberCount: core.NewFormattedUint256Field[uint64](dnt, "getMemberMinRequired"),
+
+		rp:   rp,
+		dnt:  dnt,
+		dnta: dnta,
+		dntp: dntp,
 	}
 	settings, err := newOracleDaoSettings(odaoMgr)
 	if err != nil {
@@ -71,26 +75,6 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 	}
 	odaoMgr.Settings = settings
 	return odaoMgr, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-// Get the member count
-func (c *OracleDaoManager) GetMemberCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.MemberCount.RawValue, "getMemberCount")
-}
-
-// Get the minimum member count
-func (c *OracleDaoManager) GetMinimumMemberCount(mc *batch.MultiCaller) {
-	core.AddCall(mc, c.dnt, &c.MinimumMemberCount.RawValue, "getMemberMinRequired")
-}
-
-// Get all basic details
-func (c *OracleDaoManager) GetAllDetails(mc *batch.MultiCaller) {
-	c.GetMemberCount(mc)
-	c.GetMinimumMemberCount(mc)
 }
 
 // ====================
@@ -253,7 +237,7 @@ func (c *OracleDaoManager) CreateMemberFromAddress(address common.Address, inclu
 
 	if includeDetails {
 		err = c.rp.Query(func(mc *batch.MultiCaller) error {
-			member.GetAllDetails(mc)
+			core.QueryAllFields(member, mc)
 			return nil
 		}, opts)
 		if err != nil {
@@ -283,7 +267,7 @@ func (c *OracleDaoManager) CreateMembersFromAddresses(addresses []common.Address
 		err := c.rp.BatchQuery(int(memberCount), oracleDaoMemberBatchSize,
 			func(mc *batch.MultiCaller, index int) error {
 				member := members[index]
-				member.GetAllDetails(mc)
+				core.QueryAllFields(member, mc)
 				return nil
 			},
 			opts,

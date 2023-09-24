@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -187,67 +186,4 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, "rpl.rewards.claim.period.time")
 
 	return s, nil
-}
-
-// =============
-// === Calls ===
-// =============
-
-func (s *ProtocolDaoSettings) GetAllDetails(mc *batch.MultiCaller) {
-	// Auction
-	s.Auction.IsCreateLotEnabled.Get(mc)
-	s.Auction.IsBidOnLotEnabled.Get(mc)
-	s.Auction.LotMinimumEthValue.Get(mc)
-	s.Auction.LotMaximumEthValue.Get(mc)
-	s.Auction.LotDuration.Get(mc)
-	s.Auction.LotStartingPriceRatio.Get(mc)
-	s.Auction.LotReservePriceRatio.Get(mc)
-
-	// Deposit
-	s.Deposit.IsDepositingEnabled.Get(mc)
-	s.Deposit.AreDepositAssignmentsEnabled.Get(mc)
-	s.Deposit.MinimumDeposit.Get(mc)
-	s.Deposit.MaximumDepositPoolSize.Get(mc)
-	s.Deposit.MaximumAssignmentsPerDeposit.Get(mc)
-	s.Deposit.MaximumSocialisedAssignmentsPerDeposit.Get(mc)
-	s.Deposit.DepositFee.Get(mc)
-
-	// Inflation
-	s.Inflation.IntervalRate.Get(mc)
-	s.Inflation.StartTime.Get(mc)
-
-	// Minipool
-	s.Minipool.IsSubmitWithdrawableEnabled.Get(mc)
-	s.Minipool.LaunchTimeout.Get(mc)
-	s.Minipool.IsBondReductionEnabled.Get(mc)
-	s.Minipool.MaximumCount.Get(mc)
-	s.Minipool.UserDistributeWindowStart.Get(mc)
-	s.Minipool.UserDistributeWindowLength.Get(mc)
-
-	// Network
-	s.Network.OracleDaoConsensusThreshold.Get(mc)
-	s.Network.NodePenaltyThreshold.Get(mc)
-	s.Network.PerPenaltyRate.Get(mc)
-	s.Network.IsSubmitBalancesEnabled.Get(mc)
-	s.Network.SubmitBalancesFrequency.Get(mc)
-	s.Network.IsSubmitPricesEnabled.Get(mc)
-	s.Network.SubmitPricesFrequency.Get(mc)
-	s.Network.MinimumNodeFee.Get(mc)
-	s.Network.TargetNodeFee.Get(mc)
-	s.Network.MaximumNodeFee.Get(mc)
-	s.Network.NodeFeeDemandRange.Get(mc)
-	s.Network.TargetRethCollateralRate.Get(mc)
-	s.Network.RethDepositDelay.Get(mc)
-	s.Network.IsSubmitRewardsEnabled.Get(mc)
-
-	// Node
-	s.Node.IsRegistrationEnabled.Get(mc)
-	s.Node.IsSmoothingPoolRegistrationEnabled.Get(mc)
-	s.Node.IsDepositingEnabled.Get(mc)
-	s.Node.AreVacantMinipoolsEnabled.Get(mc)
-	s.Node.MinimumPerMinipoolStake.Get(mc)
-	s.Node.MaximumPerMinipoolStake.Get(mc)
-
-	// Rewards
-	s.Rewards.IntervalTime.Get(mc)
 }

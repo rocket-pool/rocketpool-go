@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -13,129 +12,111 @@ import (
 /// === BoolSetting ===
 /// ===================
 
+// A simple boolean setting
 type ProtocolDaoBoolSetting struct {
-	Value bool
+	*core.SimpleField[bool]
 
-	settingContract *core.Contract
+	// === Internal fields ===
+	settingContract rocketpool.ContractName
 	pdaoMgr         *ProtocolDaoManager
 	path            string
 }
 
+// Creates a new bool setting
 func newBoolSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoBoolSetting {
 	return &ProtocolDaoBoolSetting{
-		settingContract: settingContract,
+		SimpleField:     core.NewSimpleField[bool](settingContract, "getSettingBool", path),
+		settingContract: rocketpool.ContractName(settingContract.Name),
 		pdaoMgr:         pdaoMgr,
 		path:            path,
 	}
 }
 
-func (s *ProtocolDaoBoolSetting) Get(mc *batch.MultiCaller) {
-	core.AddCall(mc, s.settingContract, &s.Value, "getSettingBool", s.path)
-}
-
 // Uncomment for Houston
 /*
+// Creates a proposal to change the setting
 func (s *ProtocolDaoBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetBool("", rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
+	return s.pdaoMgr.ProposeSetBool("", s.settingContract, s.path, value, opts)
 }
 */
 
+// Bootstraps the setting with a new value
 func (s *ProtocolDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.BootstrapBool(rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
-}
-
-func (s *ProtocolDaoBoolSetting) GetRawValue() bool {
-	return s.Value
-}
-
-func (s *ProtocolDaoBoolSetting) SetRawValue(value bool) {
-	s.Value = value
+	return s.pdaoMgr.BootstrapBool(s.settingContract, s.path, value, opts)
 }
 
 /// ===================
 /// === UintSetting ===
 /// ===================
 
+// A simple uint setting
 type ProtocolDaoUintSetting struct {
-	Value *big.Int
+	*core.SimpleField[*big.Int]
 
-	settingContract *core.Contract
+	// === Internal fields ===
+	settingContract rocketpool.ContractName
 	pdaoMgr         *ProtocolDaoManager
 	path            string
 }
 
+// Creates a new uint setting
 func newUintSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoUintSetting {
 	return &ProtocolDaoUintSetting{
-		settingContract: settingContract,
+		SimpleField:     core.NewSimpleField[*big.Int](settingContract, "getSettingUint", path),
+		settingContract: rocketpool.ContractName(settingContract.Name),
 		pdaoMgr:         pdaoMgr,
 		path:            path,
 	}
 }
 
-func (s *ProtocolDaoUintSetting) Get(mc *batch.MultiCaller) {
-	core.AddCall(mc, s.settingContract, &s.Value, "getSettingUint", s.path)
-}
-
 // Uncomment for Houston
 /*
+// Creates a proposal to change the setting
 func (s *ProtocolDaoUintSetting) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetUint("", rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
+	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, value, opts)
 }
 */
 
+// Bootstraps the setting with a new value
 func (s *ProtocolDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.BootstrapUint(rocketpool.ContractName(s.settingContract.Name), s.path, value, opts)
-}
-
-func (s *ProtocolDaoUintSetting) GetRawValue() *big.Int {
-	return s.Value
-}
-
-func (s *ProtocolDaoUintSetting) SetRawValue(value *big.Int) {
-	s.Value = big.NewInt(0).Set(value)
+	return s.pdaoMgr.BootstrapUint(s.settingContract, s.path, value, opts)
 }
 
 /// =======================
 /// === CompoundSetting ===
 /// =======================
 
+// A uint256 setting that can be formatted to a more well-defined type
 type ProtocolDaoCompoundSetting[DataType core.FormattedUint256Type] struct {
-	Value core.Uint256Parameter[DataType]
+	*core.FormattedUint256Field[DataType]
 
-	settingContract *core.Contract
+	// === Internal fields ===
+	settingContract rocketpool.ContractName
 	pdaoMgr         *ProtocolDaoManager
 	path            string
 }
 
+// Creates a new compound setting
 func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoCompoundSetting[DataType] {
 	s := &ProtocolDaoCompoundSetting[DataType]{
-		settingContract: settingContract,
-		pdaoMgr:         pdaoMgr,
-		path:            path,
+		FormattedUint256Field: core.NewFormattedUint256Field[DataType](settingContract, "getSettingUint", path),
+		settingContract:       rocketpool.ContractName(settingContract.Name),
+		pdaoMgr:               pdaoMgr,
+		path:                  path,
 	}
 
 	return s
 }
 
-func (s *ProtocolDaoCompoundSetting[DataType]) Get(mc *batch.MultiCaller) {
-	core.AddCall(mc, s.settingContract, &s.Value.RawValue, "getSettingUint", s.path)
-}
-
 // Uncomment for Houston
 /*
+// Creates a proposal to change the setting
 func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value core.Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetUint("", rocketpool.ContractName(s.settingContract.Name), s.path, s.Value.RawValue, opts)
+	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, s.Value.RawValue, opts)
 }
 */
 
-func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value core.Uint256Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.BootstrapUint(rocketpool.ContractName(s.settingContract.Name), s.path, s.Value.RawValue, opts)
-}
-
-func (s *ProtocolDaoCompoundSetting[DataType]) GetRawValue() *big.Int {
-	return s.Value.GetRawValue()
-}
-
-func (s *ProtocolDaoCompoundSetting[DataType]) SetRawValue(value *big.Int) {
-	s.Value.SetRawValue(value)
+// Bootstraps the setting with a new value
+func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return s.pdaoMgr.BootstrapUint(s.settingContract, s.path, value, opts)
 }

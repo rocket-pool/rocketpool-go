@@ -14,14 +14,11 @@ import (
 
 // Binding for Protocol DAO proposals
 type ProtocolDaoProposal struct {
-	*proposalCommon
-	*ProtocolDaoProposalDetails
+	*ProposalCommon
+
+	// === Internal fields ===
 	rp  *rocketpool.RocketPool
 	dpp *core.Contract
-}
-
-// Details for proposals
-type ProtocolDaoProposalDetails struct {
 }
 
 // ====================
@@ -29,7 +26,7 @@ type ProtocolDaoProposalDetails struct {
 // ====================
 
 // Creates a new ProtocolDaoProposal contract binding
-func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*ProtocolDaoProposal, error) {
+func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*ProtocolDaoProposal, error) {
 	// Create the contract
 	dpp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolProposals)
 	if err != nil {
@@ -37,10 +34,10 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *proposalCommon) (*P
 	}
 
 	return &ProtocolDaoProposal{
-		proposalCommon:             base,
-		ProtocolDaoProposalDetails: &ProtocolDaoProposalDetails{},
-		rp:                         rp,
-		dpp:                        dpp,
+		ProposalCommon: base,
+
+		rp:  rp,
+		dpp: dpp,
 	}, nil
 }
 
@@ -59,10 +56,15 @@ func GetProposalAsProtocol(proposal IProposal) (*ProtocolDaoProposal, bool) {
 
 // Get the basic details
 func (c *ProtocolDaoProposal) QueryAllDetails(mc *batch.MultiCaller) {
-	c.proposalCommon.QueryAllDetails(mc)
+	c.ProposalCommon.QueryAllDetails(mc)
+}
+
+// Get the common fields
+func (c *ProtocolDaoProposal) GetProposalCommon() *ProposalCommon {
+	return c.ProposalCommon
 }
 
 // Get the proposal's payload as a string
 func (c *ProtocolDaoProposal) GetPayloadAsString() (string, error) {
-	return getPayloadAsStringImpl(c.rp, c.dpp, c.Payload)
+	return getPayloadAsStringImpl(c.rp, c.dpp, c.Payload.Get())
 }
