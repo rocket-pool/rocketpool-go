@@ -8,6 +8,18 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
+/// ==================
+/// === Interfaces ===
+/// ==================
+
+// A general interface for settings, parameterized by the type required for proposals and boostrapping
+type IProtocolDaoSetting[ProposeType core.CallReturnType] interface {
+	core.IQueryable
+	GetPath() string
+	//ProposeSet(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+}
+
 /// ===================
 /// === BoolSetting ===
 /// ===================
@@ -30,6 +42,11 @@ func newBoolSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager,
 		pdaoMgr:         pdaoMgr,
 		path:            path,
 	}
+}
+
+// Gets the underlying path for the setting within the contracts
+func (s *ProtocolDaoBoolSetting) GetPath() string {
+	return s.path
 }
 
 // Uncomment for Houston
@@ -69,6 +86,11 @@ func newUintSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager,
 	}
 }
 
+// Gets the underlying path for the setting within the contracts
+func (s *ProtocolDaoUintSetting) GetPath() string {
+	return s.path
+}
+
 // Uncomment for Houston
 /*
 // Creates a proposal to change the setting
@@ -106,6 +128,11 @@ func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *cor
 	}
 
 	return s
+}
+
+// Gets the underlying path for the setting within the contracts
+func (s *ProtocolDaoCompoundSetting[DataType]) GetPath() string {
+	return s.path
 }
 
 // Uncomment for Houston

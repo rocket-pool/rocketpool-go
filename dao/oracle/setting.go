@@ -8,6 +8,18 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
+/// ==================
+/// === Interfaces ===
+/// ==================
+
+// A general interface for settings, parameterized by the type required for proposals and boostrapping
+type IOracleDaoSetting[ProposeType core.CallReturnType] interface {
+	core.IQueryable
+	GetPath() string
+	ProposeSet(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+}
+
 /// ===================
 /// === BoolSetting ===
 /// ===================
@@ -30,6 +42,11 @@ func newBoolSetting(settingContract *core.Contract, odaoMgr *OracleDaoManager, p
 		odaoMgr:         odaoMgr,
 		path:            path,
 	}
+}
+
+// Gets the underlying path for the setting within the contracts
+func (s *OracleDaoBoolSetting) GetPath() string {
+	return s.path
 }
 
 // Creates a proposal to change the setting
@@ -66,6 +83,11 @@ func newUintSetting(settingContract *core.Contract, odaoMgr *OracleDaoManager, p
 	}
 }
 
+// Gets the underlying path for the setting within the contracts
+func (s *OracleDaoUintSetting) GetPath() string {
+	return s.path
+}
+
 // Creates a proposal to change the setting
 func (s *OracleDaoUintSetting) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return s.odaoMgr.ProposeSetUint("", s.settingContract, s.path, value, opts)
@@ -100,6 +122,11 @@ func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *cor
 	}
 
 	return s
+}
+
+// Gets the underlying path for the setting within the contracts
+func (s *OracleDaoCompoundSetting[DataType]) GetPath() string {
+	return s.path
 }
 
 // Creates a proposal to change the setting

@@ -2,6 +2,8 @@ package protocol
 
 import (
 	"fmt"
+	"math/big"
+	"reflect"
 	"time"
 
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -49,19 +51,19 @@ type ProtocolDaoSettings struct {
 	} `json:"minipool"`
 
 	Network struct {
-		OracleDaoConsensusThreshold *ProtocolDaoCompoundSetting[float64]       `json:"oracleDaoConsensusThreshold"`
-		NodePenaltyThreshold        *ProtocolDaoCompoundSetting[float64]       `json:"nodePenaltyThreshold"`
-		PerPenaltyRate              *ProtocolDaoCompoundSetting[float64]       `json:"perPenaltyRate"`
-		IsSubmitBalancesEnabled     *ProtocolDaoBoolSetting                    `json:"isSubmitBalancesEnabled"`
-		SubmitBalancesFrequency     *ProtocolDaoCompoundSetting[uint64]        `json:"submitBalancesFrequency"`
-		IsSubmitPricesEnabled       *ProtocolDaoBoolSetting                    `json:"isSubmitPricesEnabled"`
-		SubmitPricesFrequency       *ProtocolDaoCompoundSetting[uint64]        `json:"submitPricesFrequency"`
-		MinimumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"minimumNodeFee"`
-		TargetNodeFee               *ProtocolDaoCompoundSetting[float64]       `json:"targetNodeFee"`
-		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"maximumNodeFee"`
-		NodeFeeDemandRange          *ProtocolDaoUintSetting                    `json:"nodeFeeDemandRange"`
-		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64]       `json:"targetRethCollateralRate"`
-		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting                    `json:"isSubmitRewardsEnabled"`
+		OracleDaoConsensusThreshold *ProtocolDaoCompoundSetting[float64] `json:"oracleDaoConsensusThreshold"`
+		NodePenaltyThreshold        *ProtocolDaoCompoundSetting[float64] `json:"nodePenaltyThreshold"`
+		PerPenaltyRate              *ProtocolDaoCompoundSetting[float64] `json:"perPenaltyRate"`
+		IsSubmitBalancesEnabled     *ProtocolDaoBoolSetting              `json:"isSubmitBalancesEnabled"`
+		SubmitBalancesFrequency     *ProtocolDaoCompoundSetting[uint64]  `json:"submitBalancesFrequency"`
+		IsSubmitPricesEnabled       *ProtocolDaoBoolSetting              `json:"isSubmitPricesEnabled"`
+		SubmitPricesFrequency       *ProtocolDaoCompoundSetting[uint64]  `json:"submitPricesFrequency"`
+		MinimumNodeFee              *ProtocolDaoCompoundSetting[float64] `json:"minimumNodeFee"`
+		TargetNodeFee               *ProtocolDaoCompoundSetting[float64] `json:"targetNodeFee"`
+		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64] `json:"maximumNodeFee"`
+		NodeFeeDemandRange          *ProtocolDaoUintSetting              `json:"nodeFeeDemandRange"`
+		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64] `json:"targetRethCollateralRate"`
+		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting              `json:"isSubmitRewardsEnabled"`
 	} `json:"network"`
 
 	Node struct {
@@ -179,4 +181,47 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, "rpl.rewards.claim.period.time")
 
 	return s, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get all of the settings, organized by the type used in proposals and boostraps
+func (c *ProtocolDaoSettings) GetSettings() ([]IProtocolDaoSetting[bool], []IProtocolDaoSetting[*big.Int]) {
+	boolSettings := []IProtocolDaoSetting[bool]{}
+	uintSettings := []IProtocolDaoSetting[*big.Int]{}
+
+	settingsType := reflect.TypeOf(c)
+	settingsVal := reflect.ValueOf(c)
+	fieldCount := settingsType.NumField()
+	for i := 0; i < fieldCount; i++ {
+		categoryFieldType := settingsType.Field(i).Type
+
+		// A container struct for settings by category
+		if categoryFieldType.Kind() == reflect.Struct {
+			// Get all of the settings in this cateogry
+			categoryFieldVal := settingsVal.Field(i)
+			settingCount := categoryFieldType.NumField()
+			for j := 0; j < settingCount; j++ {
+				setting := categoryFieldVal.Field(i).Interface()
+
+				// Try bool settings
+				boolSetting, isBoolSetting := setting.(IProtocolDaoSetting[bool])
+				if isBoolSetting {
+					boolSettings = append(boolSettings, boolSetting)
+					continue
+				}
+
+				// Try uint settings
+				uintSetting, isUintSetting := setting.(IProtocolDaoSetting[*big.Int])
+				if isUintSetting {
+					uintSettings = append(uintSettings, uintSetting)
+				}
+			}
+
+		}
+	}
+
+	return boolSettings, uintSettings
 }

@@ -3,6 +3,7 @@ package oracle
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 	"time"
 
 	batch "github.com/rocket-pool/batch-query"
@@ -111,7 +112,44 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 // === Calls ===
 // =============
 
-// === RocketDAONodeTrustedSettingsRewards ===
+// Get all of the settings, organized by the type used in proposals and boostraps
+func (c *OracleDaoSettings) GetSettings() ([]IOracleDaoSetting[bool], []IOracleDaoSetting[*big.Int]) {
+	boolSettings := []IOracleDaoSetting[bool]{}
+	uintSettings := []IOracleDaoSetting[*big.Int]{}
+
+	settingsType := reflect.TypeOf(c)
+	settingsVal := reflect.ValueOf(c)
+	fieldCount := settingsType.NumField()
+	for i := 0; i < fieldCount; i++ {
+		categoryFieldType := settingsType.Field(i).Type
+
+		// A container struct for settings by category
+		if categoryFieldType.Kind() == reflect.Struct {
+			// Get all of the settings in this cateogry
+			categoryFieldVal := settingsVal.Field(i)
+			settingCount := categoryFieldType.NumField()
+			for j := 0; j < settingCount; j++ {
+				setting := categoryFieldVal.Field(i).Interface()
+
+				// Try bool settings
+				boolSetting, isBoolSetting := setting.(IOracleDaoSetting[bool])
+				if isBoolSetting {
+					boolSettings = append(boolSettings, boolSetting)
+					continue
+				}
+
+				// Try uint settings
+				uintSetting, isUintSetting := setting.(IOracleDaoSetting[*big.Int])
+				if isUintSetting {
+					uintSettings = append(uintSettings, uintSetting)
+				}
+			}
+
+		}
+	}
+
+	return boolSettings, uintSettings
+}
 
 // Get whether or not the provided rewards network is enabled
 func (c *OracleDaoSettings) GetNetworkEnabled(mc *batch.MultiCaller, enabled_Out *bool, network uint64) {
