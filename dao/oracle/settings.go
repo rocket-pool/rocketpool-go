@@ -18,13 +18,11 @@ import (
 type OracleDaoSettings struct {
 	// Member
 	Member struct {
-		Quorum                 *OracleDaoCompoundSetting[float64]
-		RplBond                *OracleDaoUintSetting
-		UnbondedMinipoolMax    *OracleDaoCompoundSetting[uint64]
-		UnbondedMinipoolMinFee *OracleDaoCompoundSetting[float64]
-		ChallengeCooldown      *OracleDaoCompoundSetting[time.Duration]
-		ChallengeWindow        *OracleDaoCompoundSetting[time.Duration]
-		ChallengeCost          *OracleDaoUintSetting
+		Quorum            *OracleDaoCompoundSetting[float64]
+		RplBond           *OracleDaoUintSetting
+		ChallengeCooldown *OracleDaoCompoundSetting[time.Duration]
+		ChallengeWindow   *OracleDaoCompoundSetting[time.Duration]
+		ChallengeCost     *OracleDaoUintSetting
 	}
 
 	// Minipool
@@ -86,8 +84,6 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 	// Member
 	s.Member.Quorum = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.quorum")
 	s.Member.RplBond = newUintSetting(s.dnts_members, odaoMgr, "members.rplbond")
-	s.Member.UnbondedMinipoolMax = newCompoundSetting[uint64](s.dnts_members, odaoMgr, "members.minipool.unbonded.max")
-	s.Member.UnbondedMinipoolMinFee = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.minipool.unbonded.min.fee")
 	s.Member.ChallengeCooldown = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.cooldown")
 	s.Member.ChallengeWindow = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.window")
 	s.Member.ChallengeCost = newUintSetting(s.dnts_members, odaoMgr, "members.challenge.cost")

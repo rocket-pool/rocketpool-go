@@ -61,24 +61,6 @@ func Test_BootstrapRplBond(t *testing.T) {
 	})
 }
 
-func Test_BootstrapUnbondedMinipoolMax(t *testing.T) {
-	newVal := tests.ODaoDefaults.Member.UnbondedMinipoolMax.Formatted() + 5
-	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
-		newSettings.Member.UnbondedMinipoolMax.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Member.UnbondedMinipoolMax.Bootstrap(core.GetValueForUint256(newVal), opts)
-	})
-}
-
-func Test_BootstrapUnbondedMinipoolMinFee(t *testing.T) {
-	newVal := tests.ODaoDefaults.Member.UnbondedMinipoolMinFee.Formatted() + 0.1
-	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
-		newSettings.Member.UnbondedMinipoolMinFee.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Member.UnbondedMinipoolMinFee.Bootstrap(core.GetValueForUint256(newVal), opts)
-	})
-}
-
 func Test_BootstrapBondReductionCancellationQuorum(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.BondReductionCancellationQuorum.Formatted() + 0.15
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
@@ -219,8 +201,6 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 	newOdaoSettings.Member.ChallengeWindow.Set(tests.ODaoDefaults.Member.ChallengeWindow.Formatted() + time.Hour)
 	newOdaoSettings.Member.Quorum.Set(tests.ODaoDefaults.Member.Quorum.Formatted() + 0.15)
 	newOdaoSettings.Member.RplBond.Set(big.NewInt(0).Add(tests.ODaoDefaults.Member.RplBond.Get(), eth.EthToWei(1000)))
-	newOdaoSettings.Member.UnbondedMinipoolMax.Set(tests.ODaoDefaults.Member.UnbondedMinipoolMax.Formatted() + 5)
-	newOdaoSettings.Member.UnbondedMinipoolMinFee.Set(tests.ODaoDefaults.Member.UnbondedMinipoolMinFee.Formatted() + 0.1)
 	newOdaoSettings.Minipool.BondReductionCancellationQuorum.Set(tests.ODaoDefaults.Minipool.BondReductionCancellationQuorum.Formatted() + 0.15)
 	newOdaoSettings.Minipool.BondReductionWindowLength.Set(tests.ODaoDefaults.Minipool.BondReductionWindowLength.Formatted() + time.Hour)
 	newOdaoSettings.Minipool.BondReductionWindowStart.Set(tests.ODaoDefaults.Minipool.BondReductionWindowStart.Formatted() + time.Hour)
@@ -255,12 +235,6 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 		},
 		func() (*core.TransactionInfo, error) {
 			return odaoMgr.Settings.Member.RplBond.Bootstrap(newOdaoSettings.Member.RplBond.Get(), opts)
-		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.UnbondedMinipoolMax.Bootstrap(newOdaoSettings.Member.UnbondedMinipoolMax.Raw(), opts)
-		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.UnbondedMinipoolMinFee.Bootstrap(newOdaoSettings.Member.UnbondedMinipoolMinFee.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
 			return odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.Bootstrap(newOdaoSettings.Minipool.BondReductionCancellationQuorum.Raw(), opts)

@@ -60,24 +60,6 @@ func Test_ProposeRplBond(t *testing.T) {
 	})
 }
 
-func Test_ProposeUnbondedMinipoolMax(t *testing.T) {
-	newVal := tests.ODaoDefaults.Member.UnbondedMinipoolMax.Formatted() + 1
-	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettings) {
-		newSettings.Member.UnbondedMinipoolMax.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Member.UnbondedMinipoolMax.ProposeSet(core.GetValueForUint256(newVal), odao1.Transactor)
-	})
-}
-
-func Test_ProposeUnbondedMinipoolMinFee(t *testing.T) {
-	newVal := tests.ODaoDefaults.Member.UnbondedMinipoolMinFee.Formatted() + 0.01
-	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettings) {
-		newSettings.Member.UnbondedMinipoolMinFee.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
-		return odaoMgr.Settings.Member.UnbondedMinipoolMinFee.ProposeSet(core.GetValueForUint256(newVal), odao1.Transactor)
-	})
-}
-
 func Test_ProposeBondReductionCancellationQuorum(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.BondReductionCancellationQuorum.Formatted() + 0.15
 	testOdaoParameterProposal(t, func(newSettings *oracle.OracleDaoSettings) {
