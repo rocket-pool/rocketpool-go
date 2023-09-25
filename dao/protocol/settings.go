@@ -61,7 +61,6 @@ type ProtocolDaoSettings struct {
 		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"maximumNodeFee"`
 		NodeFeeDemandRange          *ProtocolDaoUintSetting                    `json:"nodeFeeDemandRange"`
 		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64]       `json:"targetRethCollateralRate"`
-		RethDepositDelay            *ProtocolDaoCompoundSetting[time.Duration] `json:"rethDepositDelay"`
 		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting                    `json:"isSubmitRewardsEnabled"`
 	} `json:"network"`
 
@@ -166,7 +165,6 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.maximum")
 	s.Network.NodeFeeDemandRange = newUintSetting(s.dps_network, pdaoMgr, "network.node.fee.demand.range")
 	s.Network.TargetRethCollateralRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.reth.collateral.target")
-	s.Network.RethDepositDelay = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.reth.deposit.delay")
 	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.rewards.enabled")
 
 	// Node
