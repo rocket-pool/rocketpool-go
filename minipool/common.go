@@ -293,17 +293,7 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 	}
 
 	// Grab the lowest block number worth querying from (should never have to go back this far in practice)
-	deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
-	var fromBlockBig *big.Int
-	err = c.rp.Query(func(mc *batch.MultiCaller) error {
-		c.rp.Storage.GetUint(mc, &fromBlockBig, deployBlockHash)
-		return nil
-	}, opts)
-	if err != nil {
-		return PrestakeData{}, fmt.Errorf("error getting deploy block %s: %w", c.Address.Hex(), err)
-	}
-
-	fromBlock := fromBlockBig.Uint64()
+	fromBlock := c.rp.DeployBlock.Uint64()
 	var log gethtypes.Log
 	found := false
 

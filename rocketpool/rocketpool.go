@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/sync/errgroup"
 
 	batch "github.com/rocket-pool/batch-query"
@@ -71,9 +70,8 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 	rp.VersionManager = NewVersionManager(rp)
 
 	// Get the block the protocol was deployed on
-	deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		rp.Storage.GetUint(mc, &rp.DeployBlock, deployBlockHash)
+		rp.Storage.GetDeployBlock(mc, &rp.DeployBlock)
 		return nil
 	}, nil)
 	if err != nil {

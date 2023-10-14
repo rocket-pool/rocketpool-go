@@ -69,3 +69,9 @@ func (c *Storage) GetAbi(mc *batch.MultiCaller, abiEncoded_Out *string, contract
 	key := crypto.Keccak256Hash([]byte("contract.abi"), []byte(contractName))
 	core.AddCall(mc, c.Contract, abiEncoded_Out, "getString", key)
 }
+
+// Get the number of the block that Rocket Pool was deployed on
+func (c *Storage) GetDeployBlock(mc *batch.MultiCaller, result_Out **big.Int) {
+	deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
+	c.GetUint(mc, result_Out, deployBlockHash)
+}

@@ -3,6 +3,7 @@ package tokens
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,6 +25,9 @@ type TokenRpl struct {
 	// The RPL inflation interval rate
 	InflationIntervalRate *core.SimpleField[*big.Int]
 
+	// The time that inflation started for the current interval
+	InflationIntervalStartTime *core.FormattedUint256Field[time.Time]
+
 	// === Internal fields ===
 	rpl *core.Contract
 	rp  *rocketpool.RocketPool
@@ -42,8 +46,9 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 	}
 
 	return &TokenRpl{
-		TotalSupply:           core.NewSimpleField[*big.Int](rpl, "totalSupply"),
-		InflationIntervalRate: core.NewSimpleField[*big.Int](rpl, "getInflationIntervalRate"),
+		TotalSupply:                core.NewSimpleField[*big.Int](rpl, "totalSupply"),
+		InflationIntervalRate:      core.NewSimpleField[*big.Int](rpl, "getInflationIntervalRate"),
+		InflationIntervalStartTime: core.NewFormattedUint256Field[time.Time](rpl, "getInflationIntervalStartTime"),
 
 		rp:  rp,
 		rpl: rpl,
