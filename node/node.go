@@ -92,6 +92,9 @@ type Node struct {
 	// The node's pending withdrawal address
 	PendingWithdrawalAddress *core.SimpleField[common.Address]
 
+	// The amount of RPL locked as part of active PDAO proposals or challenges
+	RplLocked *core.SimpleField[*big.Int]
+
 	// === Internal fields ===
 	rp          *rocketpool.RocketPool
 	distFactory *core.Contract
@@ -161,6 +164,7 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		RplStakedTime:     core.NewFormattedUint256Field[time.Time](nodeStaking, "getNodeRPLStakedTime", address),
 		EthMatched:        core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatched", address),
 		EthMatchedLimit:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatchedLimit", address),
+		RplLocked:         core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLLocked", address),
 
 		// MinipoolManager
 		MinipoolCount:           core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeMinipoolCount", address),

@@ -40,7 +40,7 @@ func getLegacyContractWithAddress(rp *RocketPool, contractName string, address c
 	abiEncoded := m.GetEncodedABI(contractName)
 	abi, err := core.DecodeAbi(abiEncoded)
 	if err != nil {
-		return nil, fmt.Errorf("Could not decode contract %s ABI: %w", contractName, err)
+		return nil, fmt.Errorf("error decoding contract %s ABI: %w", contractName, err)
 	}
 
 	contract := &core.Contract{

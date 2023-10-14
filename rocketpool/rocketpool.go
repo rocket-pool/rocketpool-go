@@ -46,7 +46,7 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 	// Create the RocketStorage binding
 	storage, err := storage.NewStorage(client, rocketStorageAddress)
 	if err != nil {
-		return nil, fmt.Errorf("error creating rocket storage binding: %w", err)
+		return nil, fmt.Errorf("error initializing Rocket Pool storage contract: %w", err)
 	}
 
 	// Create the balance batcher
@@ -246,7 +246,7 @@ func (rp *RocketPool) CreateMinipoolContractFromEncodedAbi(address common.Addres
 	// Decode ABI
 	abi, err := core.DecodeAbi(encodedAbi)
 	if err != nil {
-		return nil, fmt.Errorf("Could not decode minipool %s ABI: %w", address, err)
+		return nil, fmt.Errorf("error decoding minipool %s ABI: %w", address, err)
 	}
 
 	// Create and return

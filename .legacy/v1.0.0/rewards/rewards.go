@@ -18,7 +18,7 @@ import (
 func getEnabled(claimsContract *core.Contract, claimsName string, opts *bind.CallOpts) (bool, error) {
 	enabled := new(bool)
 	if err := claimsContract.Call(opts, enabled, "getEnabled"); err != nil {
-		return false, fmt.Errorf("Could not get %s claims contract enabled status: %w", claimsName, err)
+		return false, fmt.Errorf("error getting %s claims contract enabled status: %w", claimsName, err)
 	}
 	return *enabled, nil
 }
@@ -28,7 +28,7 @@ func getEnabled(claimsContract *core.Contract, claimsName string, opts *bind.Cal
 func getClaimPossible(claimsContract *core.Contract, claimsName string, claimerAddress common.Address, opts *bind.CallOpts) (bool, error) {
 	claimPossible := new(bool)
 	if err := claimsContract.Call(opts, claimPossible, "getClaimPossible", claimerAddress); err != nil {
-		return false, fmt.Errorf("Could not get %s claim possible status for %s: %w", claimsName, claimerAddress.Hex(), err)
+		return false, fmt.Errorf("error getting %s claim possible status for %s: %w", claimsName, claimerAddress.Hex(), err)
 	}
 	return *claimPossible, nil
 }
@@ -37,7 +37,7 @@ func getClaimPossible(claimsContract *core.Contract, claimsName string, claimerA
 func getClaimRewardsPerc(claimsContract *core.Contract, claimsName string, claimerAddress common.Address, opts *bind.CallOpts) (float64, error) {
 	claimRewardsPerc := new(*big.Int)
 	if err := claimsContract.Call(opts, claimRewardsPerc, "getClaimRewardsPerc", claimerAddress); err != nil {
-		return 0, fmt.Errorf("Could not get %s claim rewards percent for %s: %w", claimsName, claimerAddress.Hex(), err)
+		return 0, fmt.Errorf("error getting %s claim rewards percent for %s: %w", claimsName, claimerAddress.Hex(), err)
 	}
 	return eth.WeiToEth(*claimRewardsPerc), nil
 }
@@ -47,7 +47,7 @@ func getClaimRewardsPerc(claimsContract *core.Contract, claimsName string, claim
 func getClaimRewardsAmount(claimsContract *core.Contract, claimsName string, claimerAddress common.Address, opts *bind.CallOpts) (*big.Int, error) {
 	claimRewardsAmount := new(*big.Int)
 	if err := claimsContract.Call(opts, claimRewardsAmount, "getClaimRewardsAmount", claimerAddress); err != nil {
-		return nil, fmt.Errorf("Could not get %s claim rewards amount for %s: %w", claimsName, claimerAddress.Hex(), err)
+		return nil, fmt.Errorf("error getting %s claim rewards amount for %s: %w", claimsName, claimerAddress.Hex(), err)
 	}
 	return *claimRewardsAmount, nil
 }
@@ -60,7 +60,7 @@ func getClaimingContractUserRegisteredTime(rp *rocketpool.RocketPool, claimsCont
 	}
 	claimTime := new(*big.Int)
 	if err := rocketRewardsPool.Call(opts, claimTime, "getClaimingContractUserRegisteredTime", claimsContract, claimerAddress); err != nil {
-		return time.Time{}, fmt.Errorf("Could not get claims registration time on contract %s for %s: %w", claimsContract, claimerAddress.Hex(), err)
+		return time.Time{}, fmt.Errorf("error getting claims registration time on contract %s for %s: %w", claimsContract, claimerAddress.Hex(), err)
 	}
 	return time.Unix((*claimTime).Int64(), 0), nil
 }
@@ -73,7 +73,7 @@ func getClaimingContractTotalClaimed(rp *rocketpool.RocketPool, claimsContract s
 	}
 	totalClaimed := new(*big.Int)
 	if err := rocketRewardsPool.Call(opts, totalClaimed, "getClaimingContractTotalClaimed", claimsContract); err != nil {
-		return nil, fmt.Errorf("Could not get total claimed for %s: %w", claimsContract, err)
+		return nil, fmt.Errorf("error getting total claimed for %s: %w", claimsContract, err)
 	}
 	return *totalClaimed, nil
 }
@@ -87,7 +87,7 @@ func estimateClaimGas(claimsContract *core.Contract, opts *bind.TransactOpts) (r
 func claim(claimsContract *core.Contract, claimsName string, opts *bind.TransactOpts) (common.Hash, error) {
 	tx, err := claimsContract.Transact(opts, "claim")
 	if err != nil {
-		return common.Hash{}, fmt.Errorf("Could not claim %s rewards: %w", claimsName, err)
+		return common.Hash{}, fmt.Errorf("error claiming %s rewards: %w", claimsName, err)
 	}
 	return tx.Hash(), nil
 }
@@ -100,7 +100,7 @@ func GetClaimIntervalTimeStart(rp *rocketpool.RocketPool, opts *bind.CallOpts, l
 	}
 	unixTime := new(*big.Int)
 	if err := rocketRewardsPool.Call(opts, unixTime, "getClaimIntervalTimeStart"); err != nil {
-		return time.Time{}, fmt.Errorf("Could not get claim interval time start: %w", err)
+		return time.Time{}, fmt.Errorf("error getting claim interval time start: %w", err)
 	}
 	return time.Unix((*unixTime).Int64(), 0), nil
 }
@@ -113,7 +113,7 @@ func GetClaimIntervalTime(rp *rocketpool.RocketPool, opts *bind.CallOpts, legacy
 	}
 	unixTime := new(*big.Int)
 	if err := rocketRewardsPool.Call(opts, unixTime, "getClaimIntervalTime"); err != nil {
-		return 0, fmt.Errorf("Could not get claim interval time: %w", err)
+		return 0, fmt.Errorf("error getting claim interval time: %w", err)
 	}
 	return time.Duration((*unixTime).Int64()) * time.Second, nil
 }
@@ -126,7 +126,7 @@ func GetNodeOperatorRewardsPercent(rp *rocketpool.RocketPool, opts *bind.CallOpt
 	}
 	perc := new(*big.Int)
 	if err := rocketRewardsPool.Call(opts, perc, "getClaimingContractPerc", "rocketClaimNode"); err != nil {
-		return 0, fmt.Errorf("Could not get node operator rewards percent: %w", err)
+		return 0, fmt.Errorf("error getting node operator rewards percent: %w", err)
 	}
 	return eth.WeiToEth(*perc), nil
 }
@@ -139,7 +139,7 @@ func GetTrustedNodeOperatorRewardsPercent(rp *rocketpool.RocketPool, opts *bind.
 	}
 	perc := new(*big.Int)
 	if err := rocketRewardsPool.Call(opts, perc, "getClaimingContractPerc", "rocketClaimTrustedNode"); err != nil {
-		return 0, fmt.Errorf("Could not get trusted node operator rewards percent: %w", err)
+		return 0, fmt.Errorf("error getting trusted node operator rewards percent: %w", err)
 	}
 	return eth.WeiToEth(*perc), nil
 }

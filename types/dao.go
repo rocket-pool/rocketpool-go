@@ -2,7 +2,9 @@ package types
 
 import (
 	"fmt"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/rocket-pool/rocketpool-go/utils/json"
 )
 
@@ -20,6 +22,20 @@ const (
 )
 
 var ProposalStates = []string{"Pending", "Active", "Cancelled", "Defeated", "Succeeded", "Expired", "Executed"}
+
+// DAO setting types
+type ProposalSettingType uint8
+
+const (
+	ProposalSettingType_Uint256 ProposalSettingType = iota
+	ProposalSettingType_Bool
+	ProposalSettingType_Address
+)
+
+type VotingTreeNode struct {
+	Sum  *big.Int    `abi:"sum" json:"sum"`
+	Hash common.Hash `abi:"hash" json:"hash"`
+}
 
 // String conversion
 func (s ProposalState) String() string {
