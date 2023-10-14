@@ -322,15 +322,6 @@ func Test_BootstrapPerPenaltyRate(t *testing.T) {
 	})
 }
 
-func Test_BootstrapRethDepositDelay(t *testing.T) {
-	newVal := tests.PDaoDefaults.Network.RethDepositDelay.Formatted() + time.Hour
-	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
-		newSettings.Network.RethDepositDelay.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
-		return pdaoMgr.Settings.Network.RethDepositDelay.Bootstrap(core.GetValueForUint256(newVal), opts)
-	})
-}
-
 func Test_BootstrapSubmitRewardsEnabled(t *testing.T) {
 	newVal := !tests.PDaoDefaults.Network.IsSubmitRewardsEnabled.Get()
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
@@ -465,7 +456,6 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	newPdaoSettings.Network.TargetRethCollateralRate.Set(tests.PDaoDefaults.Network.TargetRethCollateralRate.Formatted() + 0.1)
 	newPdaoSettings.Network.NodePenaltyThreshold.Set(tests.PDaoDefaults.Network.NodePenaltyThreshold.Formatted() + 0.15)
 	newPdaoSettings.Network.PerPenaltyRate.Set(tests.PDaoDefaults.Network.PerPenaltyRate.Formatted() + 0.1)
-	newPdaoSettings.Network.RethDepositDelay.Set(tests.PDaoDefaults.Network.RethDepositDelay.Formatted() + time.Hour)
 	newPdaoSettings.Network.IsSubmitRewardsEnabled.Set(!tests.PDaoDefaults.Network.IsSubmitRewardsEnabled.Get())
 	newPdaoSettings.Node.IsRegistrationEnabled.Set(!tests.PDaoDefaults.Node.IsRegistrationEnabled.Get())
 	newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Set(!tests.PDaoDefaults.Node.IsSmoothingPoolRegistrationEnabled.Get())
@@ -583,9 +573,6 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 		},
 		func() (*core.TransactionInfo, error) {
 			return pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(newPdaoSettings.Network.PerPenaltyRate.Raw(), opts)
-		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.RethDepositDelay.Bootstrap(newPdaoSettings.Network.RethDepositDelay.Raw(), opts)
 		},
 		func() (*core.TransactionInfo, error) {
 			return pdaoMgr.Settings.Network.IsSubmitRewardsEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitRewardsEnabled.Get(), opts)

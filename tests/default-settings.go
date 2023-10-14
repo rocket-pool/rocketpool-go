@@ -83,7 +83,6 @@ func CreateDefaults(mgr *TestManager) error {
 		PDaoDefaults.Network.TargetRethCollateralRate.Set(0.1)
 		PDaoDefaults.Network.NodePenaltyThreshold.Set(0.51) // Consensus for penalties requires 51% vote
 		PDaoDefaults.Network.PerPenaltyRate.Set(0.1)        // 10% per penalty
-		PDaoDefaults.Network.RethDepositDelay.Set(0)
 		PDaoDefaults.Network.IsSubmitRewardsEnabled.Set(true)
 
 		// Node
@@ -113,8 +112,6 @@ func CreateDefaults(mgr *TestManager) error {
 		ODaoDefaults.Member.ChallengeWindow.Set(7 * 24 * time.Hour) // 7 days
 		ODaoDefaults.Member.Quorum.Set(0.51)
 		ODaoDefaults.Member.RplBond.Set(eth.EthToWei(1750))
-		ODaoDefaults.Member.UnbondedMinipoolMax.Set(30)
-		ODaoDefaults.Member.UnbondedMinipoolMinFee.Set(0.8)
 
 		// Minipools
 		ODaoDefaults.Minipool.BondReductionWindowStart.Set(12 * time.Hour)
