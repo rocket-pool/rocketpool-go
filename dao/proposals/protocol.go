@@ -2,7 +2,9 @@ package proposals
 
 import (
 	"fmt"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -15,6 +17,12 @@ import (
 // Binding for Protocol DAO proposals
 type ProtocolDaoProposal struct {
 	*ProposalCommon
+
+	// The block that was used for voting power calculation in a proposal
+	ProposalBlock *core.FormattedUint256Field[uint32]
+
+	// The veto quorum required to veto a proposal
+	VetoQuorum *core.SimpleField[*big.Int]
 
 	// === Internal fields ===
 	rp  *rocketpool.RocketPool
@@ -35,6 +43,8 @@ func newProtocolDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*P
 
 	return &ProtocolDaoProposal{
 		ProposalCommon: base,
+		ProposalBlock:  core.NewFormattedUint256Field[uint32](dpp, "getProposalBlock", base.idBig),
+		VetoQuorum:     core.NewSimpleField[*big.Int](dpp, "getProposalVetoQuorum", base.idBig),
 
 		rp:  rp,
 		dpp: dpp,
@@ -67,4 +77,18 @@ func (c *ProtocolDaoProposal) Common() *ProposalCommon {
 // Get the proposal's payload as a string
 func (c *ProtocolDaoProposal) GetPayloadAsString() (string, error) {
 	return getPayloadAsStringImpl(c.rp, c.dpp, c.Payload.Get())
+}
+
+// ====================
+// === Transactions ===
+// ====================
+
+// Get info for voting on a proposal
+func (c *ProtocolDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dpp, "vote", opts, c.idBig, support)
+}
+
+// Get info for executing a proposal
+func (c *ProtocolDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dpp, "execute", opts, c.idBig)
 }

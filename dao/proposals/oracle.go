@@ -64,6 +64,11 @@ func (c *OracleDaoProposal) Common() *ProposalCommon {
 	return c.ProposalCommon
 }
 
+// Get the proposal's payload as a string
+func (c *OracleDaoProposal) GetPayloadAsString() (string, error) {
+	return getPayloadAsStringImpl(c.rp, c.dntp, c.Payload.Get())
+}
+
 // ====================
 // === Transactions ===
 // ====================
@@ -81,9 +86,4 @@ func (c *OracleDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core
 // Get info for executing a proposal
 func (c *OracleDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.dntp, "execute", opts, c.idBig)
-}
-
-// Get the proposal's payload as a string
-func (c *OracleDaoProposal) GetPayloadAsString() (string, error) {
-	return getPayloadAsStringImpl(c.rp, c.dntp, c.Payload.Get())
 }

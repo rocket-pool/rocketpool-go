@@ -56,7 +56,7 @@ func (f *SimpleField[ValueType]) Get() ValueType {
 
 // A collection of legal types for FormattedUint256Field
 type FormattedUint256Type interface {
-	time.Time | uint64 | int64 | float64 | time.Duration
+	time.Time | uint32 | uint64 | int64 | float64 | time.Duration
 }
 
 // A field that is stored as a uint256 in the contracts, but represents a more well-defined type
@@ -93,6 +93,8 @@ func (f *FormattedUint256Field[ValueType]) Formatted() ValueType {
 	switch outPtr := any(&out).(type) {
 	case *time.Time:
 		*outPtr = time.Unix(f.value.Int64(), 0)
+	case *uint32:
+		*outPtr = uint32(f.value.Uint64())
 	case *uint64:
 		*outPtr = f.value.Uint64()
 	case *int64:
