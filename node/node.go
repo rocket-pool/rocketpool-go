@@ -95,15 +95,22 @@ type Node struct {
 	// The amount of RPL locked as part of active PDAO proposals or challenges
 	RplLocked *core.SimpleField[*big.Int]
 
+	// The address that the provided node has currently delegated voting power to
+	CurrentVotingDelegate *core.SimpleField[common.Address]
+
+	// Whether or not on-chain voting has been initialized for the given node
+	IsVotingInitialized *core.SimpleField[bool]
+
 	// === Internal fields ===
-	rp          *rocketpool.RocketPool
-	distFactory *core.Contract
-	nodeDeposit *core.Contract
-	nodeMgr     *core.Contract
-	nodeStaking *core.Contract
-	mpFactory   *core.Contract
-	mpMgr       *core.Contract
-	storage     *core.Contract
+	rp            *rocketpool.RocketPool
+	distFactory   *core.Contract
+	networkVoting *core.Contract
+	nodeDeposit   *core.Contract
+	nodeMgr       *core.Contract
+	nodeStaking   *core.Contract
+	mpFactory     *core.Contract
+	mpMgr         *core.Contract
+	storage       *core.Contract
 }
 
 // ====================
@@ -115,6 +122,10 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 	distFactory, err := rp.GetContract(rocketpool.ContractName_RocketNodeDistributorFactory)
 	if err != nil {
 		return nil, fmt.Errorf("error getting distributor factory binding: %w", err)
+	}
+	networkVoting, err := rp.GetContract(rocketpool.ContractName_RocketNetworkVoting)
+	if err != nil {
+		return nil, fmt.Errorf("error getting network voting binding: %w", err)
 	}
 	nodeDeposit, err := rp.GetContract(rocketpool.ContractName_RocketNodeDeposit)
 	if err != nil {
@@ -142,6 +153,10 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 
 		// DistributorFactory
 		DistributorAddress: core.NewSimpleField[common.Address](distFactory, "getProxyAddress", address),
+
+		// NetworkVoting
+		CurrentVotingDelegate: core.NewSimpleField[common.Address](networkVoting, "getCurrentDelegate", address),
+		IsVotingInitialized:   core.NewSimpleField[bool](networkVoting, "getVotingInitialised", address),
 
 		// NodeDeposit
 		Credit: core.NewSimpleField[*big.Int](nodeDeposit, "getNodeDepositCredit", address),
@@ -176,20 +191,47 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		WithdrawalAddress:        core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodeWithdrawalAddress", address),
 		PendingWithdrawalAddress: core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodePendingWithdrawalAddress", address),
 
-		rp:          rp,
-		distFactory: distFactory,
-		nodeDeposit: nodeDeposit,
-		nodeMgr:     nodeManager,
-		nodeStaking: nodeStaking,
-		mpFactory:   minipoolFactory,
-		mpMgr:       minipoolManager,
-		storage:     rp.Storage.Contract,
+		rp:            rp,
+		distFactory:   distFactory,
+		networkVoting: networkVoting,
+		nodeDeposit:   nodeDeposit,
+		nodeMgr:       nodeManager,
+		nodeStaking:   nodeStaking,
+		mpFactory:     minipoolFactory,
+		mpMgr:         minipoolManager,
+		storage:       rp.Storage.Contract,
 	}, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get the address that the node has delegated voting power to at the given block
+func (c *Node) GetVotingDelegateAtBlock(mc *batch.MultiCaller, delegate_Out *common.Address, blockNumber uint32) {
+	core.AddCall(mc, c.networkVoting, delegate_Out, "getDelegate", c.Address, blockNumber)
+}
+
+// Get the voting power of the given node at the provided block
+func (c *Node) GetVotingPowerAtBlock(mc *batch.MultiCaller, power_Out **big.Int, blockNumber uint32) {
+	core.AddCall(mc, c.networkVoting, power_Out, "getVotingPower", c.Address, blockNumber)
 }
 
 // ====================
 // === Transactions ===
 // ====================
+
+// === NetworkVoting ===
+
+// Get info for initializing on-chain voting for the node
+func (c *Node) InitializeVoting(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.networkVoting, "initialiseVoting", opts)
+}
+
+// Get info for setting the voting delegate for the node
+func (c *Node) SetVotingDelegate(newDelegate common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.networkVoting, "setDelegate", opts, newDelegate)
+}
 
 // === NodeDeposit ===
 

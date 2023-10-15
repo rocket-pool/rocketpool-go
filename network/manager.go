@@ -58,6 +58,7 @@ type NetworkManager struct {
 	networkFees      *core.Contract
 	networkPenalties *core.Contract
 	networkPrices    *core.Contract
+	networkVoting    *core.Contract
 }
 
 // ====================
@@ -84,6 +85,10 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting network prices contract: %w", err)
 	}
+	networkVoting, err := rp.GetContract(rocketpool.ContractName_RocketNetworkVoting)
+	if err != nil {
+		return nil, fmt.Errorf("error getting network voting binding: %w", err)
+	}
 
 	return &NetworkManager{
 		// NetworkBalances
@@ -108,6 +113,7 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 		networkFees:      networkFees,
 		networkPenalties: networkPenalties,
 		networkPrices:    networkPrices,
+		networkVoting:    networkVoting,
 	}, nil
 }
 
@@ -120,6 +126,13 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 // Get the network node fee for a node demand value
 func (c *NetworkManager) GetNodeFeeByDemand(mc *batch.MultiCaller, out **big.Int, demand *big.Int) {
 	core.AddCall(mc, c.networkFees, out, "getNodeFeeByDemand", demand)
+}
+
+// === NetworkVoting ===
+
+// Get the number of nodes that were present in the network at the provided block
+func (c *NetworkManager) GetVotingNodeCountAtBlock(mc *batch.MultiCaller, out **big.Int, blockNumber uint32) {
+	core.AddCall(mc, c.networkVoting, out, "getNodeCount", blockNumber)
 }
 
 // ====================

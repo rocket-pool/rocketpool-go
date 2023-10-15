@@ -50,6 +50,7 @@ const (
 	ContractName_RocketNetworkFees      ContractName = "rocketNetworkFees"
 	ContractName_RocketNetworkPenalties ContractName = "rocketNetworkPenalties"
 	ContractName_RocketNetworkPrices    ContractName = "rocketNetworkPrices"
+	ContractName_RocketNetworkVoting    ContractName = "rocketNetworkVoting"
 
 	// Nodes
 	ContractName_RocketNodeDeposit             ContractName = "rocketNodeDeposit"
