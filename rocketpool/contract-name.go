@@ -21,6 +21,7 @@ const (
 	ContractName_RocketDAOProtocolSettingsMinipool  ContractName = "rocketDAOProtocolSettingsMinipool"
 	ContractName_RocketDAOProtocolSettingsNetwork   ContractName = "rocketDAOProtocolSettingsNetwork"
 	ContractName_RocketDAOProtocolSettingsNode      ContractName = "rocketDAOProtocolSettingsNode"
+	ContractName_RocketDAOProtocolSettingsProposals ContractName = "rocketDAOProtocolSettingsProposals"
 	ContractName_RocketDAOProtocolSettingsRewards   ContractName = "rocketDAOProtocolSettingsRewards"
 
 	// Oracle DAO

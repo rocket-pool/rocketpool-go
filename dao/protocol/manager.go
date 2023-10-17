@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
@@ -25,10 +26,21 @@ type ProtocolDaoManager struct {
 	// Settings for the Protocol DAO
 	Settings *ProtocolDaoSettings
 
+	// The time that the RPL rewards percentages were last updated
+	LastRewardsPercentagesUpdate *core.FormattedUint256Field[time.Time]
+
 	// === Internal fields ===
-	rp  *rocketpool.RocketPool
-	dp  *core.Contract
-	dpp *core.Contract
+	rp   *rocketpool.RocketPool
+	dp   *core.Contract
+	dpp  *core.Contract
+	dpsr *core.Contract
+}
+
+// Rewards claimer percents
+type RplRewardsPercentages struct {
+	OdaoPercentage *big.Int `abi:"_trustedNodePercent"`
+	PdaoPercentage *big.Int `abi:"_protocolPercent"`
+	NodePercentage *big.Int `abi:"_nodePercent"`
 }
 
 // ====================
@@ -46,11 +58,18 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol proposals contract: %w", err)
 	}
+	dpsr, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsRewards)
+	if err != nil {
+		return nil, fmt.Errorf("error getting protocol DAO protocol settings rewards contract: %w", err)
+	}
 
 	pdaoMgr := &ProtocolDaoManager{
-		rp:  rp,
-		dp:  dp,
-		dpp: dpp,
+		LastRewardsPercentagesUpdate: core.NewFormattedUint256Field[time.Time](dpsr, "getRewardsClaimersTimeUpdated"),
+
+		rp:   rp,
+		dp:   dp,
+		dpp:  dpp,
+		dpsr: dpsr,
 	}
 	settings, err := newProtocolDaoSettings(pdaoMgr)
 	if err != nil {
@@ -58,6 +77,15 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	}
 	pdaoMgr.Settings = settings
 	return pdaoMgr, nil
+}
+
+// =============
+// === Calls ===
+// =============
+
+// Get the allocation of RPL rewards to the node operators, Oracle DAO, and the Protocol DAO
+func (c *ProtocolDaoManager) GetRewardsPercentages(mc *batch.MultiCaller, out *RplRewardsPercentages) {
+	core.AddCallRaw(mc, c.dpsr, out, "getRewardsClaimersPerc")
 }
 
 // ====================
@@ -89,7 +117,7 @@ func (c *ProtocolDaoManager) BootstrapClaimer(contractName rocketpool.ContractNa
 // === DAOProtocolProposals ===
 
 // Get info for submitting a proposal to update a bool Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetBool(message, contractName, settingPath string, value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, settingPath string, value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", settingPath)
 	}
@@ -97,7 +125,7 @@ func (c *ProtocolDaoManager) ProposeSetBool(message, contractName, settingPath s
 }
 
 // Get info for submitting a proposal to update a uint Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetUint(message, contractName, settingPath string, value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, settingPath string, value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", settingPath)
 	}
@@ -105,7 +133,7 @@ func (c *ProtocolDaoManager) ProposeSetUint(message, contractName, settingPath s
 }
 
 // Get info for submitting a proposal to update an address Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetAddress(message, contractName, settingPath string, value common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetAddress(message string, contractName rocketpool.ContractName, settingPath string, value common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", settingPath)
 	}
@@ -113,7 +141,7 @@ func (c *ProtocolDaoManager) ProposeSetAddress(message, contractName, settingPat
 }
 
 // Get info for submitting a proposal to update multiple Protocol DAO settings at once
-func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []string, settingPaths []string, settingTypes []types.ProposalSettingType, values []any, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []rocketpool.ContractName, settingPaths []string, settingTypes []types.ProposalSettingType, values []any, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", strings.Join(settingPaths, ", "))
 	}

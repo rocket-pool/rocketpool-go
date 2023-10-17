@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/types"
 )
 
 /// ==================
@@ -49,13 +50,10 @@ func (s *ProtocolDaoBoolSetting) GetPath() string {
 	return s.path
 }
 
-// Uncomment for Houston
-/*
 // Creates a proposal to change the setting
-func (s *ProtocolDaoBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetBool("", s.settingContract, s.path, value, opts)
+func (s *ProtocolDaoBoolSetting) ProposeSet(value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return s.pdaoMgr.ProposeSetBool("", s.settingContract, s.path, value, blockNumber, treeNodes, opts)
 }
-*/
 
 // Bootstraps the setting with a new value
 func (s *ProtocolDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
@@ -91,13 +89,10 @@ func (s *ProtocolDaoUintSetting) GetPath() string {
 	return s.path
 }
 
-// Uncomment for Houston
-/*
 // Creates a proposal to change the setting
-func (s *ProtocolDaoUintSetting) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, value, opts)
+func (s *ProtocolDaoUintSetting) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, value, blockNumber, treeNodes, opts)
 }
-*/
 
 // Bootstraps the setting with a new value
 func (s *ProtocolDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
@@ -135,13 +130,10 @@ func (s *ProtocolDaoCompoundSetting[DataType]) GetPath() string {
 	return s.path
 }
 
-// Uncomment for Houston
-/*
 // Creates a proposal to change the setting
-func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value core.Parameter[DataType], opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, s.Value.RawValue, opts)
+func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, value, blockNumber, treeNodes, opts)
 }
-*/
 
 // Bootstraps the setting with a new value
 func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {

@@ -15,6 +15,12 @@ func AddCall[OutType CallReturnType](mc *batch.MultiCaller, contract *Contract, 
 	mc.AddCall(*contract.Address, contract.ABI, output, method, args...)
 }
 
+// This is a helper for adding calls to multicall that has untyped output and can take in RP contracts
+// Only use this in situations where the output type is unique (such as a struct for a specific contract view)
+func AddCallRaw(mc *batch.MultiCaller, contract *Contract, output any, method string, args ...any) {
+	mc.AddCall(*contract.Address, contract.ABI, output, method, args...)
+}
+
 // Adds a collection of IQueryable calls to a multicall
 func AddQueryablesToMulticall(mc *batch.MultiCaller, queryables ...IQueryable) {
 	for _, queryable := range queryables {

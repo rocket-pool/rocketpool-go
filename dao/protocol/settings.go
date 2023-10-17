@@ -63,8 +63,22 @@ type ProtocolDaoSettings struct {
 		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64] `json:"maximumNodeFee"`
 		NodeFeeDemandRange          *ProtocolDaoUintSetting              `json:"nodeFeeDemandRange"`
 		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64] `json:"targetRethCollateralRate"`
+		NetworkPenaltyThreshold     *ProtocolDaoCompoundSetting[float64] `json:"networkPenaltyThreshold"`
+		NetworkPenaltyPerRate       *ProtocolDaoCompoundSetting[float64] `json:"networkPenaltyPerRate"`
 		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting              `json:"isSubmitRewardsEnabled"`
 	} `json:"network"`
+
+	Proposals struct {
+		VoteTime            *ProtocolDaoCompoundSetting[time.Duration] `json:"voteTime"`
+		VoteDelayTime       *ProtocolDaoCompoundSetting[time.Duration] `json:"voteDelayTime"`
+		ExecuteTime         *ProtocolDaoCompoundSetting[time.Duration] `json:"executeTime"`
+		ProposalBond        *ProtocolDaoUintSetting                    `json:"proposalBond"`
+		ChallengeBond       *ProtocolDaoUintSetting                    `json:"challengeBond"`
+		ChallengePeriod     *ProtocolDaoCompoundSetting[time.Duration] `json:"challengePeriod"`
+		ProposalQuorum      *ProtocolDaoCompoundSetting[float64]       `json:"proposalQuorum"`
+		ProposalVetoQuorum  *ProtocolDaoCompoundSetting[float64]       `json:"proposalVetoQuorum"`
+		PropoaslMaxBlockAge *ProtocolDaoCompoundSetting[uint64]        `json:"propoaslMaxBlockAge"`
+	} `json:"proposals"`
 
 	Node struct {
 		IsRegistrationEnabled              *ProtocolDaoBoolSetting              `json:"isRegistrationEnabled"`
@@ -88,6 +102,7 @@ type ProtocolDaoSettings struct {
 	dps_minipool  *core.Contract
 	dps_network   *core.Contract
 	dps_node      *core.Contract
+	dps_proposals *core.Contract
 	dps_rewards   *core.Contract
 }
 
@@ -105,6 +120,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 		rocketpool.ContractName_RocketDAOProtocolSettingsMinipool,
 		rocketpool.ContractName_RocketDAOProtocolSettingsNetwork,
 		rocketpool.ContractName_RocketDAOProtocolSettingsNode,
+		rocketpool.ContractName_RocketDAOProtocolSettingsProposals,
 		rocketpool.ContractName_RocketDAOProtocolSettingsRewards,
 	}...)
 	if err != nil {
@@ -121,7 +137,8 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 		dps_minipool:  contracts[3],
 		dps_network:   contracts[4],
 		dps_node:      contracts[5],
-		dps_rewards:   contracts[6],
+		dps_proposals: contracts[6],
+		dps_rewards:   contracts[7],
 	}
 
 	// Auction
@@ -167,6 +184,8 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.maximum")
 	s.Network.NodeFeeDemandRange = newUintSetting(s.dps_network, pdaoMgr, "network.node.fee.demand.range")
 	s.Network.TargetRethCollateralRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.reth.collateral.target")
+	s.Network.NetworkPenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.threshold")
+	s.Network.NetworkPenaltyPerRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.per.rate")
 	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.rewards.enabled")
 
 	// Node
@@ -176,6 +195,17 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Node.AreVacantMinipoolsEnabled = newBoolSetting(s.dps_node, pdaoMgr, "node.vacant.minipools.enabled")
 	s.Node.MinimumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, "node.per.minipool.stake.minimum")
 	s.Node.MaximumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, "node.per.minipool.stake.maximum")
+
+	// Proposals
+	s.Proposals.VoteTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.time")
+	s.Proposals.VoteDelayTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.delay.time")
+	s.Proposals.ExecuteTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.execute.time")
+	s.Proposals.ProposalBond = newUintSetting(s.dps_proposals, pdaoMgr, "proposal.bond")
+	s.Proposals.ChallengeBond = newUintSetting(s.dps_proposals, pdaoMgr, "proposal.challenge.bond")
+	s.Proposals.ChallengePeriod = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.challenge.period")
+	s.Proposals.ProposalQuorum = newCompoundSetting[float64](s.dps_proposals, pdaoMgr, "proposal.quorum")
+	s.Proposals.ProposalVetoQuorum = newCompoundSetting[float64](s.dps_proposals, pdaoMgr, "proposal.veto.quorum")
+	s.Proposals.PropoaslMaxBlockAge = newCompoundSetting[uint64](s.dps_proposals, pdaoMgr, "proposal.max.block.age")
 
 	// Rewards
 	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, "rpl.rewards.claim.period.time")
