@@ -86,11 +86,20 @@ type Node struct {
 	// The number of minipools owned by a node that are validating
 	ValidatingMinipoolCount *core.FormattedUint256Field[uint64]
 
-	// The node's withdrawal address
-	WithdrawalAddress *core.SimpleField[common.Address]
+	// The node's primary withdrawal address
+	PrimaryWithdrawalAddress *core.SimpleField[common.Address]
 
-	// The node's pending withdrawal address
-	PendingWithdrawalAddress *core.SimpleField[common.Address]
+	// The node's pending primary withdrawal address
+	PendingPrimaryWithdrawalAddress *core.SimpleField[common.Address]
+
+	// The node's RPL withdrawal address
+	IsRplWithdrawalAddressSet *core.SimpleField[bool]
+
+	// The node's RPL withdrawal address
+	RplWithdrawalAddress *core.SimpleField[common.Address]
+
+	// The node's pending RPL withdrawal address
+	PendingRplWithdrawalAddress *core.SimpleField[common.Address]
 
 	// The amount of RPL locked as part of active PDAO proposals or challenges
 	RplLocked *core.SimpleField[*big.Int]
@@ -170,6 +179,9 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		AverageFee:                       core.NewFormattedUint256Field[float64](nodeManager, "getAverageNodeFee", address),
 		SmoothingPoolRegistrationState:   core.NewSimpleField[bool](nodeManager, "getSmoothingPoolRegistrationState", address),
 		SmoothingPoolRegistrationChanged: core.NewFormattedUint256Field[time.Time](nodeManager, "getSmoothingPoolRegistrationChanged", address),
+		IsRplWithdrawalAddressSet:        core.NewSimpleField[bool](nodeManager, "getNodeRPLWithdrawalAddressIsSet", address),
+		RplWithdrawalAddress:             core.NewSimpleField[common.Address](nodeManager, "getNodeRPLWithdrawalAddress", address),
+		PendingRplWithdrawalAddress:      core.NewSimpleField[common.Address](nodeManager, "getNodePendingRPLWithdrawalAddress", address),
 
 		// NodeStaking
 		RplStake:          core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLStake", address),
@@ -188,8 +200,8 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		ValidatingMinipoolCount: core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeValidatingMinipoolCount", address),
 
 		// Storage
-		WithdrawalAddress:        core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodeWithdrawalAddress", address),
-		PendingWithdrawalAddress: core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodePendingWithdrawalAddress", address),
+		PrimaryWithdrawalAddress:        core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodeWithdrawalAddress", address),
+		PendingPrimaryWithdrawalAddress: core.NewSimpleField[common.Address](rp.Storage.Contract, "getNodePendingWithdrawalAddress", address),
 
 		rp:            rp,
 		distFactory:   distFactory,
@@ -295,15 +307,25 @@ func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.T
 	return core.NewTransactionInfo(c.nodeMgr, "withdrawRPL", opts, rplAmount)
 }
 
+// Get info for setting the RPL withdrawal address
+func (c *Node) SetRplWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeMgr, "setRPLWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
+}
+
+// Get info for confirming the RPL withdrawal address
+func (c *Node) ConfirmRplWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeMgr, "confirmRPLWithdrawalAddress", opts, c.Address)
+}
+
 // === Storage ===
 
-// Get info for setting the node's withdrawal address
-func (c *Node) SetWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+// Get info for setting the node's primary withdrawal address
+func (c *Node) SetPrimaryWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.storage, "setWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
 }
 
-// Get info for confirming the node's withdrawal address
-func (c *Node) ConfirmWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+// Get info for confirming the node's primary withdrawal address
+func (c *Node) ConfirmPrimaryWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.storage, "confirmWithdrawalAddress", opts, c.Address)
 }
 
