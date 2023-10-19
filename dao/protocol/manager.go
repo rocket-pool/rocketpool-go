@@ -1,11 +1,13 @@
 package protocol
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -30,10 +32,11 @@ type ProtocolDaoManager struct {
 	LastRewardsPercentagesUpdate *core.FormattedUint256Field[time.Time]
 
 	// === Internal fields ===
-	rp   *rocketpool.RocketPool
-	dp   *core.Contract
-	dpp  *core.Contract
-	dpsr *core.Contract
+	rp    *rocketpool.RocketPool
+	dp    *core.Contract
+	dpp   *core.Contract
+	dpsr  *core.Contract
+	dprop *core.Contract
 }
 
 // Rewards claimer percents
@@ -62,14 +65,19 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol settings rewards contract: %w", err)
 	}
+	dprop, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
+	if err != nil {
+		return nil, fmt.Errorf("error getting protocol DAO proposal contract: %w", err)
+	}
 
 	pdaoMgr := &ProtocolDaoManager{
 		LastRewardsPercentagesUpdate: core.NewFormattedUint256Field[time.Time](dpsr, "getRewardsClaimersTimeUpdated"),
 
-		rp:   rp,
-		dp:   dp,
-		dpp:  dpp,
-		dpsr: dpsr,
+		rp:    rp,
+		dp:    dp,
+		dpp:   dpp,
+		dpsr:  dpsr,
+		dprop: dprop,
 	}
 	settings, err := newProtocolDaoSettings(pdaoMgr)
 	if err != nil {
@@ -206,12 +214,28 @@ func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber
 	if err != nil {
 		return nil, fmt.Errorf("error encoding payload: %w", err)
 	}
+	err = c.simulateProposalExecution(payload)
+	if err != nil {
+		return nil, fmt.Errorf("error simulating proposal execution: %w", err)
+	}
 	return core.NewTransactionInfo(c.dpp, "propose", opts, message, payload, blockNumber, treeNodes)
 }
 
 /// =============
 /// === Utils ===
 /// =============
+
+// Simulate a proposal's execution to verify it won't revert
+func (c *ProtocolDaoManager) simulateProposalExecution(payload []byte) error {
+	_, err := c.rp.Client.EstimateGas(context.Background(), ethereum.CallMsg{
+		From:     *c.dprop.Address,
+		To:       c.dpp.Address,
+		GasPrice: big.NewInt(0),
+		Value:    nil,
+		Data:     payload,
+	})
+	return err
+}
 
 // Get the ABI encoding of multiple values for a ProposeSettingMulti call
 func abiEncodeMultiValues(settingTypes []types.ProposalSettingType, values []any) ([][]byte, error) {
