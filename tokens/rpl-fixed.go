@@ -57,7 +57,7 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 // === Core ERC-20 functions ===
 
 // Get the fixed-supply RPL balance of an address
-func (c *TokenRplFixedSupply) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+func (c *TokenRplFixedSupply) BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
 	core.AddCall(mc, c.fsrpl, balance_Out, "balanceOf", address)
 }
 

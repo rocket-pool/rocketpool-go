@@ -65,7 +65,7 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 // === Core ERC-20 functions ===
 
 // Get the rETH balance of an address
-func (c *TokenReth) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+func (c *TokenReth) BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
 	core.AddCall(mc, c.reth, balance_Out, "balanceOf", address)
 }
 

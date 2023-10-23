@@ -1,4 +1,4 @@
-package utils
+package tokens
 
 import (
 	"fmt"
@@ -99,6 +99,15 @@ const (
 
 // Global container for the parsed ABI above
 var erc20Abi *abi.ABI
+
+// ==================
+// === Interfaces ===
+// ==================
+
+type IErc20Token interface {
+	BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address)
+	Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+}
 
 // ===============
 // === Structs ===

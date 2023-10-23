@@ -62,7 +62,7 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 // === Core ERC-20 functions ===
 
 // Get the RPL balance of an address
-func (c *TokenRpl) GetBalance(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
+func (c *TokenRpl) BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address) {
 	core.AddCall(mc, c.rpl, balance_Out, "balanceOf", address)
 }
 
