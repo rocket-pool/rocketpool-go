@@ -104,8 +104,12 @@ var erc20Abi *abi.ABI
 // === Interfaces ===
 // ==================
 
+// Binding for ERC20 tokens
 type IErc20Token interface {
+	// The token balance of the given address
 	BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address)
+
+	// Transfer tokens to a different address
 	Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 }
 
