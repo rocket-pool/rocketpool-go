@@ -494,6 +494,15 @@ func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.Transact
 // NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
 // Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
 func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*core.TransactionSubmission, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+	if opts.Nonce == nil {
+		// Get the latest nonce and use that as the nonce for the first TX
+		nonce, err := rp.Client.NonceAt(context.Background(), opts.From, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error getting latest nonce for node: %w", err)
+		}
+		opts.Nonce = big.NewInt(0).SetUint64(nonce)
+	}
+
 	txs := make([]*types.Transaction, len(txSubmissions))
 	for i, txSubmission := range txSubmissions {
 		txInfo := txSubmission.TxInfo
@@ -503,10 +512,9 @@ func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*core.Transaction
 			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
 		}
 		txs[i] = tx
-		if opts.Nonce != nil {
-			// Increment the nonce for the next TX if it's explicitly set
-			opts.Nonce.Add(opts.Nonce, common.Big1)
-		}
+
+		// Increment the nonce for the next TX
+		opts.Nonce.Add(opts.Nonce, common.Big1)
 	}
 	return txs, nil
 }
