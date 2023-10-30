@@ -490,13 +490,14 @@ func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.Transact
 
 // Signs and submits a bundle of transactions to the network that are all sent from the same address.
 // The values for each TX will be in each TX info; the value specified in the opts argument is not used.
-// NOTE: this assumes the bundle is meant to be submitted sequentially.
-// If you want to specify a nonce for the first transaction, add it to the opts argument.
-// Each subsequent transaction will then use the next nonce.
-func (rp *RocketPool) BatchExecuteTransactions(txInfos []*core.TransactionInfo, opts *bind.TransactOpts) ([]*types.Transaction, error) {
-	txs := make([]*types.Transaction, len(txInfos))
-	one := big.NewInt(1)
-	for i, txInfo := range txInfos {
+// The GasFeeCap and GasTipCap from opts will be used for all transactions.
+// NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
+// Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
+func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*core.TransactionSubmission, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+	txs := make([]*types.Transaction, len(txSubmissions))
+	for i, txSubmission := range txSubmissions {
+		txInfo := txSubmission.TxInfo
+		opts.GasLimit = txSubmission.GasLimit
 		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
 		if err != nil {
 			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
@@ -504,58 +505,60 @@ func (rp *RocketPool) BatchExecuteTransactions(txInfos []*core.TransactionInfo, 
 		txs[i] = tx
 		if opts.Nonce != nil {
 			// Increment the nonce for the next TX if it's explicitly set
-			opts.Nonce.Add(opts.Nonce, one)
+			opts.Nonce.Add(opts.Nonce, common.Big1)
 		}
 	}
 	return txs, nil
 }
 
 // Creates, signs, and submits a collection of transactions to the network that are all sent from the same address.
+// The values for each TX will be in each TX info; the value specified in the opts argument is not used.
+// The GasFeeCap and GasTipCap from opts will be used for all transactions.
 // Use this if you don't care about the estimated gas costs and just want to run them as quickly as possible.
 // If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
-// NOTE: this assumes the bundle is meant to be submitted sequentially.
-// If you want to specify a nonce for the first transaction, add it to the opts argument.
-// Each subsequent transaction will then use the next nonce.
-func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core.TransactionInfo, error), failOnSimErrors bool, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+// NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
+// Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
+func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core.TransactionSubmission, error), failOnSimErrors bool, opts *bind.TransactOpts) ([]*types.Transaction, error) {
 	// Create the TXs
-	txInfos := make([]*core.TransactionInfo, len(creators))
+	txSubmissions := make([]*core.TransactionSubmission, len(creators))
 	for i, creator := range creators {
-		txInfo, err := creator()
+		txSubmission, err := creator()
 		if err != nil {
-			return nil, fmt.Errorf("error creating TX info for TX %d: %w", i, err)
+			return nil, fmt.Errorf("error creating TX submission for TX %d: %w", i, err)
 		}
-		if failOnSimErrors && txInfo.SimError != "" {
-			return nil, fmt.Errorf("error simulating TX %d: %s", i, txInfo.SimError)
+		if failOnSimErrors && txSubmission.TxInfo.SimError != "" {
+			return nil, fmt.Errorf("error simulating TX %d: %s", i, txSubmission.TxInfo.SimError)
 		}
-		txInfos[i] = txInfo
+		txSubmissions[i] = txSubmission
 	}
 
 	// Run the TXs
-	return rp.BatchExecuteTransactions(txInfos, opts)
+	return rp.BatchExecuteTransactions(txSubmissions, opts)
 }
 
-// Creates, signs, and submits a collection of transactions to the network that are all sent from the same address.
+// Creates, signs, and submits a collection of transactions to the network that are all sent from the same address, then waits for them all to complete.
+// The values for each TX will be in each TX info; the value specified in the opts argument is not used.
+// The GasFeeCap and GasTipCap from opts will be used for all transactions.
 // Use this if you don't care about the estimated gas costs and just want to run them as quickly as possible.
 // If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
-// NOTE: this assumes the bundle is meant to be submitted sequentially.
-// If you want to specify a nonce for the first transaction, add it to the opts argument.
-// Each subsequent transaction will then use the next nonce.
-func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*core.TransactionInfo, error), failOnSimErrors bool, opts *bind.TransactOpts) error {
+// NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
+// Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
+func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*core.TransactionSubmission, error), failOnSimErrors bool, opts *bind.TransactOpts) error {
 	// Create the TXs
-	txInfos := make([]*core.TransactionInfo, len(creators))
+	txSubmissions := make([]*core.TransactionSubmission, len(creators))
 	for i, creator := range creators {
-		txInfo, err := creator()
+		txSubmission, err := creator()
 		if err != nil {
-			return fmt.Errorf("error creating TX info for TX %d: %w", i, err)
+			return fmt.Errorf("error creating TX submission for TX %d: %w", i, err)
 		}
-		if failOnSimErrors && txInfo.SimError != "" {
-			return fmt.Errorf("error simulating TX %d: %s", i, txInfo.SimError)
+		if failOnSimErrors && txSubmission.TxInfo.SimError != "" {
+			return fmt.Errorf("error simulating TX %d: %s", i, txSubmission.TxInfo.SimError)
 		}
-		txInfos[i] = txInfo
+		txSubmissions[i] = txSubmission
 	}
 
 	// Run the TXs
-	txs, err := rp.BatchExecuteTransactions(txInfos, opts)
+	txs, err := rp.BatchExecuteTransactions(txSubmissions, opts)
 	if err != nil {
 		return fmt.Errorf("error running TXs: %w", err)
 	}

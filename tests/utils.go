@@ -79,12 +79,12 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	rplBond := oSettings.Member.RplBond.Get()
 
 	// Bootstrap it and mint RPL for it
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor)
+	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionSubmission, error){
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor))
 		},
-		func() (*core.TransactionInfo, error) {
-			return MintLegacyRpl(rp, owner, nodeAccount, rplBond)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(MintLegacyRpl(rp, owner, nodeAccount, rplBond))
 		},
 	}, true, owner.Transactor)
 	if err != nil {
@@ -92,18 +92,18 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	}
 
 	// Swap RPL and Join the oDAO
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return fsrpl.Approve(*rplContract.Address, rplBond, nodeAccount.Transactor)
+	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionSubmission, error){
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(fsrpl.Approve(*rplContract.Address, rplBond, nodeAccount.Transactor))
 		},
-		func() (*core.TransactionInfo, error) {
-			return rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor))
 		},
-		func() (*core.TransactionInfo, error) {
-			return rpl.Approve(*oma.Address, rplBond, nodeAccount.Transactor)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(rpl.Approve(*oma.Address, rplBond, nodeAccount.Transactor))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Join(nodeAccount.Transactor)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Join(nodeAccount.Transactor))
 		},
 	}, false, nodeAccount.Transactor)
 	if err != nil {

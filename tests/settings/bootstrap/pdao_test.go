@@ -470,150 +470,150 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	t.Log("Updated details all differ from original details")
 
 	// Set the new settings
-	txInfos := []*core.TransactionInfo{}
-	bootstrappers := []func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.IsCreateLotEnabled.Bootstrap(newPdaoSettings.Auction.IsCreateLotEnabled.Get(), opts)
+	txSubmissions := []*core.TransactionSubmission{}
+	bootstrappers := []func() (*core.TransactionSubmission, error){
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.IsCreateLotEnabled.Bootstrap(newPdaoSettings.Auction.IsCreateLotEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.IsBidOnLotEnabled.Bootstrap(newPdaoSettings.Auction.IsBidOnLotEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.IsBidOnLotEnabled.Bootstrap(newPdaoSettings.Auction.IsBidOnLotEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotMinimumEthValue.Bootstrap(newPdaoSettings.Auction.LotMinimumEthValue.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.LotMinimumEthValue.Bootstrap(newPdaoSettings.Auction.LotMinimumEthValue.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotMaximumEthValue.Bootstrap(newPdaoSettings.Auction.LotMaximumEthValue.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.LotMaximumEthValue.Bootstrap(newPdaoSettings.Auction.LotMaximumEthValue.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotDuration.Bootstrap(newPdaoSettings.Auction.LotDuration.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.LotDuration.Bootstrap(newPdaoSettings.Auction.LotDuration.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotStartingPriceRatio.Bootstrap(newPdaoSettings.Auction.LotStartingPriceRatio.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.LotStartingPriceRatio.Bootstrap(newPdaoSettings.Auction.LotStartingPriceRatio.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Auction.LotReservePriceRatio.Bootstrap(newPdaoSettings.Auction.LotReservePriceRatio.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Auction.LotReservePriceRatio.Bootstrap(newPdaoSettings.Auction.LotReservePriceRatio.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.IsDepositingEnabled.Bootstrap(newPdaoSettings.Deposit.IsDepositingEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.IsDepositingEnabled.Bootstrap(newPdaoSettings.Deposit.IsDepositingEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.AreDepositAssignmentsEnabled.Bootstrap(newPdaoSettings.Deposit.AreDepositAssignmentsEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.AreDepositAssignmentsEnabled.Bootstrap(newPdaoSettings.Deposit.AreDepositAssignmentsEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MinimumDeposit.Bootstrap(newPdaoSettings.Deposit.MinimumDeposit.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.MinimumDeposit.Bootstrap(newPdaoSettings.Deposit.MinimumDeposit.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MaximumDepositPoolSize.Bootstrap(newPdaoSettings.Deposit.MaximumDepositPoolSize.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.MaximumDepositPoolSize.Bootstrap(newPdaoSettings.Deposit.MaximumDepositPoolSize.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MaximumAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumAssignmentsPerDeposit.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.MaximumAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumAssignmentsPerDeposit.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Bootstrap(newPdaoSettings.Deposit.MaximumSocialisedAssignmentsPerDeposit.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Deposit.DepositFee.Bootstrap(newPdaoSettings.Deposit.DepositFee.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Deposit.DepositFee.Bootstrap(newPdaoSettings.Deposit.DepositFee.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Inflation.IntervalRate.Bootstrap(newPdaoSettings.Inflation.IntervalRate.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Inflation.IntervalRate.Bootstrap(newPdaoSettings.Inflation.IntervalRate.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Inflation.StartTime.Bootstrap(newPdaoSettings.Inflation.StartTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Inflation.StartTime.Bootstrap(newPdaoSettings.Inflation.StartTime.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.IsSubmitWithdrawableEnabled.Bootstrap(newPdaoSettings.Minipool.IsSubmitWithdrawableEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Minipool.IsSubmitWithdrawableEnabled.Bootstrap(newPdaoSettings.Minipool.IsSubmitWithdrawableEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.IsBondReductionEnabled.Bootstrap(newPdaoSettings.Minipool.IsBondReductionEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Minipool.IsBondReductionEnabled.Bootstrap(newPdaoSettings.Minipool.IsBondReductionEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.LaunchTimeout.Bootstrap(newPdaoSettings.Minipool.LaunchTimeout.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Minipool.LaunchTimeout.Bootstrap(newPdaoSettings.Minipool.LaunchTimeout.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.MaximumCount.Bootstrap(newPdaoSettings.Minipool.MaximumCount.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Minipool.MaximumCount.Bootstrap(newPdaoSettings.Minipool.MaximumCount.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.UserDistributeWindowStart.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowStart.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Minipool.UserDistributeWindowStart.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowStart.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Minipool.UserDistributeWindowLength.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowLength.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Minipool.UserDistributeWindowLength.Bootstrap(newPdaoSettings.Minipool.UserDistributeWindowLength.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.OracleDaoConsensusThreshold.Bootstrap(newPdaoSettings.Network.OracleDaoConsensusThreshold.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.OracleDaoConsensusThreshold.Bootstrap(newPdaoSettings.Network.OracleDaoConsensusThreshold.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.IsSubmitBalancesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitBalancesEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.IsSubmitBalancesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitBalancesEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.IsSubmitPricesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitPricesEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.IsSubmitPricesEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitPricesEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.SubmitPricesFrequency.Bootstrap(newPdaoSettings.Network.SubmitPricesFrequency.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.MinimumNodeFee.Bootstrap(newPdaoSettings.Network.MinimumNodeFee.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.MinimumNodeFee.Bootstrap(newPdaoSettings.Network.MinimumNodeFee.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.TargetNodeFee.Bootstrap(newPdaoSettings.Network.TargetNodeFee.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.TargetNodeFee.Bootstrap(newPdaoSettings.Network.TargetNodeFee.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.MaximumNodeFee.Bootstrap(newPdaoSettings.Network.MaximumNodeFee.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.MaximumNodeFee.Bootstrap(newPdaoSettings.Network.MaximumNodeFee.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.NodeFeeDemandRange.Bootstrap(newPdaoSettings.Network.NodeFeeDemandRange.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.NodeFeeDemandRange.Bootstrap(newPdaoSettings.Network.NodeFeeDemandRange.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.TargetRethCollateralRate.Bootstrap(newPdaoSettings.Network.TargetRethCollateralRate.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.TargetRethCollateralRate.Bootstrap(newPdaoSettings.Network.TargetRethCollateralRate.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.NodePenaltyThreshold.Bootstrap(newPdaoSettings.Network.NodePenaltyThreshold.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.NodePenaltyThreshold.Bootstrap(newPdaoSettings.Network.NodePenaltyThreshold.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(newPdaoSettings.Network.PerPenaltyRate.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.PerPenaltyRate.Bootstrap(newPdaoSettings.Network.PerPenaltyRate.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Network.IsSubmitRewardsEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitRewardsEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Network.IsSubmitRewardsEnabled.Bootstrap(newPdaoSettings.Network.IsSubmitRewardsEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsRegistrationEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsRegistrationEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.IsSmoothingPoolRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.IsSmoothingPoolRegistrationEnabled.Bootstrap(newPdaoSettings.Node.IsSmoothingPoolRegistrationEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.IsDepositingEnabled.Bootstrap(newPdaoSettings.Node.IsDepositingEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.IsDepositingEnabled.Bootstrap(newPdaoSettings.Node.IsDepositingEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.AreVacantMinipoolsEnabled.Bootstrap(newPdaoSettings.Node.AreVacantMinipoolsEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.AreVacantMinipoolsEnabled.Bootstrap(newPdaoSettings.Node.AreVacantMinipoolsEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.MinimumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MinimumPerMinipoolStake.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.MinimumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MinimumPerMinipoolStake.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MaximumPerMinipoolStake.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MaximumPerMinipoolStake.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(newPdaoSettings.Rewards.IntervalTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(newPdaoSettings.Rewards.IntervalTime.Raw(), opts))
 		},
 	}
 	for i, bootstrapper := range bootstrappers {
-		txInfo, err := bootstrapper()
+		txSubmission, err := bootstrapper()
 		if err != nil {
 			t.Fatalf("error running boostrapper %d: %s", i, err.Error())
 			continue
 		}
-		if txInfo.SimError != "" {
-			t.Fatalf("error simming boostrapper %d: %s", i, txInfo.SimError)
+		if txSubmission.TxInfo.SimError != "" {
+			t.Fatalf("error simming boostrapper %d: %s", i, txSubmission.TxInfo.SimError)
 		}
-		txInfos = append(txInfos, txInfo)
+		txSubmissions = append(txSubmissions, txSubmission)
 	}
 	t.Log("Bootstrappers constructed")
 
 	// Run the transactions
-	txs, err := rp.BatchExecuteTransactions(txInfos, opts)
+	txs, err := rp.BatchExecuteTransactions(txSubmissions, opts)
 	if err != nil {
 		t.Fatalf("error submitting transactions: %s", err.Error())
 	}

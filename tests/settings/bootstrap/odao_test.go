@@ -219,75 +219,75 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 	t.Log("Updated details all differ from original details")
 
 	// Set the new settings
-	txInfos := []*core.TransactionInfo{}
-	bootstrappers := []func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.ChallengeCooldown.Bootstrap(newOdaoSettings.Member.ChallengeCooldown.Raw(), opts)
+	txSubmissions := []*core.TransactionSubmission{}
+	bootstrappers := []func() (*core.TransactionSubmission, error){
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeCooldown.Bootstrap(newOdaoSettings.Member.ChallengeCooldown.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.ChallengeCost.Bootstrap(newOdaoSettings.Member.ChallengeCost.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeCost.Bootstrap(newOdaoSettings.Member.ChallengeCost.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.ChallengeWindow.Bootstrap(newOdaoSettings.Member.ChallengeWindow.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeWindow.Bootstrap(newOdaoSettings.Member.ChallengeWindow.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.Quorum.Bootstrap(newOdaoSettings.Member.Quorum.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.Quorum.Bootstrap(newOdaoSettings.Member.Quorum.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Member.RplBond.Bootstrap(newOdaoSettings.Member.RplBond.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.RplBond.Bootstrap(newOdaoSettings.Member.RplBond.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.Bootstrap(newOdaoSettings.Minipool.BondReductionCancellationQuorum.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.Bootstrap(newOdaoSettings.Minipool.BondReductionCancellationQuorum.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.BondReductionWindowLength.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowLength.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionWindowLength.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowLength.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.BondReductionWindowStart.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowStart.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionWindowStart.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowStart.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.IsScrubPenaltyEnabled.Bootstrap(newOdaoSettings.Minipool.IsScrubPenaltyEnabled.Get(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.IsScrubPenaltyEnabled.Bootstrap(newOdaoSettings.Minipool.IsScrubPenaltyEnabled.Get(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.PromotionScrubPeriod.Bootstrap(newOdaoSettings.Minipool.PromotionScrubPeriod.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.PromotionScrubPeriod.Bootstrap(newOdaoSettings.Minipool.PromotionScrubPeriod.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.ScrubPeriod.Bootstrap(newOdaoSettings.Minipool.ScrubPeriod.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.ScrubPeriod.Bootstrap(newOdaoSettings.Minipool.ScrubPeriod.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Minipool.ScrubQuorum.Bootstrap(newOdaoSettings.Minipool.ScrubQuorum.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.ScrubQuorum.Bootstrap(newOdaoSettings.Minipool.ScrubQuorum.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Proposal.ActionTime.Bootstrap(newOdaoSettings.Proposal.ActionTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.ActionTime.Bootstrap(newOdaoSettings.Proposal.ActionTime.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Proposal.CooldownTime.Bootstrap(newOdaoSettings.Proposal.CooldownTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.CooldownTime.Bootstrap(newOdaoSettings.Proposal.CooldownTime.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Proposal.ExecuteTime.Bootstrap(newOdaoSettings.Proposal.ExecuteTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.ExecuteTime.Bootstrap(newOdaoSettings.Proposal.ExecuteTime.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Proposal.VoteDelayTime.Bootstrap(newOdaoSettings.Proposal.VoteDelayTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.VoteDelayTime.Bootstrap(newOdaoSettings.Proposal.VoteDelayTime.Raw(), opts))
 		},
-		func() (*core.TransactionInfo, error) {
-			return odaoMgr.Settings.Proposal.VoteTime.Bootstrap(newOdaoSettings.Proposal.VoteTime.Raw(), opts)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.VoteTime.Bootstrap(newOdaoSettings.Proposal.VoteTime.Raw(), opts))
 		},
 	}
 	for i, bootstrapper := range bootstrappers {
-		txInfo, err := bootstrapper()
+		txSubmission, err := bootstrapper()
 		if err != nil {
 			t.Fatalf("error running boostrapper %d: %s", i, err.Error())
 			continue
 		}
-		if txInfo.SimError != "" {
-			t.Fatalf("error simming boostrapper %d: %s", i, txInfo.SimError)
+		if txSubmission.TxInfo.SimError != "" {
+			t.Fatalf("error simming boostrapper %d: %s", i, txSubmission.TxInfo.SimError)
 		}
-		txInfos = append(txInfos, txInfo)
+		txSubmissions = append(txSubmissions, txSubmission)
 	}
 	t.Log("Bootstrappers constructed")
 
 	// Run the transactions
-	txs, err := rp.BatchExecuteTransactions(txInfos, opts)
+	txs, err := rp.BatchExecuteTransactions(txSubmissions, opts)
 	if err != nil {
 		t.Fatalf("error submitting transactions: %s", err.Error())
 	}

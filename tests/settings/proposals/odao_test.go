@@ -277,12 +277,12 @@ func testOdaoParameterProposal(t *testing.T, setter func(*oracle.OracleDaoSettin
 	t.Log("Voted yes from node 1")
 
 	// Vote yay from node 2 and execute it
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionInfo, error){
-		func() (*core.TransactionInfo, error) {
-			return prop.VoteOn(true, odao2.Transactor)
+	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionSubmission, error){
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(prop.VoteOn(true, odao2.Transactor))
 		},
-		func() (*core.TransactionInfo, error) {
-			return prop.Execute(odao2.Transactor)
+		func() (*core.TransactionSubmission, error) {
+			return core.CreateTxSubmissionFromInfo(prop.Execute(odao2.Transactor))
 		},
 	}, false, odao2.Transactor)
 	if err != nil {

@@ -9,10 +9,8 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 )
 
 const (
@@ -96,31 +94,6 @@ func NewTransactionInfoRaw(ec ExecutionClient, to common.Address, data []byte, o
 	}
 
 	return txInfo, nil
-}
-
-// Create a transaction from serialized info, signs it, and submits it to the network if requested in opts.
-// Note the value in opts is not used; set it in the value argument instead.
-func ExecuteTransaction(client ExecutionClient, data []byte, to common.Address, value *big.Int, opts *bind.TransactOpts) (*types.Transaction, error) {
-	// Create a "dummy" contract for the Geth API with no ABI since we don't need it for this
-	contract := bind.NewBoundContract(to, abi.ABI{}, client, client, client)
-
-	newOpts := &bind.TransactOpts{
-		// Copy the original fields
-		From:      opts.From,
-		Nonce:     opts.Nonce,
-		Signer:    opts.Signer,
-		GasPrice:  opts.GasPrice,
-		GasFeeCap: opts.GasFeeCap,
-		GasTipCap: opts.GasTipCap,
-		GasLimit:  opts.GasLimit,
-		Context:   opts.Context,
-		NoSend:    opts.NoSend,
-
-		// Overwrite the value
-		Value: value,
-	}
-
-	return contract.RawTransact(newOpts, data)
 }
 
 // Estimate the expected and safe gas limits for a contract transaction
