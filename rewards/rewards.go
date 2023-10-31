@@ -117,13 +117,13 @@ func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 // =============
 
 // Check whether or not the given address has submitted for the given rewards interval
-func (c *RewardsPool) GetTrustedNodeSubmitted(mc *batch.MultiCaller, nodeAddress common.Address, rewardsIndex uint64, hasSubmitted_Out *bool, opts *bind.CallOpts) {
+func (c *RewardsPool) GetTrustedNodeSubmitted(mc *batch.MultiCaller, hasSubmitted_Out *bool, nodeAddress common.Address, rewardsIndex uint64) {
 	indexBig := big.NewInt(0).SetUint64(rewardsIndex)
 	core.AddCall(mc, c.rewardsPool, hasSubmitted_Out, "getTrustedNodeSubmitted", nodeAddress, indexBig)
 }
 
 // Check whether or not the given address has submitted specific rewards info
-func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *batch.MultiCaller, nodeAddress common.Address, submission RewardSubmission, hasSubmitted_Out *bool, opts *bind.CallOpts) error {
+func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *batch.MultiCaller, hasSubmitted_Out *bool, nodeAddress common.Address, submission RewardSubmission) error {
 	// NOTE: this doesn't have a view yet so we have to construct it manually, and RLP encode it
 	stringTy, _ := abi.NewType("string", "string", nil)
 	addressTy, _ := abi.NewType("address", "address", nil)
