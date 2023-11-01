@@ -168,7 +168,7 @@ func (c *NetworkManager) SubmitPrices(block uint64, rplPrice *big.Int, opts *bin
 func (c *NetworkManager) GetBalancesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
 	addressFilter := []common.Address{*c.networkBalances.Address}
-	topicFilter := [][]common.Hash{{c.networkBalances.ABI.Events["BalancesSubmitted"].ID}, {nodeAddress.Hash()}}
+	topicFilter := [][]common.Hash{{c.networkBalances.ABI.Events["BalancesSubmitted"].ID}, {common.BytesToHash(nodeAddress[:])}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)
@@ -213,7 +213,7 @@ func (c *NetworkManager) GetLatestBalancesSubmissions(fromBlock uint64, interval
 func (c *NetworkManager) GetPricesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
 	addressFilter := []common.Address{*c.networkPrices.Address}
-	topicFilter := [][]common.Hash{{c.networkPrices.ABI.Events["PricesSubmitted"].ID}, {nodeAddress.Hash()}}
+	topicFilter := [][]common.Hash{{c.networkPrices.ABI.Events["PricesSubmitted"].ID}, {common.BytesToHash(nodeAddress[:])}}
 
 	// Get the event logs
 	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(fromBlock)), nil, nil)
