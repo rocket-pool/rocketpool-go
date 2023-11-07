@@ -145,15 +145,6 @@ func (c *OracleDaoManager) ProposeMemberLeave(message string, memberAddress comm
 	return c.submitProposal(opts, message, "proposalLeave", memberAddress)
 }
 
-// Get info for proposing to replace the address of an Oracle DAO member
-func (c *OracleDaoManager) ProposeReplaceMember(message string, memberAddress common.Address, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	newMemberUrl = strings.Sanitize(newMemberUrl)
-	if message == "" {
-		message = fmt.Sprintf("replace %s with %s (%s)", memberAddress.Hex(), newMemberId, newMemberAddress.Hex())
-	}
-	return c.submitProposal(opts, message, "proposalReplace", memberAddress, newMemberId, newMemberUrl, newMemberAddress)
-}
-
 // Get info for proposing to kick a member from the Oracle DAO
 func (c *OracleDaoManager) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {

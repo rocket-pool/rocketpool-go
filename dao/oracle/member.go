@@ -46,9 +46,6 @@ type OracleDaoMember struct {
 	// The member's RPL bond amount
 	RplBondAmount *core.SimpleField[*big.Int]
 
-	// The member's replacement address, if a replace proposal is pending
-	ReplacementAddress *core.SimpleField[common.Address]
-
 	// True if the member has an active challenge raised against it
 	IsChallenged *core.SimpleField[bool]
 
@@ -69,18 +66,16 @@ func NewOracleDaoMember(rp *rocketpool.RocketPool, address common.Address) (*Ora
 	}
 
 	return &OracleDaoMember{
-		Address:            address,
-		Exists:             core.NewSimpleField[bool](dnt, "getMemberIsValid", address),
-		ID:                 core.NewSimpleField[string](dnt, "getMemberID", address),
-		Url:                core.NewSimpleField[string](dnt, "getMemberUrl", address),
-		InvitedTime:        core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "invited", address),
-		JoinedTime:         core.NewFormattedUint256Field[time.Time](dnt, "getMemberJoinedTime", address),
-		ReplacedTime:       core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "replace", address),
-		LeftTime:           core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "leave", address),
-		LastProposalTime:   core.NewFormattedUint256Field[time.Time](dnt, "getMemberLastProposalTime", address),
-		RplBondAmount:      core.NewSimpleField[*big.Int](dnt, "getMemberRPLBondAmount", address),
-		ReplacementAddress: core.NewSimpleField[common.Address](dnt, "getMemberReplacedAddress", "new", address),
-		IsChallenged:       core.NewSimpleField[bool](dnt, "getMemberIsChallenged", address),
+		Address:          address,
+		Exists:           core.NewSimpleField[bool](dnt, "getMemberIsValid", address),
+		ID:               core.NewSimpleField[string](dnt, "getMemberID", address),
+		Url:              core.NewSimpleField[string](dnt, "getMemberUrl", address),
+		InvitedTime:      core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "invited", address),
+		JoinedTime:       core.NewFormattedUint256Field[time.Time](dnt, "getMemberJoinedTime", address),
+		LeftTime:         core.NewFormattedUint256Field[time.Time](dnt, "getMemberProposalExecutedTime", "leave", address),
+		LastProposalTime: core.NewFormattedUint256Field[time.Time](dnt, "getMemberLastProposalTime", address),
+		RplBondAmount:    core.NewSimpleField[*big.Int](dnt, "getMemberRPLBondAmount", address),
+		IsChallenged:     core.NewSimpleField[bool](dnt, "getMemberIsChallenged", address),
 
 		dnt: dnt,
 	}, nil
