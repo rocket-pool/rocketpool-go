@@ -53,6 +53,18 @@ type Node struct {
 	// The amount of ETH in the node's deposit credit bank
 	Credit *core.SimpleField[*big.Int]
 
+	// The amount of ETH in the node's deposit credit bank that is currently usable for new deposits
+	UsableCredit *core.SimpleField[*big.Int]
+
+	// The current donated ETH balance for the node
+	DonatedEthBalance *core.SimpleField[*big.Int]
+
+	// The sum of the node's credit and donated balances
+	TotalCreditAndDonatedBalance *core.SimpleField[*big.Int]
+
+	// How much of the combined credit and donated balances can be used for new deposits
+	UsableCreditAndDonatedBalance *core.SimpleField[*big.Int]
+
 	// The node's RPL stake
 	RplStake *core.SimpleField[*big.Int]
 
@@ -107,7 +119,7 @@ type Node struct {
 	// The address that the provided node has currently delegated voting power to
 	CurrentVotingDelegate *core.SimpleField[common.Address]
 
-	// Whether or not on-chain voting has been initialized for the given node
+	// Whether or not on-chain voting has been initialized for the node
 	IsVotingInitialized *core.SimpleField[bool]
 
 	// === Internal fields ===
@@ -168,7 +180,11 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		IsVotingInitialized:   core.NewSimpleField[bool](networkVoting, "getVotingInitialised", address),
 
 		// NodeDeposit
-		Credit: core.NewSimpleField[*big.Int](nodeDeposit, "getNodeDepositCredit", address),
+		Credit:                        core.NewSimpleField[*big.Int](nodeDeposit, "getNodeDepositCredit", address),
+		UsableCredit:                  core.NewSimpleField[*big.Int](nodeDeposit, "getNodeUsableCredit", address),
+		DonatedEthBalance:             core.NewSimpleField[*big.Int](nodeDeposit, "getNodeEthBalance", address),
+		TotalCreditAndDonatedBalance:  core.NewSimpleField[*big.Int](nodeDeposit, "getNodeCreditAndBalance", address),
+		UsableCreditAndDonatedBalance: core.NewSimpleField[*big.Int](nodeDeposit, "getNodeUsableCreditAndBalance", address),
 
 		// NodeManager
 		Exists:                           core.NewSimpleField[bool](nodeManager, "getNodeExists", address),
@@ -260,6 +276,11 @@ func (c *Node) DepositWithCredit(bondAmount *big.Int, minimumNodeFee float64, va
 // Get info for making a vacant minipool for solo staker migration
 func (c *Node) CreateVacantMinipool(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, salt *big.Int, expectedMinipoolAddress common.Address, currentBalance *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.nodeDeposit, "createVacantMinipool", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], salt, expectedMinipoolAddress, currentBalance)
+}
+
+// Withdraw unused ETH that was donated (staked on behalf of the node)
+func (c *Node) WithdrawDonatedEth(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeDeposit, "withdrawEth", opts, c.Address, amount)
 }
 
 // === NodeManager ===

@@ -197,7 +197,6 @@ func (c *OracleDaoManager) GetMemberAddress(mc *batch.MultiCaller, address_Out *
 }
 
 // Get the list of Oracle DAO member addresses.
-// Use GetMemberCount() for the memberCount parameter.
 func (c *OracleDaoManager) GetMemberAddresses(memberCount uint64, opts *bind.CallOpts) ([]common.Address, error) {
 	addresses := make([]common.Address, memberCount)
 
@@ -218,7 +217,6 @@ func (c *OracleDaoManager) GetMemberAddresses(memberCount uint64, opts *bind.Cal
 }
 
 // Get an Oracle DAO member by address.
-// Use GetMemberCount() for the memberCount parameter.
 func (c *OracleDaoManager) CreateMemberFromAddress(address common.Address, includeDetails bool, opts *bind.CallOpts) (*OracleDaoMember, error) {
 	// Create the member binding
 	member, err := NewOracleDaoMember(c.rp, address)
@@ -232,7 +230,7 @@ func (c *OracleDaoManager) CreateMemberFromAddress(address common.Address, inclu
 			return nil
 		}, opts)
 		if err != nil {
-			return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
+			return nil, fmt.Errorf("error getting Oracle DAO member details: %w", err)
 		}
 	}
 
@@ -241,7 +239,6 @@ func (c *OracleDaoManager) CreateMemberFromAddress(address common.Address, inclu
 }
 
 // Get the list of all Oracle DAO members.
-// Use GetMemberCount() for the memberCount parameter.
 func (c *OracleDaoManager) CreateMembersFromAddresses(addresses []common.Address, includeDetails bool, opts *bind.CallOpts) ([]*OracleDaoMember, error) {
 	// Create the member bindings
 	memberCount := len(addresses)
@@ -264,7 +261,7 @@ func (c *OracleDaoManager) CreateMembersFromAddresses(addresses []common.Address
 			opts,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error getting Oracle DAO member addresses: %w", err)
+			return nil, fmt.Errorf("error getting Oracle DAO member details: %w", err)
 		}
 	}
 

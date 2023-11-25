@@ -51,22 +51,31 @@ type ProtocolDaoSettings struct {
 	} `json:"minipool"`
 
 	Network struct {
-		OracleDaoConsensusThreshold *ProtocolDaoCompoundSetting[float64] `json:"oracleDaoConsensusThreshold"`
-		NodePenaltyThreshold        *ProtocolDaoCompoundSetting[float64] `json:"nodePenaltyThreshold"`
-		PerPenaltyRate              *ProtocolDaoCompoundSetting[float64] `json:"perPenaltyRate"`
-		IsSubmitBalancesEnabled     *ProtocolDaoBoolSetting              `json:"isSubmitBalancesEnabled"`
-		SubmitBalancesFrequency     *ProtocolDaoCompoundSetting[uint64]  `json:"submitBalancesFrequency"`
-		IsSubmitPricesEnabled       *ProtocolDaoBoolSetting              `json:"isSubmitPricesEnabled"`
-		SubmitPricesFrequency       *ProtocolDaoCompoundSetting[uint64]  `json:"submitPricesFrequency"`
-		MinimumNodeFee              *ProtocolDaoCompoundSetting[float64] `json:"minimumNodeFee"`
-		TargetNodeFee               *ProtocolDaoCompoundSetting[float64] `json:"targetNodeFee"`
-		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64] `json:"maximumNodeFee"`
-		NodeFeeDemandRange          *ProtocolDaoUintSetting              `json:"nodeFeeDemandRange"`
-		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64] `json:"targetRethCollateralRate"`
-		NetworkPenaltyThreshold     *ProtocolDaoCompoundSetting[float64] `json:"networkPenaltyThreshold"`
-		NetworkPenaltyPerRate       *ProtocolDaoCompoundSetting[float64] `json:"networkPenaltyPerRate"`
-		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting              `json:"isSubmitRewardsEnabled"`
+		OracleDaoConsensusThreshold *ProtocolDaoCompoundSetting[float64]       `json:"oracleDaoConsensusThreshold"`
+		NodePenaltyThreshold        *ProtocolDaoCompoundSetting[float64]       `json:"nodePenaltyThreshold"`
+		PerPenaltyRate              *ProtocolDaoCompoundSetting[float64]       `json:"perPenaltyRate"`
+		IsSubmitBalancesEnabled     *ProtocolDaoBoolSetting                    `json:"isSubmitBalancesEnabled"`
+		SubmitBalancesFrequency     *ProtocolDaoCompoundSetting[time.Duration] `json:"submitBalancesFrequency"`
+		IsSubmitPricesEnabled       *ProtocolDaoBoolSetting                    `json:"isSubmitPricesEnabled"`
+		SubmitPricesFrequency       *ProtocolDaoCompoundSetting[time.Duration] `json:"submitPricesFrequency"`
+		MinimumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"minimumNodeFee"`
+		TargetNodeFee               *ProtocolDaoCompoundSetting[float64]       `json:"targetNodeFee"`
+		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"maximumNodeFee"`
+		NodeFeeDemandRange          *ProtocolDaoUintSetting                    `json:"nodeFeeDemandRange"`
+		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64]       `json:"targetRethCollateralRate"`
+		NetworkPenaltyThreshold     *ProtocolDaoCompoundSetting[float64]       `json:"networkPenaltyThreshold"`
+		NetworkPenaltyPerRate       *ProtocolDaoCompoundSetting[float64]       `json:"networkPenaltyPerRate"`
+		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting                    `json:"isSubmitRewardsEnabled"`
 	} `json:"network"`
+
+	Node struct {
+		IsRegistrationEnabled              *ProtocolDaoBoolSetting              `json:"isRegistrationEnabled"`
+		IsSmoothingPoolRegistrationEnabled *ProtocolDaoBoolSetting              `json:"isSmoothingPoolRegistrationEnabled"`
+		IsDepositingEnabled                *ProtocolDaoBoolSetting              `json:"isDepositingEnabled"`
+		AreVacantMinipoolsEnabled          *ProtocolDaoBoolSetting              `json:"areVacantMinipoolsEnabled"`
+		MinimumPerMinipoolStake            *ProtocolDaoCompoundSetting[float64] `json:"minimumPerMinipoolStake"`
+		MaximumPerMinipoolStake            *ProtocolDaoCompoundSetting[float64] `json:"maximumPerMinipoolStake"`
+	} `json:"node"`
 
 	Proposals struct {
 		VoteTime            *ProtocolDaoCompoundSetting[time.Duration] `json:"voteTime"`
@@ -80,18 +89,17 @@ type ProtocolDaoSettings struct {
 		PropoaslMaxBlockAge *ProtocolDaoCompoundSetting[uint64]        `json:"propoaslMaxBlockAge"`
 	} `json:"proposals"`
 
-	Node struct {
-		IsRegistrationEnabled              *ProtocolDaoBoolSetting              `json:"isRegistrationEnabled"`
-		IsSmoothingPoolRegistrationEnabled *ProtocolDaoBoolSetting              `json:"isSmoothingPoolRegistrationEnabled"`
-		IsDepositingEnabled                *ProtocolDaoBoolSetting              `json:"isDepositingEnabled"`
-		AreVacantMinipoolsEnabled          *ProtocolDaoBoolSetting              `json:"areVacantMinipoolsEnabled"`
-		MinimumPerMinipoolStake            *ProtocolDaoCompoundSetting[float64] `json:"minimumPerMinipoolStake"`
-		MaximumPerMinipoolStake            *ProtocolDaoCompoundSetting[float64] `json:"maximumPerMinipoolStake"`
-	} `json:"node"`
-
 	Rewards struct {
 		IntervalTime *ProtocolDaoCompoundSetting[time.Duration] `json:"intervalTime"`
 	} `json:"rewards"`
+
+	Security struct {
+		MembersQuorum       *ProtocolDaoCompoundSetting[float64]       `json:"membersQuorum"`
+		MembersLeaveTime    *ProtocolDaoCompoundSetting[time.Duration] `json:"membersLeaveTime"`
+		ProposalVoteTime    *ProtocolDaoCompoundSetting[time.Duration] `json:"proposalVoteTime"`
+		ProposalExecuteTime *ProtocolDaoCompoundSetting[time.Duration] `json:"proposalExecuteTime"`
+		ProposalActionTime  *ProtocolDaoCompoundSetting[time.Duration] `json:"proposalActionTime"`
+	} `json:"security"`
 
 	// === Internal fields ===
 	rp            *rocketpool.RocketPool
@@ -104,6 +112,7 @@ type ProtocolDaoSettings struct {
 	dps_node      *core.Contract
 	dps_proposals *core.Contract
 	dps_rewards   *core.Contract
+	dps_security  *core.Contract
 }
 
 // ====================
@@ -122,6 +131,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 		rocketpool.ContractName_RocketDAOProtocolSettingsNode,
 		rocketpool.ContractName_RocketDAOProtocolSettingsProposals,
 		rocketpool.ContractName_RocketDAOProtocolSettingsRewards,
+		rocketpool.ContractName_RocketDAOProtocolSettingsSecurity,
 	}...)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO settings contracts: %w", err)
@@ -139,6 +149,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 		dps_node:      contracts[5],
 		dps_proposals: contracts[6],
 		dps_rewards:   contracts[7],
+		dps_security:  contracts[8],
 	}
 
 	// Auction
@@ -176,9 +187,9 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Network.NodePenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.threshold")
 	s.Network.PerPenaltyRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.per.rate")
 	s.Network.IsSubmitBalancesEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.balances.enabled")
-	s.Network.SubmitBalancesFrequency = newCompoundSetting[uint64](s.dps_network, pdaoMgr, "network.submit.balances.frequency")
+	s.Network.SubmitBalancesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.submit.balances.frequency")
 	s.Network.IsSubmitPricesEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.prices.enabled")
-	s.Network.SubmitPricesFrequency = newCompoundSetting[uint64](s.dps_network, pdaoMgr, "network.submit.prices.frequency")
+	s.Network.SubmitPricesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.submit.prices.frequency")
 	s.Network.MinimumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.minimum")
 	s.Network.TargetNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.target")
 	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.maximum")
@@ -209,6 +220,13 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 
 	// Rewards
 	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, "rpl.rewards.claim.period.time")
+
+	// Security
+	s.Security.MembersQuorum = newCompoundSetting[float64](s.dps_security, pdaoMgr, "members.quorum")
+	s.Security.MembersLeaveTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "members.leave.time")
+	s.Security.ProposalVoteTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "proposal.vote.time")
+	s.Security.ProposalExecuteTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "proposal.execute.time")
+	s.Security.ProposalActionTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "proposal.action.time")
 
 	return s, nil
 }

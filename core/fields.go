@@ -113,7 +113,7 @@ func (f *FormattedUint256Field[ValueType]) Formatted() ValueType {
 
 // A collection of legal types for FormattedUint8Field
 type FormattedUint8Type interface {
-	types.MinipoolStatus | types.MinipoolDeposit | types.ProposalState
+	types.MinipoolStatus | types.MinipoolDeposit | types.ProposalState | types.ProtocolDaoProposalState
 }
 
 // A field that is stored as a uint8 in the contracts, but represents a more well-defined type
@@ -152,6 +152,10 @@ func (f *FormattedUint8Field[ValueType]) Formatted() ValueType {
 		*outPtr = types.MinipoolStatus(f.value)
 	case *types.MinipoolDeposit:
 		*outPtr = types.MinipoolDeposit(f.value)
+	case *types.ProposalState:
+		*outPtr = types.ProposalState(f.value)
+	case *types.ProtocolDaoProposalState:
+		*outPtr = types.ProtocolDaoProposalState(f.value)
 	}
 	return out
 }

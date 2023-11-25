@@ -16,7 +16,13 @@ import (
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
+	"github.com/rocket-pool/rocketpool-go/utils"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
+)
+
+// Settings
+const (
+	proposalBatchSize int = 100
 )
 
 // ===============
@@ -31,12 +37,17 @@ type ProtocolDaoManager struct {
 	// The time that the RPL rewards percentages were last updated
 	LastRewardsPercentagesUpdate *core.FormattedUint256Field[time.Time]
 
+	// Get the total number of Protocol DAO proposals
+	ProposalCount *core.FormattedUint256Field[uint64]
+
 	// === Internal fields ===
 	rp    *rocketpool.RocketPool
 	dp    *core.Contract
 	dpp   *core.Contract
+	dpps  *core.Contract
 	dpsr  *core.Contract
 	dprop *core.Contract
+	dpv   *core.Contract
 }
 
 // Rewards claimer percents
@@ -44,6 +55,44 @@ type RplRewardsPercentages struct {
 	OdaoPercentage *big.Int `abi:"_trustedNodePercent"`
 	PdaoPercentage *big.Int `abi:"_protocolPercent"`
 	NodePercentage *big.Int `abi:"_nodePercent"`
+}
+
+// Structure of the RootSubmitted event
+type RootSubmitted struct {
+	ProposalID  *big.Int               `json:"proposalId"`
+	Proposer    common.Address         `json:"proposer"`
+	BlockNumber uint32                 `json:"blockNumber"`
+	Index       *big.Int               `json:"index"`
+	Root        types.VotingTreeNode   `json:"root"`
+	TreeNodes   []types.VotingTreeNode `json:"treeNodes"`
+	Timestamp   time.Time              `json:"timestamp"`
+}
+
+// Internal struct - returned by the RootSubmitted event
+type rootSubmittedRaw struct {
+	ProposalID  *big.Int               `json:"proposalId"`
+	Proposer    common.Address         `json:"proposer"`
+	BlockNumber uint32                 `json:"blockNumber"`
+	Index       *big.Int               `json:"index"`
+	Root        types.VotingTreeNode   `json:"root"`
+	TreeNodes   []types.VotingTreeNode `json:"treeNodes"`
+	Timestamp   *big.Int               `json:"timestamp"`
+}
+
+// Structure of the ChallengeSubmitted event
+type ChallengeSubmitted struct {
+	ProposalID *big.Int       `json:"proposalId"`
+	Challenger common.Address `json:"challenger"`
+	Index      *big.Int       `json:"index"`
+	Timestamp  time.Time      `json:"timestamp"`
+}
+
+// Internal struct - returned by the ChallengeSubmitted event
+type challengeSubmittedRaw struct {
+	ProposalID *big.Int       `json:"proposalId"`
+	Challenger common.Address `json:"challenger"`
+	Index      *big.Int       `json:"index"`
+	Timestamp  *big.Int       `json:"timestamp"`
 }
 
 // ====================
@@ -57,7 +106,11 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO manager contract: %w", err)
 	}
-	dpp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolProposals)
+	dpp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolProposal)
+	if err != nil {
+		return nil, fmt.Errorf("error getting protocol DAO protocol proposal contract: %w", err)
+	}
+	dpps, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolProposals)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol proposals contract: %w", err)
 	}
@@ -69,15 +122,22 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO proposal contract: %w", err)
 	}
+	dpv, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
+	if err != nil {
+		return nil, fmt.Errorf("error getting protocol DAO protocol verifier contract: %w", err)
+	}
 
 	pdaoMgr := &ProtocolDaoManager{
 		LastRewardsPercentagesUpdate: core.NewFormattedUint256Field[time.Time](dpsr, "getRewardsClaimersTimeUpdated"),
+		ProposalCount:                core.NewFormattedUint256Field[uint64](dpp, "getTotal"),
 
 		rp:    rp,
 		dp:    dp,
 		dpp:   dpp,
+		dpps:  dpps,
 		dpsr:  dpsr,
 		dprop: dprop,
+		dpv:   dpv,
 	}
 	settings, err := newProtocolDaoSettings(pdaoMgr)
 	if err != nil {
@@ -91,9 +151,26 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 // === Calls ===
 // =============
 
+// === DAOProtocolSettingsRewards ===
+
 // Get the allocation of RPL rewards to the node operators, Oracle DAO, and the Protocol DAO
 func (c *ProtocolDaoManager) GetRewardsPercentages(mc *batch.MultiCaller, out *RplRewardsPercentages) {
 	core.AddCallRaw(mc, c.dpsr, out, "getRewardsClaimersPerc")
+}
+
+// Get the allocation of RPL rewards to the node operators
+func (c *ProtocolDaoManager) GetNodeOperatorRewardsPercent(mc *batch.MultiCaller, out **big.Int) {
+	core.AddCall(mc, c.dpsr, out, "getRewardsClaimersNodePerc")
+}
+
+// Get the allocation of RPL rewards to the Oracle DAO
+func (c *ProtocolDaoManager) GetOracleDaoRewardsPercent(mc *batch.MultiCaller, out **big.Int) {
+	core.AddCall(mc, c.dpsr, out, "getRewardsClaimersTrustedNodePerc")
+}
+
+// Get the allocation of RPL rewards to the Protocol DAO
+func (c *ProtocolDaoManager) GetProtocolDaoRewardsPercent(mc *batch.MultiCaller, out **big.Int) {
+	core.AddCall(mc, c.dpsr, out, "getRewardsClaimersProtocolPerc")
 }
 
 // ====================
@@ -208,9 +285,25 @@ func (c *ProtocolDaoManager) ProposeKickFromSecurityCouncil(message string, addr
 	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSecurityKick", address)
 }
 
+// Get info for submitting a proposal to kick multiple members from the security council
+func (c *ProtocolDaoManager) ProposeKickMultiFromSecurityCouncil(message string, addresses []common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	if message == "" {
+		message = "kick multiple members from the security council"
+	}
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSecurityKickMulti", addresses)
+}
+
+// Get info for submitting a proposal to replace a member of the security council with another one in a single TX
+func (c *ProtocolDaoManager) ProposeReplaceSecurityCouncilMember(message string, existingMemberAddress common.Address, newMemberID string, newMemberAddress common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	if message == "" {
+		message = fmt.Sprintf("replace %s on the security council with %s (%s)", existingMemberAddress.Hex(), newMemberID, newMemberAddress.Hex())
+	}
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSecurityReplace", existingMemberAddress, newMemberID, newMemberAddress)
+}
+
 // Submit a protocol DAO proposal
 func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber uint32, treeNodes []types.VotingTreeNode, message string, method string, args ...interface{}) (*core.TransactionInfo, error) {
-	payload, err := c.dpp.ABI.Pack(method, args...)
+	payload, err := c.dpps.ABI.Pack(method, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding payload: %w", err)
 	}
@@ -224,6 +317,132 @@ func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber
 /// =============
 /// === Utils ===
 /// =============
+
+// Get RootSubmitted event info
+func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, intervalSize *big.Int, startBlock *big.Int, endBlock *big.Int, opts *bind.CallOpts) ([]RootSubmitted, error) {
+	// Construct a filter query for relevant logs
+	idBuffers := make([]common.Hash, len(proposalIDs))
+	for i, id := range proposalIDs {
+		proposalIdBig := big.NewInt(0).SetUint64(id)
+		proposalIdBig.FillBytes(idBuffers[i].Bytes())
+	}
+	rootSubmittedEvent := c.dpv.ABI.Events["RootSubmitted"]
+	addressFilter := []common.Address{*c.dpv.Address}
+	topicFilter := [][]common.Hash{{rootSubmittedEvent.ID}, idBuffers}
+
+	// Get the event logs
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, startBlock, endBlock, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(logs) == 0 {
+		return []RootSubmitted{}, nil
+	}
+
+	events := make([]RootSubmitted, 0, len(logs))
+	for _, log := range logs {
+		// Get the log info values
+		values, err := rootSubmittedEvent.Inputs.Unpack(log.Data)
+		if err != nil {
+			return nil, fmt.Errorf("error unpacking RootSubmitted event data: %w", err)
+		}
+
+		// Convert to a native struct
+		var raw rootSubmittedRaw
+		err = rootSubmittedEvent.Inputs.Copy(&raw, values)
+		if err != nil {
+			return nil, fmt.Errorf("error converting RootSubmitted event data to struct: %w", err)
+		}
+
+		// Get the decoded data
+		events = append(events, RootSubmitted{
+			ProposalID:  raw.ProposalID,
+			Proposer:    raw.Proposer,
+			BlockNumber: raw.BlockNumber,
+			Index:       raw.Index,
+			Root:        raw.Root,
+			TreeNodes:   raw.TreeNodes,
+			Timestamp:   time.Unix(raw.Timestamp.Int64(), 0),
+		})
+	}
+
+	return events, nil
+}
+
+// Get ChallengeSubmitted event info
+func (c *ProtocolDaoManager) GetChallengeSubmittedEvents(proposalIDs []uint64, intervalSize *big.Int, startBlock *big.Int, endBlock *big.Int, opts *bind.CallOpts) ([]ChallengeSubmitted, error) {
+	// Construct a filter query for relevant logs
+	idBuffers := make([]common.Hash, len(proposalIDs))
+	for i, id := range proposalIDs {
+		proposalIdBig := big.NewInt(0).SetUint64(id)
+		proposalIdBig.FillBytes(idBuffers[i].Bytes())
+	}
+	challengeSubmittedEvent := c.dpv.ABI.Events["ChallengeSubmitted"]
+	addressFilter := []common.Address{*c.dpv.Address}
+	topicFilter := [][]common.Hash{{challengeSubmittedEvent.ID}, idBuffers}
+
+	// Get the event logs
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, startBlock, endBlock, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(logs) == 0 {
+		return []ChallengeSubmitted{}, nil
+	}
+
+	events := make([]ChallengeSubmitted, 0, len(logs))
+	for _, log := range logs {
+		// Get the log info values
+		values, err := challengeSubmittedEvent.Inputs.Unpack(log.Data)
+		if err != nil {
+			return nil, fmt.Errorf("error unpacking ChallengeSubmitted event data: %w", err)
+		}
+
+		// Convert to a native struct
+		var raw challengeSubmittedRaw
+		err = challengeSubmittedEvent.Inputs.Copy(&raw, values)
+		if err != nil {
+			return nil, fmt.Errorf("error converting ChallengeSubmitted event data to struct: %w", err)
+		}
+
+		// Get the decoded data
+		events = append(events, ChallengeSubmitted{
+			ProposalID: raw.ProposalID,
+			Challenger: raw.Challenger,
+			Index:      raw.Index,
+			Timestamp:  time.Unix(raw.Timestamp.Int64(), 0),
+		})
+	}
+
+	return events, nil
+}
+
+// Get all proposal details
+func (c *ProtocolDaoManager) GetProposals(proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*ProtocolDaoProposal, error) {
+	// Create prop commons for each one
+	props := make([]*ProtocolDaoProposal, proposalCount)
+	for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
+		prop, err := NewProtocolDaoProposal(c.rp, i)
+		if err != nil {
+			return nil, fmt.Errorf("error creating Protocol DAO proposal %d: %w", i, err)
+		}
+		props[i-1] = prop
+	}
+
+	// Get all details if requested
+	if includeDetails {
+		err := c.rp.BatchQuery(int(proposalCount), proposalBatchSize, func(mc *batch.MultiCaller, index int) error {
+			core.QueryAllFields(props[index], mc)
+			return nil
+		}, opts)
+		if err != nil {
+			return nil, fmt.Errorf("error getting proposal details: %w", err)
+		}
+	}
+
+	// Return
+	return props, nil
+}
 
 // Simulate a proposal's execution to verify it won't revert
 func (c *ProtocolDaoManager) simulateProposalExecution(payload []byte) error {

@@ -61,10 +61,10 @@ func (c *DaoProposalManager) NewProposalFromDao(id uint64, dao rocketpool.Contra
 	}
 
 	switch dao {
-	case rocketpool.ContractName_RocketDAOProtocolProposals:
-		return newProtocolDaoProposal(c.rp, base)
 	case rocketpool.ContractName_RocketDAONodeTrustedProposals:
 		return newOracleDaoProposal(c.rp, base)
+	case rocketpool.ContractName_RocketDAOSecurityProposals:
+		return newSecurityCouncilProposal(c.rp, base)
 	case "":
 		return nil, fmt.Errorf("proposal %d does not exist", id)
 	default:
@@ -89,10 +89,10 @@ func (c *DaoProposalManager) CreateProposalFromID(id uint64, opts *bind.CallOpts
 	}
 
 	switch dao {
-	case string(rocketpool.ContractName_RocketDAOProtocolProposals):
-		return newProtocolDaoProposal(c.rp, prop)
 	case string(rocketpool.ContractName_RocketDAONodeTrustedProposals):
 		return newOracleDaoProposal(c.rp, prop)
+	case string(rocketpool.ContractName_RocketDAOSecurityProposals):
+		return newSecurityCouncilProposal(c.rp, prop)
 	case "":
 		return nil, fmt.Errorf("proposal %d does not exist", id)
 	default:
@@ -100,9 +100,9 @@ func (c *DaoProposalManager) CreateProposalFromID(id uint64, opts *bind.CallOpts
 	}
 }
 
-// Get all of the Protocol DAO proposals
+// Get all of the Oracle DAO and security council proposals
 // NOTE: Proposals are 1-indexed
-func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*ProtocolDaoProposal, []*OracleDaoProposal, error) {
+func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails bool, opts *bind.CallOpts) ([]*OracleDaoProposal, []*SecurityCouncilProposal, error) {
 	// Create prop commons for each one
 	props := make([]*ProposalCommon, proposalCount)
 	for i := uint64(1); i <= proposalCount; i++ { // Proposals are 1-indexed
@@ -124,19 +124,11 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 	}
 
 	// Construct concrete bindings for each one
-	pDaoProps := []*ProtocolDaoProposal{}
 	oDaoProps := []*OracleDaoProposal{}
+	secProps := []*SecurityCouncilProposal{}
 	totalProps := []IProposal{}
 	for i, prop := range props {
 		switch daos[i] {
-		case string(rocketpool.ContractName_RocketDAOProtocolProposals):
-			pdaoProp, err := newProtocolDaoProposal(c.rp, prop)
-			if err != nil {
-				return nil, nil, fmt.Errorf("error creating Oracle DAO proposal binding for proposal %d: %w", prop.ID, err)
-			}
-			pDaoProps = append(pDaoProps, pdaoProp)
-			totalProps = append(totalProps, pdaoProp)
-
 		case string(rocketpool.ContractName_RocketDAONodeTrustedProposals):
 			odaoProp, err := newOracleDaoProposal(c.rp, prop)
 			if err != nil {
@@ -144,6 +136,14 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 			}
 			oDaoProps = append(oDaoProps, odaoProp)
 			totalProps = append(totalProps, odaoProp)
+
+		case string(rocketpool.ContractName_RocketDAOSecurityProposals):
+			secProp, err := newSecurityCouncilProposal(c.rp, prop)
+			if err != nil {
+				return nil, nil, fmt.Errorf("error creating security council proposal binding for proposal %d: %w", prop.ID, err)
+			}
+			secProps = append(secProps, secProp)
+			totalProps = append(totalProps, secProp)
 
 		default:
 			return nil, nil, fmt.Errorf("proposal %d has DAO [%s] which is not recognized", prop.ID, daos[i])
@@ -157,9 +157,9 @@ func (c *DaoProposalManager) GetProposals(proposalCount uint64, includeDetails b
 			return nil
 		}, opts)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error getting ")
+			return nil, nil, fmt.Errorf("error getting proposal details: %w", err)
 		}
 	}
 
-	return pDaoProps, oDaoProps, nil
+	return oDaoProps, secProps, nil
 }

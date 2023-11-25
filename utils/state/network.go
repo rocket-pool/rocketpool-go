@@ -52,7 +52,7 @@ type NetworkDetails struct {
 	SmoothingPoolBalance          *big.Int
 	NodeFee                       float64
 	BalancesBlock                 *big.Int
-	LatestReportableBalancesBlock *big.Int
+	LatestReportableBalancesBlock uint64
 	SubmitBalancesEnabled         bool
 	SubmitPricesEnabled           bool
 	MinipoolLaunchTimeout         *big.Int
@@ -62,10 +62,14 @@ type NetworkDetails struct {
 	BondReductionWindowStart  time.Duration
 	BondReductionWindowLength time.Duration
 	DepositPoolUserBalance    *big.Int
+
+	// Houston
+	PricesSubmissionFrequency   uint64
+	BalancesSubmissionFrequency uint64
 }
 
 // Create a snapshot of all of the network's details
-func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (*NetworkDetails, error) {
+func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts, isHoustonDeployed bool) (*NetworkDetails, error) {
 	opts := &bind.CallOpts{
 		BlockNumber: contracts.ElBlockNumber,
 	}
@@ -82,11 +86,13 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	var totalQueueLength *big.Int
 	var pricesBlock *big.Int
 	var latestReportablePricesBlock *big.Int
+	var pricesSubmissionFrequency *big.Int
 	var ethUtilizationRate *big.Int
 	var rETHExchangeRate *big.Int
 	var nodeFee *big.Int
 	var balancesBlock *big.Int
 	var latestReportableBalancesBlock *big.Int
+	var balancesSubmissionFrequency *big.Int
 	var minipoolLaunchTimeout *big.Int
 	var promotionScrubPeriodSeconds *big.Int
 	var windowStartRaw *big.Int
@@ -116,7 +122,6 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	core.AddCall(mc, contracts.RocketTokenRPL, &details.RPLInflationIntervalRate, "getInflationIntervalRate")
 	core.AddCall(mc, contracts.RocketTokenRPL, &details.RPLTotalSupply, "totalSupply")
 	core.AddCall(mc, contracts.RocketNetworkPrices, &pricesBlock, "getPricesBlock")
-	core.AddCall(mc, contracts.RocketNetworkPrices, &latestReportablePricesBlock, "getLatestReportableBlock")
 	core.AddCall(mc, contracts.RocketNetworkBalances, &ethUtilizationRate, "getETHUtilizationRate")
 	core.AddCall(mc, contracts.RocketNetworkBalances, &details.StakingETHBalance, "getStakingETHBalance")
 	core.AddCall(mc, contracts.RocketTokenRETH, &rETHExchangeRate, "getExchangeRate")
@@ -125,7 +130,6 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	core.AddCall(mc, contracts.RocketNodeStaking, &details.TotalRPLStake, "getTotalRPLStake")
 	core.AddCall(mc, contracts.RocketNetworkFees, &nodeFee, "getNodeFee")
 	core.AddCall(mc, contracts.RocketNetworkBalances, &balancesBlock, "getBalancesBlock")
-	core.AddCall(mc, contracts.RocketNetworkBalances, &latestReportableBalancesBlock, "getLatestReportableBlock")
 	core.AddCall(mc, contracts.RocketDAOProtocolSettingsNetwork, &details.SubmitBalancesEnabled, "getSubmitBalancesEnabled")
 	core.AddCall(mc, contracts.RocketDAOProtocolSettingsNetwork, &details.SubmitPricesEnabled, "getSubmitPricesEnabled")
 	core.AddCall(mc, contracts.RocketDAOProtocolSettingsMinipool, &minipoolLaunchTimeout, "getLaunchTimeout")
@@ -135,6 +139,16 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &windowStartRaw, "getBondReductionWindowStart")
 	core.AddCall(mc, contracts.RocketDAONodeTrustedSettingsMinipool, &windowLengthRaw, "getBondReductionWindowLength")
 	core.AddCall(mc, contracts.RocketDepositPool, &details.DepositPoolUserBalance, "getUserBalance")
+
+	// Houston
+	if isHoustonDeployed {
+		core.AddCall(mc, contracts.RocketDAOProtocolSettingsNetwork, &pricesSubmissionFrequency, "getSubmitPricesFrequency")
+		core.AddCall(mc, contracts.RocketDAOProtocolSettingsNetwork, &balancesSubmissionFrequency, "getSubmitBalancesFrequency")
+	} else {
+		// getLatestReportableBlock was deprecated on Houston
+		core.AddCall(mc, contracts.RocketNetworkPrices, &latestReportablePricesBlock, "getLatestReportableBlock")
+		core.AddCall(mc, contracts.RocketNetworkBalances, &latestReportableBalancesBlock, "getLatestReportableBlock")
+	}
 
 	_, err = mc.FlexibleCall(true, opts)
 	if err != nil {
@@ -151,12 +165,17 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts) (
 	details.EffectiveQueueCapacity = effectiveQueueCapacity
 	details.QueueLength = totalQueueLength
 	details.PricesBlock = pricesBlock.Uint64()
-	details.LatestReportablePricesBlock = latestReportablePricesBlock.Uint64()
+	if !isHoustonDeployed {
+		details.LatestReportablePricesBlock = latestReportablePricesBlock.Uint64()
+		details.LatestReportableBalancesBlock = latestReportableBalancesBlock.Uint64()
+	} else {
+		details.PricesSubmissionFrequency = pricesSubmissionFrequency.Uint64()
+		details.BalancesSubmissionFrequency = balancesSubmissionFrequency.Uint64()
+	}
 	details.ETHUtilizationRate = eth.WeiToEth(ethUtilizationRate)
 	details.RETHExchangeRate = eth.WeiToEth(rETHExchangeRate)
 	details.NodeFee = eth.WeiToEth(nodeFee)
 	details.BalancesBlock = balancesBlock
-	details.LatestReportableBalancesBlock = latestReportableBalancesBlock
 	details.MinipoolLaunchTimeout = minipoolLaunchTimeout
 	details.PromotionScrubPeriod = convertToDuration(promotionScrubPeriodSeconds)
 	details.BondReductionWindowStart = convertToDuration(windowStartRaw)

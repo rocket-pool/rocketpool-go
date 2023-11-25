@@ -3,14 +3,21 @@ package network
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/node"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils"
+)
+
+const (
+	nodeVotingInfoBatchSize int = 250
 )
 
 // ===============
@@ -34,9 +41,6 @@ type NetworkManager struct {
 	// The current network ETH utilization rate
 	EthUtilizationRate *core.FormattedUint256Field[float64]
 
-	// The latest block number that oracles should be reporting balances for
-	LatestReportableBalancesBlock *core.FormattedUint256Field[uint64]
-
 	// The current network node demand in ETH
 	NodeDemand *core.SimpleField[*big.Int]
 
@@ -59,6 +63,42 @@ type NetworkManager struct {
 	networkPenalties *core.Contract
 	networkPrices    *core.Contract
 	networkVoting    *core.Contract
+}
+
+// Info for a balances updated event
+type BalancesUpdated struct {
+	BlockNumber    uint64    `json:"blockNumber"`
+	SlotTimestamp  time.Time `json:"slotTimestamp"`
+	TotalEth       *big.Int  `json:"totalEth"`
+	StakingEth     *big.Int  `json:"stakingEth"`
+	RethSupply     *big.Int  `json:"rethSupply"`
+	BlockTimestamp time.Time `json:"blockTimestamp"`
+}
+
+// Info for a balances updated event
+type balancesUpdatedRaw struct {
+	BlockNumber    *big.Int `json:"blockNumber"`
+	SlotTimestamp  *big.Int `json:"slotTimestamp"`
+	TotalEth       *big.Int `json:"totalEth"`
+	StakingEth     *big.Int `json:"stakingEth"`
+	RethSupply     *big.Int `json:"rethSupply"`
+	BlockTimestamp *big.Int `json:"blockTimestamp"`
+}
+
+// Info for a price updated event
+type PriceUpdated struct {
+	BlockNumber   uint64    `json:"blockNumber"`
+	SlotTimestamp time.Time `json:"slotTimestamp"`
+	RplPrice      *big.Int  `json:"rplPrice"`
+	Time          time.Time `json:"time"`
+}
+
+// Info for a price updated event
+type priceUpdatedRaw struct {
+	BlockNumber   *big.Int `json:"blockNumber"`
+	SlotTimestamp *big.Int `json:"slotTimestamp"`
+	RplPrice      *big.Int `json:"rplPrice"`
+	Time          *big.Int `json:"time"`
 }
 
 // ====================
@@ -92,12 +132,11 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 
 	return &NetworkManager{
 		// NetworkBalances
-		BalancesBlock:                 core.NewFormattedUint256Field[uint64](networkBalances, "getBalancesBlock"),
-		TotalEthBalance:               core.NewSimpleField[*big.Int](networkBalances, "getTotalETHBalance"),
-		StakingEthBalance:             core.NewSimpleField[*big.Int](networkBalances, "getStakingETHBalance"),
-		TotalRethSupply:               core.NewSimpleField[*big.Int](networkBalances, "getTotalRETHSupply"),
-		EthUtilizationRate:            core.NewFormattedUint256Field[float64](networkBalances, "getETHUtilizationRate"),
-		LatestReportableBalancesBlock: core.NewFormattedUint256Field[uint64](networkBalances, "getLatestReportableBlock"),
+		BalancesBlock:      core.NewFormattedUint256Field[uint64](networkBalances, "getBalancesBlock"),
+		TotalEthBalance:    core.NewSimpleField[*big.Int](networkBalances, "getTotalETHBalance"),
+		StakingEthBalance:  core.NewSimpleField[*big.Int](networkBalances, "getStakingETHBalance"),
+		TotalRethSupply:    core.NewSimpleField[*big.Int](networkBalances, "getTotalRETHSupply"),
+		EthUtilizationRate: core.NewFormattedUint256Field[float64](networkBalances, "getETHUtilizationRate"),
 
 		// NetworkFees
 		NodeDemand: core.NewSimpleField[*big.Int](networkFees, "getNodeDemand"),
@@ -142,8 +181,8 @@ func (c *NetworkManager) GetVotingNodeCountAtBlock(mc *batch.MultiCaller, out **
 // === NetworkBalances ===
 
 // Get info for network balance submission
-func (c *NetworkManager) SubmitBalances(block uint64, totalEth, stakingEth, rethSupply *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkBalances, "submitBalances", opts, block, totalEth, stakingEth, rethSupply)
+func (c *NetworkManager) SubmitBalances(block uint64, slotTimestamp uint64, totalEth *big.Int, stakingEth *big.Int, rethSupply *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.networkBalances, "submitBalances", opts, big.NewInt(int64(block)), big.NewInt(int64(slotTimestamp)), totalEth, stakingEth, rethSupply)
 }
 
 // === NetworkPenalties ===
@@ -156,13 +195,32 @@ func (c *NetworkManager) SubmitPenalty(minipoolAddress common.Address, block *bi
 // === NetworkPrices ===
 
 // Get info for network price submission
-func (c *NetworkManager) SubmitPrices(block uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkPrices, "submitPrices", opts, big.NewInt(int64(block)), rplPrice)
+func (c *NetworkManager) SubmitPrices(block uint64, slotTimestamp uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.networkPrices, "submitPrices", opts, big.NewInt(int64(block)), big.NewInt(int64(slotTimestamp)), rplPrice)
 }
 
 // =============
 // === Utils ===
 // =============
+
+// Gets the voting power and delegation info for every node at the specified block using multicall
+func (c *NetworkManager) GetNodeVotingInfo(blockNumber uint32, nodeAddresses []common.Address, opts *bind.CallOpts) ([]types.NodeVotingInfo, error) {
+	infos := make([]types.NodeVotingInfo, len(nodeAddresses))
+	err := c.rp.BatchQuery(len(nodeAddresses), nodeVotingInfoBatchSize, func(mc *batch.MultiCaller, i int) error {
+		address := nodeAddresses[i]
+		node, err := node.NewNode(c.rp, address)
+		if err != nil {
+			return fmt.Errorf("error creating node binding for node %s: %w", address.Hex(), err)
+		}
+		node.GetVotingPowerAtBlock(mc, &infos[i].VotingPower, blockNumber)
+		node.GetVotingDelegateAtBlock(mc, &infos[i].Delegate, blockNumber)
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, err
+	}
+	return infos, nil
+}
 
 // Returns an array of block numbers for balances submissions the given trusted node has submitted since fromBlock
 func (c *NetworkManager) GetBalancesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
@@ -209,6 +267,51 @@ func (c *NetworkManager) GetLatestBalancesSubmissions(fromBlock uint64, interval
 	return results, nil
 }
 
+// Get the event emitted when the network balances were updated
+func (c *NetworkManager) GetBalancesUpdatedEvent(blockNumber uint64, opts *bind.CallOpts) (bool, BalancesUpdated, error) {
+	// Create the list of addresses to check
+	currentAddress := *c.networkBalances.Address
+	rocketNetworkBalancesAddress := []common.Address{currentAddress}
+
+	// Construct a filter query for relevant logs
+	balancesUpdatedEvent := c.networkBalances.ABI.Events["BalancesUpdated"]
+	indexBytes := [32]byte{}
+	addressFilter := rocketNetworkBalancesAddress
+	topicFilter := [][]common.Hash{{balancesUpdatedEvent.ID}, {indexBytes}}
+
+	// Get the event logs
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, big.NewInt(1), big.NewInt(int64(blockNumber)), big.NewInt(int64(blockNumber)), nil)
+	if err != nil {
+		return false, BalancesUpdated{}, err
+	}
+	if len(logs) == 0 {
+		return false, BalancesUpdated{}, nil
+	}
+
+	// Get the log info values
+	values, err := balancesUpdatedEvent.Inputs.Unpack(logs[0].Data)
+	if err != nil {
+		return false, BalancesUpdated{}, fmt.Errorf("error unpacking price updated event data: %w", err)
+	}
+
+	// Convert to a native struct
+	var eventData balancesUpdatedRaw
+	err = balancesUpdatedEvent.Inputs.Copy(&eventData, values)
+	if err != nil {
+		return false, BalancesUpdated{}, fmt.Errorf("error converting price updated event data to struct: %w", err)
+	}
+	balancesUpdated := BalancesUpdated{
+		BlockNumber:    eventData.BlockNumber.Uint64(),
+		SlotTimestamp:  time.Unix(eventData.SlotTimestamp.Int64(), 0),
+		TotalEth:       eventData.TotalEth,
+		StakingEth:     eventData.StakingEth,
+		RethSupply:     eventData.RethSupply,
+		BlockTimestamp: time.Unix(eventData.BlockTimestamp.Int64(), 0),
+	}
+
+	return true, balancesUpdated, nil
+}
+
 // Returns an array of block numbers for prices submissions the given trusted node has submitted since fromBlock
 func (c *NetworkManager) GetPricesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
@@ -251,4 +354,47 @@ func (c *NetworkManager) GetLatestPricesSubmissions(fromBlock uint64, intervalSi
 		results[i] = address
 	}
 	return results, nil
+}
+
+// Get the event info for a price update
+func (c *NetworkManager) GetPriceUpdatedEvent(blockNumber uint64, opts *bind.CallOpts) (bool, PriceUpdated, error) {
+	// Create the list of addresses to check
+	currentAddress := *c.networkPrices.Address
+	rocketNetworkPricesAddress := []common.Address{currentAddress}
+
+	// Construct a filter query for relevant logs
+	pricesUpdatedEvent := c.networkPrices.ABI.Events["PricesUpdated"]
+	indexBytes := [32]byte{}
+	addressFilter := rocketNetworkPricesAddress
+	topicFilter := [][]common.Hash{{pricesUpdatedEvent.ID}, {indexBytes}}
+
+	// Get the event logs
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, big.NewInt(1), big.NewInt(int64(blockNumber)), big.NewInt(int64(blockNumber)), nil)
+	if err != nil {
+		return false, PriceUpdated{}, err
+	}
+	if len(logs) == 0 {
+		return false, PriceUpdated{}, nil
+	}
+
+	// Get the log info values
+	values, err := pricesUpdatedEvent.Inputs.Unpack(logs[0].Data)
+	if err != nil {
+		return false, PriceUpdated{}, fmt.Errorf("error unpacking price updated event data: %w", err)
+	}
+
+	// Convert to a native struct
+	var eventData priceUpdatedRaw
+	err = pricesUpdatedEvent.Inputs.Copy(&eventData, values)
+	if err != nil {
+		return false, PriceUpdated{}, fmt.Errorf("error converting price updated event data to struct: %w", err)
+	}
+	priceUpdated := PriceUpdated{
+		BlockNumber:   eventData.BlockNumber.Uint64(),
+		SlotTimestamp: time.Unix(eventData.SlotTimestamp.Int64(), 0),
+		RplPrice:      eventData.RplPrice,
+		Time:          time.Unix(eventData.Time.Int64(), 0),
+	}
+
+	return true, priceUpdated, nil
 }

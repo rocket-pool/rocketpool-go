@@ -16,8 +16,9 @@ import (
 // A general interface for settings, parameterized by the type required for proposals and boostrapping
 type IProtocolDaoSetting[ProposeType core.CallReturnType] interface {
 	core.IQueryable
+	GetContract() rocketpool.ContractName
 	GetPath() string
-	//ProposeSet(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+	ProposeSet(value ProposeType, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 }
 
@@ -43,6 +44,11 @@ func newBoolSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager,
 		pdaoMgr:         pdaoMgr,
 		path:            path,
 	}
+}
+
+// Gets the owning contract of this setting
+func (s *ProtocolDaoBoolSetting) GetContract() rocketpool.ContractName {
+	return s.settingContract
 }
 
 // Gets the underlying path for the setting within the contracts
@@ -84,6 +90,11 @@ func newUintSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager,
 	}
 }
 
+// Gets the owning contract of this setting
+func (s *ProtocolDaoUintSetting) GetContract() rocketpool.ContractName {
+	return s.settingContract
+}
+
 // Gets the underlying path for the setting within the contracts
 func (s *ProtocolDaoUintSetting) GetPath() string {
 	return s.path
@@ -123,6 +134,11 @@ func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *cor
 	}
 
 	return s
+}
+
+// Gets the owning contract of this setting
+func (s *ProtocolDaoCompoundSetting[DataType]) GetContract() rocketpool.ContractName {
+	return s.settingContract
 }
 
 // Gets the underlying path for the setting within the contracts

@@ -14,6 +14,7 @@ const (
 
 	// Protocol DAO
 	ContractName_RocketDAOProtocol                  ContractName = "rocketDAOProtocol"
+	ContractName_RocketDAOProtocolProposal          ContractName = "rocketDAOProtocolProposal"
 	ContractName_RocketDAOProtocolProposals         ContractName = "rocketDAOProtocolProposals"
 	ContractName_RocketDAOProtocolSettingsAuction   ContractName = "rocketDAOProtocolSettingsAuction"
 	ContractName_RocketDAOProtocolSettingsDeposit   ContractName = "rocketDAOProtocolSettingsDeposit"
@@ -23,6 +24,8 @@ const (
 	ContractName_RocketDAOProtocolSettingsNode      ContractName = "rocketDAOProtocolSettingsNode"
 	ContractName_RocketDAOProtocolSettingsProposals ContractName = "rocketDAOProtocolSettingsProposals"
 	ContractName_RocketDAOProtocolSettingsRewards   ContractName = "rocketDAOProtocolSettingsRewards"
+	ContractName_RocketDAOProtocolSettingsSecurity  ContractName = "rocketDAOProtocolSettingsSecurity"
+	ContractName_RocketDAOProtocolVerifier          ContractName = "rocketDAOProtocolVerifier"
 
 	// Oracle DAO
 	ContractName_RocketDAONodeTrustedActions           ContractName = "rocketDAONodeTrustedActions"
@@ -63,6 +66,11 @@ const (
 	// Rewards
 	ContractName_RocketMerkleDistributorMainnet ContractName = "rocketMerkleDistributorMainnet"
 	ContractName_RocketRewardsPool              ContractName = "rocketRewardsPool"
+
+	// Security
+	ContractName_RocketDAOSecurity          ContractName = "rocketDAOSecurity"
+	ContractName_RocketDAOSecurityActions   ContractName = "rocketDAOSecurityActions"
+	ContractName_RocketDAOSecurityProposals ContractName = "rocketDAOSecurityProposals"
 
 	// Smoothing Pool
 	ContractName_RocketSmoothingPool ContractName = "rocketSmoothingPool"
