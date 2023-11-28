@@ -36,17 +36,20 @@ type ProtocolDaoProposal struct {
 	// The message provided with the proposal
 	Message *core.SimpleField[string]
 
-	// The block number where nodes can start voting on the proposal (start of phase 1)
-	StartBlock *core.FormattedUint256Field[uint64]
+	// The length of time from proposal creation where challenges can be responded to
+	ChallengeWindow *core.FormattedUint256Field[time.Duration]
 
-	// The block that marks the end of phase 1 and the start of phase 2
-	Phase1EndBlock *core.FormattedUint256Field[uint64]
+	// The time when nodes can start voting on the proposal (start of phase 1)
+	VotingStartTime *core.FormattedUint256Field[time.Time]
 
-	// The block that marks the end of phase 2
-	Phase2EndBlock *core.FormattedUint256Field[uint64]
+	// The time that marks the end of phase 1 and the start of phase 2
+	Phase1EndTime *core.FormattedUint256Field[time.Time]
 
-	// The block the proposal expires on, where it can no longer be executed if successful
-	ExpiryBlock *core.FormattedUint256Field[uint64]
+	// The time that marks the end of phase 2
+	Phase2EndTime *core.FormattedUint256Field[time.Time]
+
+	// The time the proposal expires on, where it can no longer be executed if successful
+	ExpiryTime *core.FormattedUint256Field[time.Time]
 
 	// The time the proposal was created
 	CreatedTime *core.FormattedUint256Field[time.Time]
@@ -84,8 +87,17 @@ type ProtocolDaoProposal struct {
 	// The proposal's payload
 	Payload *core.SimpleField[[]byte]
 
-	// The Proposal's state
+	// The proposal's state
 	State *core.FormattedUint8Field[types.ProtocolDaoProposalState]
+
+	// The RPL bond locked by the proposer as part of submitting this proposal
+	ProposalBond *core.SimpleField[*big.Int]
+
+	// The RPL bond locked by a challenger as part of submitting a challenge against this proposal
+	ChallengeBond *core.SimpleField[*big.Int]
+
+	// The index of the tree node that challenged and not responded to, if this proposal was defeated
+	DefeatIndex *core.FormattedUint256Field[uint64]
 
 	// === Internal fields ===
 	idBig *big.Int
@@ -114,12 +126,13 @@ func NewProtocolDaoProposal(rp *rocketpool.RocketPool, id uint64) (*ProtocolDaoP
 	return &ProtocolDaoProposal{
 		ID:                   id,
 		ProposerAddress:      core.NewSimpleField[common.Address](dpp, "getProposer", idBig),
-		TargetBlock:          core.NewFormattedUint256Field[uint32](dpp, "getProposalBlock"),
+		TargetBlock:          core.NewFormattedUint256Field[uint32](dpp, "getProposalBlock", idBig),
 		Message:              core.NewSimpleField[string](dpp, "getMessage", idBig),
-		StartBlock:           core.NewFormattedUint256Field[uint64](dpp, "getStart", idBig),
-		Phase1EndBlock:       core.NewFormattedUint256Field[uint64](dpp, "getPhase1End", idBig),
-		Phase2EndBlock:       core.NewFormattedUint256Field[uint64](dpp, "getPhase2End", idBig),
-		ExpiryBlock:          core.NewFormattedUint256Field[uint64](dpp, "getExpires", idBig),
+		ChallengeWindow:      core.NewFormattedUint256Field[time.Duration](dpv, "getChallengePeriod", idBig),
+		VotingStartTime:      core.NewFormattedUint256Field[time.Time](dpp, "getStart", idBig),
+		Phase1EndTime:        core.NewFormattedUint256Field[time.Time](dpp, "getPhase1End", idBig),
+		Phase2EndTime:        core.NewFormattedUint256Field[time.Time](dpp, "getPhase2End", idBig),
+		ExpiryTime:           core.NewFormattedUint256Field[time.Time](dpp, "getExpires", idBig),
 		CreatedTime:          core.NewFormattedUint256Field[time.Time](dpp, "getCreated", idBig),
 		VotingPowerRequired:  core.NewFormattedUint256Field[float64](dpp, "getVotesRequired", idBig),
 		VotingPowerFor:       core.NewFormattedUint256Field[float64](dpp, "getVotesFor", idBig),
@@ -133,6 +146,9 @@ func NewProtocolDaoProposal(rp *rocketpool.RocketPool, id uint64) (*ProtocolDaoP
 		VetoQuorum:           core.NewFormattedUint256Field[float64](dpp, "getProposalVetoQuorum", idBig),
 		Payload:              core.NewSimpleField[[]byte](dpp, "getPayload", idBig),
 		State:                core.NewFormattedUint8Field[types.ProtocolDaoProposalState](dpp, "getState", idBig),
+		ProposalBond:         core.NewSimpleField[*big.Int](dpv, "getProposalBond", idBig),
+		ChallengeBond:        core.NewSimpleField[*big.Int](dpv, "getChallengeBond", idBig),
+		DefeatIndex:          core.NewFormattedUint256Field[uint64](dpv, "getDefeatIndex", idBig),
 
 		idBig: idBig,
 		rp:    rp,
@@ -184,6 +200,11 @@ func (p *ProtocolDaoProposal) Execute(opts *bind.TransactOpts) (*core.Transactio
 	return core.NewTransactionInfo(p.dpp, "execute", opts, p.idBig)
 }
 
+// Get info for defeaing a proposal if the proposer fails to respond to a challenge within the challenge window, providing the node index that wasn't responded to
+func (p *ProtocolDaoProposal) Defeat(index uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(p.dpv, "defeatProposal", opts, p.idBig, big.NewInt(int64(index)))
+}
+
 // Get info for challenging the proposal at a specific tree node index, providing a Merkle proof of the node as well
 func (p *ProtocolDaoProposal) CreateChallenge(index uint64, node types.VotingTreeNode, witness []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(p.dpv, "createChallenge", opts, p.idBig, big.NewInt((int64(index))), node, witness)
@@ -192,6 +213,24 @@ func (p *ProtocolDaoProposal) CreateChallenge(index uint64, node types.VotingTre
 // Get info for submitting the Merkle root for the proposal at the specific index in response to a challenge
 func (p *ProtocolDaoProposal) SubmitRoot(index uint64, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(p.dpv, "submitRoot", opts, p.idBig, big.NewInt((int64(index))), treeNodes)
+}
+
+// Get info for claiming any RPL bond refunds or rewards for a proposal, as a challenger
+func (p *ProtocolDaoProposal) ClaimBondChallenger(indices []uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	indicesBig := make([]*big.Int, len(indices))
+	for i, index := range indices {
+		indicesBig[i] = big.NewInt(int64(index))
+	}
+	return core.NewTransactionInfo(p.dpv, "claimBondChallenger", opts, p.idBig, indicesBig)
+}
+
+// Get info for claiming any RPL bond refunds or rewards for a proposal, as the proposer
+func (p *ProtocolDaoProposal) ClaimBondProposer(indices []uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	indicesBig := make([]*big.Int, len(indices))
+	for i, index := range indices {
+		indicesBig[i] = big.NewInt(int64(index))
+	}
+	return core.NewTransactionInfo(p.dpv, "claimBondProposer", opts, p.idBig, indicesBig)
 }
 
 // =============

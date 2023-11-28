@@ -116,6 +116,9 @@ type Node struct {
 	// The amount of RPL locked as part of active PDAO proposals or challenges
 	RplLocked *core.SimpleField[*big.Int]
 
+	// True if RPL the node can have its RPL locked via protocol DAO proposals / challenges
+	IsRplLockingAllowed *core.SimpleField[bool]
+
 	// The address that the provided node has currently delegated voting power to
 	CurrentVotingDelegate *core.SimpleField[common.Address]
 
@@ -200,14 +203,15 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		PendingRplWithdrawalAddress:      core.NewSimpleField[common.Address](nodeManager, "getNodePendingRPLWithdrawalAddress", address),
 
 		// NodeStaking
-		RplStake:          core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLStake", address),
-		EffectiveRplStake: core.NewSimpleField[*big.Int](nodeStaking, "getNodeEffectiveRPLStake", address),
-		MinimumRplStake:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeMinimumRPLStake", address),
-		MaximumRplStake:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeMaximumRPLStake", address),
-		RplStakedTime:     core.NewFormattedUint256Field[time.Time](nodeStaking, "getNodeRPLStakedTime", address),
-		EthMatched:        core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatched", address),
-		EthMatchedLimit:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatchedLimit", address),
-		RplLocked:         core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLLocked", address),
+		RplStake:            core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLStake", address),
+		EffectiveRplStake:   core.NewSimpleField[*big.Int](nodeStaking, "getNodeEffectiveRPLStake", address),
+		MinimumRplStake:     core.NewSimpleField[*big.Int](nodeStaking, "getNodeMinimumRPLStake", address),
+		MaximumRplStake:     core.NewSimpleField[*big.Int](nodeStaking, "getNodeMaximumRPLStake", address),
+		RplStakedTime:       core.NewFormattedUint256Field[time.Time](nodeStaking, "getNodeRPLStakedTime", address),
+		EthMatched:          core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatched", address),
+		EthMatchedLimit:     core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatchedLimit", address),
+		RplLocked:           core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLLocked", address),
+		IsRplLockingAllowed: core.NewSimpleField[bool](nodeStaking, "getRPLLockingAllowed", address),
 
 		// MinipoolManager
 		MinipoolCount:           core.NewFormattedUint256Field[uint64](minipoolManager, "getNodeMinipoolCount", address),
@@ -313,21 +317,6 @@ func (c *Node) SetSmoothingPoolRegistrationState(optIn bool, opts *bind.Transact
 	return core.NewTransactionInfo(c.nodeMgr, "setSmoothingPoolRegistrationState", opts, optIn)
 }
 
-// Get info for staking RPL
-func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "stakeRPL", opts, rplAmount)
-}
-
-// Get info for adding or removing an address from the stake-RPL-on-behalf allowlist
-func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "setStakeRPLForAllowed", opts, caller, allowed)
-}
-
-// Get info for withdrawing staked RPL
-func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "withdrawRPL", opts, rplAmount)
-}
-
 // Get info for setting the RPL withdrawal address
 func (c *Node) SetRplWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.nodeMgr, "setRPLWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
@@ -336,6 +325,28 @@ func (c *Node) SetRplWithdrawalAddress(withdrawalAddress common.Address, confirm
 // Get info for confirming the RPL withdrawal address
 func (c *Node) ConfirmRplWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.nodeMgr, "confirmRPLWithdrawalAddress", opts, c.Address)
+}
+
+// === NodeStaking ===
+
+// Get info for staking RPL
+func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeStaking, "stakeRPL", opts, rplAmount)
+}
+
+// Get info for adding or removing an address from the stake-RPL-on-behalf allowlist
+func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeStaking, "setStakeRPLForAllowed", opts, caller, allowed)
+}
+
+// Get info for withdrawing staked RPL
+func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeStaking, "withdrawRPL", opts, c.Address, rplAmount)
+}
+
+// Get info for withdrawing staked RPL
+func (c *Node) SetRplLockingAllowed(allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.nodeStaking, "setRPLLockingAllowed", opts, c.Address, allowed)
 }
 
 // === Storage ===

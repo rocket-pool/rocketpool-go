@@ -7,7 +7,6 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/rocket-pool/batch-query v1.0.0
 	golang.org/x/sync v0.4.0
-	gonum.org/v1/gonum v0.14.0
 )
 
 require (
