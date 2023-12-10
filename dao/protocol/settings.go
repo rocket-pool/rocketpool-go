@@ -63,8 +63,6 @@ type ProtocolDaoSettings struct {
 		MaximumNodeFee              *ProtocolDaoCompoundSetting[float64]       `json:"maximumNodeFee"`
 		NodeFeeDemandRange          *ProtocolDaoUintSetting                    `json:"nodeFeeDemandRange"`
 		TargetRethCollateralRate    *ProtocolDaoCompoundSetting[float64]       `json:"targetRethCollateralRate"`
-		NetworkPenaltyThreshold     *ProtocolDaoCompoundSetting[float64]       `json:"networkPenaltyThreshold"`
-		NetworkPenaltyPerRate       *ProtocolDaoCompoundSetting[float64]       `json:"networkPenaltyPerRate"`
 		IsSubmitRewardsEnabled      *ProtocolDaoBoolSetting                    `json:"isSubmitRewardsEnabled"`
 	} `json:"network"`
 
@@ -195,8 +193,6 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.maximum")
 	s.Network.NodeFeeDemandRange = newUintSetting(s.dps_network, pdaoMgr, "network.node.fee.demand.range")
 	s.Network.TargetRethCollateralRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.reth.collateral.target")
-	s.Network.NetworkPenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.threshold")
-	s.Network.NetworkPenaltyPerRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.per.rate")
 	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.rewards.enabled")
 
 	// Node
