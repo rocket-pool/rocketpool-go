@@ -246,7 +246,7 @@ func (c *ProtocolDaoManager) ProposeSetRewardsPercentages(message string, odaoPe
 }
 
 // Get info for submitting a proposal to spend a portion of the Rocket Pool treasury one time
-func (c *ProtocolDaoManager) ProposeOneTimeTreasurySpend(rp *rocketpool.RocketPool, message, invoiceID string, recipient common.Address, amount *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeOneTimeTreasurySpend(message, invoiceID string, recipient common.Address, amount *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("propose one-time treasury spend - invoice %s", invoiceID)
 	}
