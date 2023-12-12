@@ -42,6 +42,7 @@ type ProtocolDaoManager struct {
 
 	// === Internal fields ===
 	rp    *rocketpool.RocketPool
+	cd    *core.Contract
 	dp    *core.Contract
 	dpp   *core.Contract
 	dpps  *core.Contract
@@ -102,6 +103,10 @@ type challengeSubmittedRaw struct {
 // Creates a new ProtocolDaoManager contract binding
 func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, error) {
 	// Create the contracts
+	cd, err := rp.GetContract(rocketpool.ContractName_RocketClaimDAO)
+	if err != nil {
+		return nil, fmt.Errorf("error getting claim DAO contract: %w", err)
+	}
 	dp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocol)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO manager contract: %w", err)
@@ -132,6 +137,7 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 		ProposalCount:                core.NewFormattedUint256Field[uint64](dpp, "getTotal"),
 
 		rp:    rp,
+		cd:    cd,
 		dp:    dp,
 		dpp:   dpp,
 		dpps:  dpps,
@@ -150,6 +156,13 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 // =============
 // === Calls ===
 // =============
+
+// === ClaimDAO ===
+
+// Check if a recurring spend exists with the given contract name
+func (c *ProtocolDaoManager) GetContractExists(mc *batch.MultiCaller, out *bool, contractName string) {
+	core.AddCall(mc, c.cd, out, "getContractExists", contractName)
+}
 
 // === DAOProtocolSettingsRewards ===
 

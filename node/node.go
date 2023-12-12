@@ -344,7 +344,7 @@ func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.T
 	return core.NewTransactionInfo(c.nodeStaking, "withdrawRPL", opts, c.Address, rplAmount)
 }
 
-// Get info for withdrawing staked RPL
+// Get info for enabling or disabling RPL locking (for Protocol DAO votes or challenges)
 func (c *Node) SetRplLockingAllowed(allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	return core.NewTransactionInfo(c.nodeStaking, "setRPLLockingAllowed", opts, c.Address, allowed)
 }

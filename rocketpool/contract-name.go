@@ -9,6 +9,9 @@ const (
 	// Auctions
 	ContractName_RocketAuctionManager ContractName = "rocketAuctionManager"
 
+	// Claims
+	ContractName_RocketClaimDAO ContractName = "rocketClaimDAO"
+
 	// DAO Proposals
 	ContractName_RocketDAOProposal ContractName = "rocketDAOProposal"
 
