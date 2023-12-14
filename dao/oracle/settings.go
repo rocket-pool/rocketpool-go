@@ -15,6 +15,13 @@ import (
 // === Structs ===
 // ===============
 
+// Wrapper for a settings category, with all of its settings
+type SettingsCategory struct {
+	ContractName rocketpool.ContractName
+	BoolSettings []IOracleDaoSetting[bool]
+	UintSettings []IOracleDaoSetting[*big.Int]
+}
+
 // Binding for Oracle DAO settings
 type OracleDaoSettings struct {
 	// Member
@@ -47,12 +54,13 @@ type OracleDaoSettings struct {
 	}
 
 	// === Internal fields ===
-	rp             *rocketpool.RocketPool
-	odaoMgr        *OracleDaoManager
-	dnts_members   *core.Contract
-	dnts_minipool  *core.Contract
-	dnts_proposals *core.Contract
-	dnts_rewards   *core.Contract
+	rp              *rocketpool.RocketPool
+	odaoMgr         *OracleDaoManager
+	dnts_members    *core.Contract
+	dnts_minipool   *core.Contract
+	dnts_proposals  *core.Contract
+	dnts_rewards    *core.Contract
+	contractNameMap map[string]rocketpool.ContractName
 }
 
 // ====================
@@ -62,12 +70,13 @@ type OracleDaoSettings struct {
 // Creates a new Oracle DAO settings binding
 func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error) {
 	// Get the contracts
-	contracts, err := odaoMgr.rp.GetContracts([]rocketpool.ContractName{
+	contractNames := []rocketpool.ContractName{
 		rocketpool.ContractName_RocketDAONodeTrustedSettingsMembers,
 		rocketpool.ContractName_RocketDAONodeTrustedSettingsMinipool,
 		rocketpool.ContractName_RocketDAONodeTrustedSettingsProposals,
 		rocketpool.ContractName_RocketDAONodeTrustedSettingsRewards,
-	}...)
+	}
+	contracts, err := odaoMgr.rp.GetContracts(contractNames...)
 	if err != nil {
 		return nil, fmt.Errorf("error getting Oracle DAO settings contracts: %w", err)
 	}
@@ -80,6 +89,11 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 		dnts_minipool:  contracts[1],
 		dnts_proposals: contracts[2],
 		dnts_rewards:   contracts[3],
+	}
+	s.contractNameMap = map[string]rocketpool.ContractName{
+		"Member":   contractNames[0],
+		"Minipool": contractNames[1],
+		"Proposal": contractNames[2],
 	}
 
 	// Member
@@ -113,18 +127,26 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 // =============
 
 // Get all of the settings, organized by the type used in proposals and boostraps
-func (c *OracleDaoSettings) GetSettings() ([]IOracleDaoSetting[bool], []IOracleDaoSetting[*big.Int]) {
-	boolSettings := []IOracleDaoSetting[bool]{}
-	uintSettings := []IOracleDaoSetting[*big.Int]{}
+func (c *OracleDaoSettings) GetSettings() map[rocketpool.ContractName]SettingsCategory {
+	catMap := map[rocketpool.ContractName]SettingsCategory{}
 
 	settingsType := reflect.TypeOf(c)
 	settingsVal := reflect.ValueOf(c)
 	fieldCount := settingsType.NumField()
 	for i := 0; i < fieldCount; i++ {
-		categoryFieldType := settingsType.Field(i).Type
+		categoryField := settingsType.Field(i)
+		categoryFieldType := categoryField.Type
 
 		// A container struct for settings by category
 		if categoryFieldType.Kind() == reflect.Struct {
+			// Get the contract name of this category
+			name, exists := c.contractNameMap[categoryField.Name]
+			if !exists {
+				panic(fmt.Sprintf("Oracle DAO settings field named %s does not exist in the contract map.", name))
+			}
+			boolSettings := []IOracleDaoSetting[bool]{}
+			uintSettings := []IOracleDaoSetting[*big.Int]{}
+
 			// Get all of the settings in this cateogry
 			categoryFieldVal := settingsVal.Field(i)
 			settingCount := categoryFieldType.NumField()
@@ -145,10 +167,16 @@ func (c *OracleDaoSettings) GetSettings() ([]IOracleDaoSetting[bool], []IOracleD
 				}
 			}
 
+			settingsCat := SettingsCategory{
+				ContractName: name,
+				BoolSettings: boolSettings,
+				UintSettings: uintSettings,
+			}
+			catMap[name] = settingsCat
 		}
 	}
 
-	return boolSettings, uintSettings
+	return catMap
 }
 
 // Get whether or not the provided rewards network is enabled

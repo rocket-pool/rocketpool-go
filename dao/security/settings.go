@@ -1,6 +1,7 @@
 package security
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
@@ -10,6 +11,12 @@ import (
 // ===============
 // === Structs ===
 // ===============
+
+// Wrapper for a settings category, with all of its settings
+type SettingsCategory struct {
+	ContractName rocketpool.ContractName
+	BoolSettings []ISecurityCouncilSetting[bool]
+}
 
 // Binding for security council settings
 type SecurityCouncilSettings struct {
@@ -41,8 +48,9 @@ type SecurityCouncilSettings struct {
 	} `json:"node"`
 
 	// === Internal fields ===
-	rp     *rocketpool.RocketPool
-	secMgr *SecurityCouncilManager
+	rp              *rocketpool.RocketPool
+	secMgr          *SecurityCouncilManager
+	contractNameMap map[string]rocketpool.ContractName
 }
 
 // ====================
@@ -54,6 +62,13 @@ func newSecurityCouncilSettings(secMgr *SecurityCouncilManager, pdaoSettings *pr
 	s := &SecurityCouncilSettings{
 		rp:     secMgr.rp,
 		secMgr: secMgr,
+	}
+	s.contractNameMap = map[string]rocketpool.ContractName{
+		"Auction":  pdaoSettings.Auction.IsCreateLotEnabled.GetContract(),
+		"Deposit":  pdaoSettings.Deposit.IsDepositingEnabled.GetContract(),
+		"Minipool": pdaoSettings.Minipool.IsSubmitWithdrawableEnabled.GetContract(),
+		"Network":  pdaoSettings.Network.IsSubmitBalancesEnabled.GetContract(),
+		"Node":     pdaoSettings.Node.IsRegistrationEnabled.GetContract(),
 	}
 
 	// Auction
@@ -86,17 +101,25 @@ func newSecurityCouncilSettings(secMgr *SecurityCouncilManager, pdaoSettings *pr
 // =============
 
 // Get all of the settings, organized by the type used in proposals and boostraps
-func (c *SecurityCouncilSettings) GetSettings() []ISecurityCouncilSetting[bool] {
-	boolSettings := []ISecurityCouncilSetting[bool]{}
+func (c *SecurityCouncilSettings) GetSettings() map[rocketpool.ContractName]SettingsCategory {
+	catMap := map[rocketpool.ContractName]SettingsCategory{}
 
 	settingsType := reflect.TypeOf(c)
 	settingsVal := reflect.ValueOf(c)
 	fieldCount := settingsType.NumField()
 	for i := 0; i < fieldCount; i++ {
-		categoryFieldType := settingsType.Field(i).Type
+		categoryField := settingsType.Field(i)
+		categoryFieldType := categoryField.Type
 
 		// A container struct for settings by category
 		if categoryFieldType.Kind() == reflect.Struct {
+			// Get the contract name of this category
+			name, exists := c.contractNameMap[categoryField.Name]
+			if !exists {
+				panic(fmt.Sprintf("Security Council settings field named %s does not exist in the contract map.", name))
+			}
+			boolSettings := []ISecurityCouncilSetting[bool]{}
+
 			// Get all of the settings in this cateogry
 			categoryFieldVal := settingsVal.Field(i)
 			settingCount := categoryFieldType.NumField()
@@ -111,8 +134,13 @@ func (c *SecurityCouncilSettings) GetSettings() []ISecurityCouncilSetting[bool] 
 				}
 			}
 
+			settingsCat := SettingsCategory{
+				ContractName: name,
+				BoolSettings: boolSettings,
+			}
+			catMap[name] = settingsCat
 		}
 	}
 
-	return boolSettings
+	return catMap
 }
