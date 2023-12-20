@@ -83,7 +83,8 @@ type ProtocolDaoSettings struct {
 	}
 
 	Proposals struct {
-		VoteTime            *ProtocolDaoCompoundSetting[time.Duration]
+		VotePhase1Time      *ProtocolDaoCompoundSetting[time.Duration]
+		VotePhase2Time      *ProtocolDaoCompoundSetting[time.Duration]
 		VoteDelayTime       *ProtocolDaoCompoundSetting[time.Duration]
 		ExecuteTime         *ProtocolDaoCompoundSetting[time.Duration]
 		ProposalBond        *ProtocolDaoUintSetting
@@ -224,7 +225,8 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Node.MaximumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, "node.per.minipool.stake.maximum")
 
 	// Proposals
-	s.Proposals.VoteTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.time")
+	s.Proposals.VotePhase1Time = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.phase1.time")
+	s.Proposals.VotePhase2Time = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.phase2.time")
 	s.Proposals.VoteDelayTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.delay.time")
 	s.Proposals.ExecuteTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.execute.time")
 	s.Proposals.ProposalBond = newUintSetting(s.dps_proposals, pdaoMgr, "proposal.bond")

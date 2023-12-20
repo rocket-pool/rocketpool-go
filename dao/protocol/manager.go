@@ -40,15 +40,17 @@ type ProtocolDaoManager struct {
 	// Get the total number of Protocol DAO proposals
 	ProposalCount *core.FormattedUint256Field[uint64]
 
+	// The depth of a network or node voting tree pollard for each round of challenge / response
+	DepthPerRound *core.FormattedUint256Field[uint64]
+
 	// === Internal fields ===
-	rp    *rocketpool.RocketPool
-	cd    *core.Contract
-	dp    *core.Contract
-	dpp   *core.Contract
-	dpps  *core.Contract
-	dpsr  *core.Contract
-	dprop *core.Contract
-	dpv   *core.Contract
+	rp   *rocketpool.RocketPool
+	cd   *core.Contract
+	dp   *core.Contract
+	dpp  *core.Contract
+	dpps *core.Contract
+	dpsr *core.Contract
+	dpv  *core.Contract
 }
 
 // Rewards claimer percents
@@ -123,10 +125,6 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol settings rewards contract: %w", err)
 	}
-	dprop, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
-	if err != nil {
-		return nil, fmt.Errorf("error getting protocol DAO proposal contract: %w", err)
-	}
 	dpv, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol verifier contract: %w", err)
@@ -135,15 +133,15 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	pdaoMgr := &ProtocolDaoManager{
 		LastRewardsPercentagesUpdate: core.NewFormattedUint256Field[time.Time](dpsr, "getRewardsClaimersTimeUpdated"),
 		ProposalCount:                core.NewFormattedUint256Field[uint64](dpp, "getTotal"),
+		DepthPerRound:                core.NewFormattedUint256Field[uint64](dpv, "getDepthPerRound"),
 
-		rp:    rp,
-		cd:    cd,
-		dp:    dp,
-		dpp:   dpp,
-		dpps:  dpps,
-		dpsr:  dpsr,
-		dprop: dprop,
-		dpv:   dpv,
+		rp:   rp,
+		cd:   cd,
+		dp:   dp,
+		dpp:  dpp,
+		dpps: dpps,
+		dpsr: dpsr,
+		dpv:  dpv,
 	}
 	settings, err := newProtocolDaoSettings(pdaoMgr)
 	if err != nil {
@@ -460,8 +458,8 @@ func (c *ProtocolDaoManager) GetProposals(proposalCount uint64, includeDetails b
 // Simulate a proposal's execution to verify it won't revert
 func (c *ProtocolDaoManager) simulateProposalExecution(payload []byte) error {
 	_, err := c.rp.Client.EstimateGas(context.Background(), ethereum.CallMsg{
-		From:     *c.dprop.Address,
-		To:       c.dpp.Address,
+		From:     *c.dpp.Address,
+		To:       c.dpps.Address,
 		GasPrice: big.NewInt(0),
 		Value:    nil,
 		Data:     payload,
