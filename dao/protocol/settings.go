@@ -261,7 +261,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Auction.LotMaximumEthValue = newUintSetting(s.dps_auction, pdaoMgr, SettingName_Auction_LotMaximumEthValue)
 	s.Auction.LotDuration = newCompoundSetting[uint64](s.dps_auction, pdaoMgr, SettingName_Auction_LotDuration)
 	s.Auction.LotStartingPriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotStartingPriceRatio)
-	s.Auction.LotReservePriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotStartingPriceRatio)
+	s.Auction.LotReservePriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotReservePriceRatio)
 
 	// Deposit
 	s.Deposit.IsDepositingEnabled = newBoolSetting(s.dps_deposit, pdaoMgr, SettingName_Deposit_IsDepositingEnabled)
@@ -288,16 +288,16 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Network.OracleDaoConsensusThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_OracleDaoConsensusThreshold)
 	s.Network.NodePenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_NodePenaltyThreshold)
 	s.Network.PerPenaltyRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_PerPenaltyRate)
-	s.Network.IsSubmitBalancesEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_PerPenaltyRate)
+	s.Network.IsSubmitBalancesEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_IsSubmitBalancesEnabled)
 	s.Network.SubmitBalancesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, SettingName_Network_SubmitBalancesFrequency)
-	s.Network.IsSubmitPricesEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_SubmitBalancesFrequency)
+	s.Network.IsSubmitPricesEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_IsSubmitPricesEnabled)
 	s.Network.SubmitPricesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, SettingName_Network_SubmitPricesFrequency)
-	s.Network.MinimumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_SubmitPricesFrequency)
+	s.Network.MinimumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_MinimumNodeFee)
 	s.Network.TargetNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_TargetNodeFee)
 	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_MaximumNodeFee)
 	s.Network.NodeFeeDemandRange = newUintSetting(s.dps_network, pdaoMgr, SettingName_Network_NodeFeeDemandRange)
 	s.Network.TargetRethCollateralRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_TargetRethCollateralRate)
-	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_TargetRethCollateralRate)
+	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_IsSubmitRewardsEnabled)
 
 	// Node
 	s.Node.IsRegistrationEnabled = newBoolSetting(s.dps_node, pdaoMgr, SettingName_Node_IsRegistrationEnabled)
