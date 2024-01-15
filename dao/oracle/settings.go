@@ -11,6 +11,37 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
+// =====================
+// === Setting Names ===
+// =====================
+
+type SettingName string
+
+const (
+	// Member
+	SettingName_Member_Quorum            SettingName = "members.quorum"
+	SettingName_Member_RplBond           SettingName = "members.rplbond"
+	SettingName_Member_ChallengeCooldown SettingName = "members.challenge.cooldown"
+	SettingName_Member_ChallengeWindow   SettingName = "members.challenge.window"
+	SettingName_Member_ChallengeCost     SettingName = "members.challenge.cost"
+
+	// Minipool
+	SettingName_Minipool_ScrubPeriod                     SettingName = "minipool.scrub.period"
+	SettingName_Minipool_ScrubQuorum                     SettingName = "minipool.scrub.quorum"
+	SettingName_Minipool_PromotionScrubPeriod            SettingName = "minipool.promotion.scrub.period"
+	SettingName_Minipool_IsScrubPenaltyEnabled           SettingName = "minipool.scrub.penalty.enabled"
+	SettingName_Minipool_BondReductionWindowStart        SettingName = "minipool.bond.reduction.window.start"
+	SettingName_Minipool_BondReductionWindowLength       SettingName = "minipool.bond.reduction.window.length"
+	SettingName_Minipool_BondReductionCancellationQuorum SettingName = "minipool.cancel.bond.reduction.quorum"
+
+	// Proposal
+	SettingName_Proposal_CooldownTime  SettingName = "proposal.cooldown.time"
+	SettingName_Proposal_VoteTime      SettingName = "proposal.vote.time"
+	SettingName_Proposal_VoteDelayTime SettingName = "proposal.vote.delay.time"
+	SettingName_Proposal_ExecuteTime   SettingName = "proposal.execute.time"
+	SettingName_Proposal_ActionTime    SettingName = "proposal.action.time"
+)
+
 // ===============
 // === Structs ===
 // ===============
@@ -97,27 +128,27 @@ func newOracleDaoSettings(odaoMgr *OracleDaoManager) (*OracleDaoSettings, error)
 	}
 
 	// Member
-	s.Member.Quorum = newCompoundSetting[float64](s.dnts_members, odaoMgr, "members.quorum")
-	s.Member.RplBond = newUintSetting(s.dnts_members, odaoMgr, "members.rplbond")
-	s.Member.ChallengeCooldown = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.cooldown")
-	s.Member.ChallengeWindow = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, "members.challenge.window")
-	s.Member.ChallengeCost = newUintSetting(s.dnts_members, odaoMgr, "members.challenge.cost")
+	s.Member.Quorum = newCompoundSetting[float64](s.dnts_members, odaoMgr, SettingName_Member_Quorum)
+	s.Member.RplBond = newUintSetting(s.dnts_members, odaoMgr, SettingName_Member_RplBond)
+	s.Member.ChallengeCooldown = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, SettingName_Member_ChallengeCooldown)
+	s.Member.ChallengeWindow = newCompoundSetting[time.Duration](s.dnts_members, odaoMgr, SettingName_Member_ChallengeWindow)
+	s.Member.ChallengeCost = newUintSetting(s.dnts_members, odaoMgr, SettingName_Member_ChallengeCost)
 
 	// Minipool
-	s.Minipool.ScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.scrub.period")
-	s.Minipool.ScrubQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, "minipool.scrub.quorum")
-	s.Minipool.PromotionScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.promotion.scrub.period")
-	s.Minipool.IsScrubPenaltyEnabled = newBoolSetting(s.dnts_minipool, odaoMgr, "minipool.scrub.penalty.enabled")
-	s.Minipool.BondReductionWindowStart = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.bond.reduction.window.start")
-	s.Minipool.BondReductionWindowLength = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, "minipool.bond.reduction.window.length")
-	s.Minipool.BondReductionCancellationQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, "minipool.cancel.bond.reduction.quorum")
+	s.Minipool.ScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, SettingName_Minipool_ScrubPeriod)
+	s.Minipool.ScrubQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, SettingName_Minipool_ScrubQuorum)
+	s.Minipool.PromotionScrubPeriod = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, SettingName_Minipool_PromotionScrubPeriod)
+	s.Minipool.IsScrubPenaltyEnabled = newBoolSetting(s.dnts_minipool, odaoMgr, SettingName_Minipool_IsScrubPenaltyEnabled)
+	s.Minipool.BondReductionWindowStart = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, SettingName_Minipool_BondReductionWindowStart)
+	s.Minipool.BondReductionWindowLength = newCompoundSetting[time.Duration](s.dnts_minipool, odaoMgr, SettingName_Minipool_BondReductionWindowLength)
+	s.Minipool.BondReductionCancellationQuorum = newCompoundSetting[float64](s.dnts_minipool, odaoMgr, SettingName_Minipool_BondReductionCancellationQuorum)
 
 	// Proposal
-	s.Proposal.CooldownTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.cooldown.time")
-	s.Proposal.VoteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.vote.time")
-	s.Proposal.VoteDelayTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.vote.delay.time")
-	s.Proposal.ExecuteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.execute.time")
-	s.Proposal.ActionTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, "proposal.action.time")
+	s.Proposal.CooldownTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, SettingName_Proposal_CooldownTime)
+	s.Proposal.VoteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, SettingName_Proposal_VoteTime)
+	s.Proposal.VoteDelayTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, SettingName_Proposal_VoteDelayTime)
+	s.Proposal.ExecuteTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, SettingName_Proposal_ExecuteTime)
+	s.Proposal.ActionTime = newCompoundSetting[time.Duration](s.dnts_proposals, odaoMgr, SettingName_Proposal_ActionTime)
 
 	return s, nil
 }

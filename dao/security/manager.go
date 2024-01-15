@@ -113,19 +113,19 @@ func (c *SecurityCouncilManager) Leave(opts *bind.TransactOpts) (*core.Transacti
 // === DAOSecurityProposals ===
 
 // Get info for proposing a uint setting
-func (c *SecurityCouncilManager) ProposeSetUint(message string, contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, message, "proposalSettingUint", contractName, settingPath, value)
+	return c.submitProposal(opts, message, "proposalSettingUint", contractName, string(setting), value)
 }
 
 // Get info for proposing a bool setting
-func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, message, "proposalSettingBool", contractName, settingPath, value)
+	return c.submitProposal(opts, message, "proposalSettingBool", contractName, string(setting), value)
 }
 
 // Get info for proposing to invite a new member to the security council

@@ -84,13 +84,13 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 // === DAONodeTrusted ===
 
 // Bootstrap a bool setting
-func (c *OracleDaoManager) BootstrapBool(contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnt, "bootstrapSettingBool", opts, contractName, settingPath, value)
+func (c *OracleDaoManager) BootstrapBool(contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dnt, "bootstrapSettingBool", opts, contractName, string(setting), value)
 }
 
 // Bootstrap a uint setting
-func (c *OracleDaoManager) BootstrapUint(contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnt, "bootstrapSettingUint", opts, contractName, settingPath, value)
+func (c *OracleDaoManager) BootstrapUint(contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dnt, "bootstrapSettingUint", opts, contractName, string(setting), value)
 }
 
 // Bootstrap a member into the Oracle DAO
@@ -154,19 +154,19 @@ func (c *OracleDaoManager) ProposeKickMember(message string, memberAddress commo
 }
 
 // Get info for proposing a bool setting
-func (c *OracleDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, message, "proposalSettingBool", contractName, settingPath, value)
+	return c.submitProposal(opts, message, "proposalSettingBool", contractName, string(setting), value)
 }
 
 // Get info for proposing a uint setting
-func (c *OracleDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, message, "proposalSettingUint", contractName, settingPath, value)
+	return c.submitProposal(opts, message, "proposalSettingUint", contractName, string(setting), value)
 }
 
 // Get info for proposing a contract upgrade

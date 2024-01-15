@@ -191,18 +191,18 @@ func (c *ProtocolDaoManager) GetProtocolDaoRewardsPercent(mc *batch.MultiCaller,
 // === DAOProtocol ===
 
 // Get info for bootstrapping a bool setting
-func (c *ProtocolDaoManager) BootstrapBool(contractName rocketpool.ContractName, settingPath string, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingBool", opts, contractName, settingPath, value)
+func (c *ProtocolDaoManager) BootstrapBool(contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingBool", opts, contractName, string(setting), value)
 }
 
 // Get info for bootstrapping a uint256 setting
-func (c *ProtocolDaoManager) BootstrapUint(contractName rocketpool.ContractName, settingPath string, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingUint", opts, contractName, settingPath, value)
+func (c *ProtocolDaoManager) BootstrapUint(contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingUint", opts, contractName, string(setting), value)
 }
 
 // Get info for bootstrapping an address setting
-func (c *ProtocolDaoManager) BootstrapAddress(contractName rocketpool.ContractName, settingPath string, value common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingAddress", opts, contractName, settingPath, value)
+func (c *ProtocolDaoManager) BootstrapAddress(contractName rocketpool.ContractName, setting SettingName, value common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	return core.NewTransactionInfo(c.dp, "bootstrapSettingAddress", opts, contractName, string(setting), value)
 }
 
 // Get info for bootstrapping a rewards claimer
@@ -213,39 +213,43 @@ func (c *ProtocolDaoManager) BootstrapClaimer(contractName rocketpool.ContractNa
 // === DAOProtocolProposals ===
 
 // Get info for submitting a proposal to update a bool Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, settingPath string, value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting SettingName, value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingBool", contractName, settingPath, value)
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingBool", contractName, string(setting), value)
 }
 
 // Get info for submitting a proposal to update a uint Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, settingPath string, value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting SettingName, value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingUint", contractName, settingPath, value)
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingUint", contractName, string(setting), value)
 }
 
 // Get info for submitting a proposal to update an address Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetAddress(message string, contractName rocketpool.ContractName, settingPath string, value common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetAddress(message string, contractName rocketpool.ContractName, setting SettingName, value common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
 	if message == "" {
-		message = fmt.Sprintf("set %s", settingPath)
+		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingAddress", contractName, settingPath, value)
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingAddress", contractName, string(setting), value)
 }
 
 // Get info for submitting a proposal to update multiple Protocol DAO settings at once
-func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []rocketpool.ContractName, settingPaths []string, settingTypes []types.ProposalSettingType, values []any, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []rocketpool.ContractName, settings []SettingName, settingTypes []types.ProposalSettingType, values []any, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+	settingNameStrings := make([]string, len(settings))
+	for i, setting := range settings {
+		settingNameStrings[i] = string(setting)
+	}
 	if message == "" {
-		message = fmt.Sprintf("set %s", strings.Join(settingPaths, ", "))
+		message = fmt.Sprintf("set %s", strings.Join(settingNameStrings, ", "))
 	}
 	encodedValues, err := abiEncodeMultiValues(settingTypes, values)
 	if err != nil {
 		return nil, fmt.Errorf("error ABI encoding values: %w", err)
 	}
-	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingMulti", contractNames, settingPaths, settingTypes, encodedValues)
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalSettingMulti", contractNames, settingNameStrings, settingTypes, encodedValues)
 }
 
 // Get info for submitting a proposal to update the allocations of RPL rewards

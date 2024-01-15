@@ -10,6 +10,89 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
+// =====================
+// === Setting Names ===
+// =====================
+
+type SettingName string
+
+const (
+	// Auction
+	SettingName_Auction_IsCreateLotEnabled    SettingName = "auction.lot.create.enabled"
+	SettingName_Auction_IsBidOnLotEnabled     SettingName = "auction.lot.bidding.enabled"
+	SettingName_Auction_LotMinimumEthValue    SettingName = "auction.lot.value.minimum"
+	SettingName_Auction_LotMaximumEthValue    SettingName = "auction.lot.value.maximum"
+	SettingName_Auction_LotDuration           SettingName = "auction.lot.duration"
+	SettingName_Auction_LotStartingPriceRatio SettingName = "auction.price.start"
+	SettingName_Auction_LotReservePriceRatio  SettingName = "auction.price.reserve"
+
+	// Deposit
+	SettingName_Deposit_IsDepositingEnabled                    SettingName = "deposit.enabled"
+	SettingName_Deposit_AreDepositAssignmentsEnabled           SettingName = "deposit.assign.enabled"
+	SettingName_Deposit_MinimumDeposit                         SettingName = "deposit.minimum"
+	SettingName_Deposit_MaximumDepositPoolSize                 SettingName = "deposit.pool.maximum"
+	SettingName_Deposit_MaximumAssignmentsPerDeposit           SettingName = "deposit.assign.maximum"
+	SettingName_Deposit_MaximumSocialisedAssignmentsPerDeposit SettingName = "deposit.assign.socialised.maximum"
+	SettingName_Deposit_DepositFee                             SettingName = "deposit.fee"
+
+	// Inflation
+	SettingName_Inflation_IntervalRate SettingName = "rpl.inflation.interval.rate"
+	SettingName_Inflation_StartTime    SettingName = "rpl.inflation.interval.start"
+
+	// Minipool
+	SettingName_Minipool_IsSubmitWithdrawableEnabled SettingName = "minipool.submit.withdrawable.enabled"
+	SettingName_Minipool_LaunchTimeout               SettingName = "minipool.launch.timeout"
+	SettingName_Minipool_IsBondReductionEnabled      SettingName = "minipool.bond.reduction.enabled"
+	SettingName_Minipool_MaximumCount                SettingName = "minipool.maximum.count"
+	SettingName_Minipool_UserDistributeWindowStart   SettingName = "minipool.user.distribute.window.start"
+	SettingName_Minipool_UserDistributeWindowLength  SettingName = "minipool.user.distribute.window.length"
+
+	// Network
+	SettingName_Network_OracleDaoConsensusThreshold SettingName = "network.consensus.threshold"
+	SettingName_Network_NodePenaltyThreshold        SettingName = "network.penalty.threshold"
+	SettingName_Network_PerPenaltyRate              SettingName = "network.penalty.per.rate"
+	SettingName_Network_IsSubmitBalancesEnabled     SettingName = "network.submit.balances.enabled"
+	SettingName_Network_SubmitBalancesFrequency     SettingName = "network.submit.balances.frequency"
+	SettingName_Network_IsSubmitPricesEnabled       SettingName = "network.submit.prices.enabled"
+	SettingName_Network_SubmitPricesFrequency       SettingName = "network.submit.prices.frequency"
+	SettingName_Network_MinimumNodeFee              SettingName = "network.node.fee.minimum"
+	SettingName_Network_TargetNodeFee               SettingName = "network.node.fee.target"
+	SettingName_Network_MaximumNodeFee              SettingName = "network.node.fee.maximum"
+	SettingName_Network_NodeFeeDemandRange          SettingName = "network.node.fee.demand.range"
+	SettingName_Network_TargetRethCollateralRate    SettingName = "network.reth.collateral.target"
+	SettingName_Network_IsSubmitRewardsEnabled      SettingName = "network.submit.rewards.enabled"
+
+	// Node
+	SettingName_Node_IsRegistrationEnabled              SettingName = "node.registration.enabled"
+	SettingName_Node_IsSmoothingPoolRegistrationEnabled SettingName = "node.smoothing.pool.registration.enabled"
+	SettingName_Node_IsDepositingEnabled                SettingName = "node.deposit.enabled"
+	SettingName_Node_AreVacantMinipoolsEnabled          SettingName = "node.vacant.minipools.enabled"
+	SettingName_Node_MinimumPerMinipoolStake            SettingName = "node.per.minipool.stake.minimum"
+	SettingName_Node_MaximumPerMinipoolStake            SettingName = "node.per.minipool.stake.maximum"
+
+	// Proposals
+	SettingName_Proposals_VotePhase1Time      SettingName = "proposal.vote.phase1.time"
+	SettingName_Proposals_VotePhase2Time      SettingName = "proposal.vote.phase2.time"
+	SettingName_Proposals_VoteDelayTime       SettingName = "proposal.vote.delay.time"
+	SettingName_Proposals_ExecuteTime         SettingName = "proposal.execute.time"
+	SettingName_Proposals_ProposalBond        SettingName = "proposal.bond"
+	SettingName_Proposals_ChallengeBond       SettingName = "proposal.challenge.bond"
+	SettingName_Proposals_ChallengePeriod     SettingName = "proposal.challenge.period"
+	SettingName_Proposals_ProposalQuorum      SettingName = "proposal.quorum"
+	SettingName_Proposals_ProposalVetoQuorum  SettingName = "proposal.veto.quorum"
+	SettingName_Proposals_ProposalMaxBlockAge SettingName = "proposal.max.block.age"
+
+	// Rewards
+	SettingName_Rewards_IntervalTime SettingName = "rpl.rewards.claim.period.time"
+
+	// Security
+	SettingName_Security_MembersQuorum       SettingName = "members.quorum"
+	SettingName_Security_MembersLeaveTime    SettingName = "members.leave.time"
+	SettingName_Security_ProposalVoteTime    SettingName = "proposal.vote.time"
+	SettingName_Security_ProposalExecuteTime SettingName = "proposal.execute.time"
+	SettingName_Security_ProposalActionTime  SettingName = "proposal.action.time"
+)
+
 // ===============
 // === Structs ===
 // ===============
@@ -92,7 +175,7 @@ type ProtocolDaoSettings struct {
 		ChallengePeriod     *ProtocolDaoCompoundSetting[time.Duration]
 		ProposalQuorum      *ProtocolDaoCompoundSetting[float64]
 		ProposalVetoQuorum  *ProtocolDaoCompoundSetting[float64]
-		PropoaslMaxBlockAge *ProtocolDaoCompoundSetting[uint64]
+		ProposalMaxBlockAge *ProtocolDaoCompoundSetting[uint64]
 	}
 
 	Rewards struct {
@@ -172,79 +255,79 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	}
 
 	// Auction
-	s.Auction.IsCreateLotEnabled = newBoolSetting(s.dps_auction, pdaoMgr, "auction.lot.create.enabled")
-	s.Auction.IsBidOnLotEnabled = newBoolSetting(s.dps_auction, pdaoMgr, "auction.lot.bidding.enabled")
-	s.Auction.LotMinimumEthValue = newUintSetting(s.dps_auction, pdaoMgr, "auction.lot.value.minimum")
-	s.Auction.LotMaximumEthValue = newUintSetting(s.dps_auction, pdaoMgr, "auction.lot.value.maximum")
-	s.Auction.LotDuration = newCompoundSetting[uint64](s.dps_auction, pdaoMgr, "auction.lot.duration")
-	s.Auction.LotStartingPriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, "auction.price.start")
-	s.Auction.LotReservePriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, "auction.price.reserve")
+	s.Auction.IsCreateLotEnabled = newBoolSetting(s.dps_auction, pdaoMgr, SettingName_Auction_IsCreateLotEnabled)
+	s.Auction.IsBidOnLotEnabled = newBoolSetting(s.dps_auction, pdaoMgr, SettingName_Auction_IsBidOnLotEnabled)
+	s.Auction.LotMinimumEthValue = newUintSetting(s.dps_auction, pdaoMgr, SettingName_Auction_LotMinimumEthValue)
+	s.Auction.LotMaximumEthValue = newUintSetting(s.dps_auction, pdaoMgr, SettingName_Auction_LotMaximumEthValue)
+	s.Auction.LotDuration = newCompoundSetting[uint64](s.dps_auction, pdaoMgr, SettingName_Auction_LotDuration)
+	s.Auction.LotStartingPriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotStartingPriceRatio)
+	s.Auction.LotReservePriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotStartingPriceRatio)
 
 	// Deposit
-	s.Deposit.IsDepositingEnabled = newBoolSetting(s.dps_deposit, pdaoMgr, "deposit.enabled")
-	s.Deposit.AreDepositAssignmentsEnabled = newBoolSetting(s.dps_deposit, pdaoMgr, "deposit.assign.enabled")
-	s.Deposit.MinimumDeposit = newUintSetting(s.dps_deposit, pdaoMgr, "deposit.minimum")
-	s.Deposit.MaximumDepositPoolSize = newUintSetting(s.dps_deposit, pdaoMgr, "deposit.pool.maximum")
-	s.Deposit.MaximumAssignmentsPerDeposit = newCompoundSetting[uint64](s.dps_deposit, pdaoMgr, "deposit.assign.maximum")
-	s.Deposit.MaximumSocialisedAssignmentsPerDeposit = newCompoundSetting[uint64](s.dps_deposit, pdaoMgr, "deposit.assign.socialised.maximum")
-	s.Deposit.DepositFee = newCompoundSetting[float64](s.dps_deposit, pdaoMgr, "deposit.fee")
+	s.Deposit.IsDepositingEnabled = newBoolSetting(s.dps_deposit, pdaoMgr, SettingName_Deposit_IsDepositingEnabled)
+	s.Deposit.AreDepositAssignmentsEnabled = newBoolSetting(s.dps_deposit, pdaoMgr, SettingName_Deposit_AreDepositAssignmentsEnabled)
+	s.Deposit.MinimumDeposit = newUintSetting(s.dps_deposit, pdaoMgr, SettingName_Deposit_MinimumDeposit)
+	s.Deposit.MaximumDepositPoolSize = newUintSetting(s.dps_deposit, pdaoMgr, SettingName_Deposit_MaximumDepositPoolSize)
+	s.Deposit.MaximumAssignmentsPerDeposit = newCompoundSetting[uint64](s.dps_deposit, pdaoMgr, SettingName_Deposit_MaximumAssignmentsPerDeposit)
+	s.Deposit.MaximumSocialisedAssignmentsPerDeposit = newCompoundSetting[uint64](s.dps_deposit, pdaoMgr, SettingName_Deposit_MaximumSocialisedAssignmentsPerDeposit)
+	s.Deposit.DepositFee = newCompoundSetting[float64](s.dps_deposit, pdaoMgr, SettingName_Deposit_DepositFee)
 
 	// Inflation
-	s.Inflation.IntervalRate = newCompoundSetting[float64](s.dps_inflation, pdaoMgr, "rpl.inflation.interval.rate")
-	s.Inflation.StartTime = newCompoundSetting[time.Time](s.dps_inflation, pdaoMgr, "rpl.inflation.interval.start")
+	s.Inflation.IntervalRate = newCompoundSetting[float64](s.dps_inflation, pdaoMgr, SettingName_Inflation_IntervalRate)
+	s.Inflation.StartTime = newCompoundSetting[time.Time](s.dps_inflation, pdaoMgr, SettingName_Inflation_StartTime)
 
 	// Minipool
-	s.Minipool.IsSubmitWithdrawableEnabled = newBoolSetting(s.dps_minipool, pdaoMgr, "minipool.submit.withdrawable.enabled")
-	s.Minipool.LaunchTimeout = newCompoundSetting[time.Duration](s.dps_minipool, pdaoMgr, "minipool.launch.timeout")
-	s.Minipool.IsBondReductionEnabled = newBoolSetting(s.dps_minipool, pdaoMgr, "minipool.bond.reduction.enabled")
-	s.Minipool.MaximumCount = newCompoundSetting[uint64](s.dps_minipool, pdaoMgr, "minipool.maximum.count")
-	s.Minipool.UserDistributeWindowStart = newCompoundSetting[time.Duration](s.dps_minipool, pdaoMgr, "minipool.user.distribute.window.start")
-	s.Minipool.UserDistributeWindowLength = newCompoundSetting[time.Duration](s.dps_minipool, pdaoMgr, "minipool.user.distribute.window.length")
+	s.Minipool.IsSubmitWithdrawableEnabled = newBoolSetting(s.dps_minipool, pdaoMgr, SettingName_Minipool_IsSubmitWithdrawableEnabled)
+	s.Minipool.LaunchTimeout = newCompoundSetting[time.Duration](s.dps_minipool, pdaoMgr, SettingName_Minipool_LaunchTimeout)
+	s.Minipool.IsBondReductionEnabled = newBoolSetting(s.dps_minipool, pdaoMgr, SettingName_Minipool_IsBondReductionEnabled)
+	s.Minipool.MaximumCount = newCompoundSetting[uint64](s.dps_minipool, pdaoMgr, SettingName_Minipool_MaximumCount)
+	s.Minipool.UserDistributeWindowStart = newCompoundSetting[time.Duration](s.dps_minipool, pdaoMgr, SettingName_Minipool_UserDistributeWindowStart)
+	s.Minipool.UserDistributeWindowLength = newCompoundSetting[time.Duration](s.dps_minipool, pdaoMgr, SettingName_Minipool_UserDistributeWindowLength)
 
 	// Network
-	s.Network.OracleDaoConsensusThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.consensus.threshold")
-	s.Network.NodePenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.threshold")
-	s.Network.PerPenaltyRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.penalty.per.rate")
-	s.Network.IsSubmitBalancesEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.balances.enabled")
-	s.Network.SubmitBalancesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.submit.balances.frequency")
-	s.Network.IsSubmitPricesEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.prices.enabled")
-	s.Network.SubmitPricesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, "network.submit.prices.frequency")
-	s.Network.MinimumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.minimum")
-	s.Network.TargetNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.target")
-	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.node.fee.maximum")
-	s.Network.NodeFeeDemandRange = newUintSetting(s.dps_network, pdaoMgr, "network.node.fee.demand.range")
-	s.Network.TargetRethCollateralRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, "network.reth.collateral.target")
-	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, "network.submit.rewards.enabled")
+	s.Network.OracleDaoConsensusThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_OracleDaoConsensusThreshold)
+	s.Network.NodePenaltyThreshold = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_NodePenaltyThreshold)
+	s.Network.PerPenaltyRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_PerPenaltyRate)
+	s.Network.IsSubmitBalancesEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_PerPenaltyRate)
+	s.Network.SubmitBalancesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, SettingName_Network_SubmitBalancesFrequency)
+	s.Network.IsSubmitPricesEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_SubmitBalancesFrequency)
+	s.Network.SubmitPricesFrequency = newCompoundSetting[time.Duration](s.dps_network, pdaoMgr, SettingName_Network_SubmitPricesFrequency)
+	s.Network.MinimumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_SubmitPricesFrequency)
+	s.Network.TargetNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_TargetNodeFee)
+	s.Network.MaximumNodeFee = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_MaximumNodeFee)
+	s.Network.NodeFeeDemandRange = newUintSetting(s.dps_network, pdaoMgr, SettingName_Network_NodeFeeDemandRange)
+	s.Network.TargetRethCollateralRate = newCompoundSetting[float64](s.dps_network, pdaoMgr, SettingName_Network_TargetRethCollateralRate)
+	s.Network.IsSubmitRewardsEnabled = newBoolSetting(s.dps_network, pdaoMgr, SettingName_Network_TargetRethCollateralRate)
 
 	// Node
-	s.Node.IsRegistrationEnabled = newBoolSetting(s.dps_node, pdaoMgr, "node.registration.enabled")
-	s.Node.IsSmoothingPoolRegistrationEnabled = newBoolSetting(s.dps_node, pdaoMgr, "node.smoothing.pool.registration.enabled")
-	s.Node.IsDepositingEnabled = newBoolSetting(s.dps_node, pdaoMgr, "node.deposit.enabled")
-	s.Node.AreVacantMinipoolsEnabled = newBoolSetting(s.dps_node, pdaoMgr, "node.vacant.minipools.enabled")
-	s.Node.MinimumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, "node.per.minipool.stake.minimum")
-	s.Node.MaximumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, "node.per.minipool.stake.maximum")
+	s.Node.IsRegistrationEnabled = newBoolSetting(s.dps_node, pdaoMgr, SettingName_Node_IsRegistrationEnabled)
+	s.Node.IsSmoothingPoolRegistrationEnabled = newBoolSetting(s.dps_node, pdaoMgr, SettingName_Node_IsSmoothingPoolRegistrationEnabled)
+	s.Node.IsDepositingEnabled = newBoolSetting(s.dps_node, pdaoMgr, SettingName_Node_IsDepositingEnabled)
+	s.Node.AreVacantMinipoolsEnabled = newBoolSetting(s.dps_node, pdaoMgr, SettingName_Node_AreVacantMinipoolsEnabled)
+	s.Node.MinimumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, SettingName_Node_MinimumPerMinipoolStake)
+	s.Node.MaximumPerMinipoolStake = newCompoundSetting[float64](s.dps_node, pdaoMgr, SettingName_Node_MaximumPerMinipoolStake)
 
 	// Proposals
-	s.Proposals.VotePhase1Time = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.phase1.time")
-	s.Proposals.VotePhase2Time = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.phase2.time")
-	s.Proposals.VoteDelayTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.vote.delay.time")
-	s.Proposals.ExecuteTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.execute.time")
-	s.Proposals.ProposalBond = newUintSetting(s.dps_proposals, pdaoMgr, "proposal.bond")
-	s.Proposals.ChallengeBond = newUintSetting(s.dps_proposals, pdaoMgr, "proposal.challenge.bond")
-	s.Proposals.ChallengePeriod = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, "proposal.challenge.period")
-	s.Proposals.ProposalQuorum = newCompoundSetting[float64](s.dps_proposals, pdaoMgr, "proposal.quorum")
-	s.Proposals.ProposalVetoQuorum = newCompoundSetting[float64](s.dps_proposals, pdaoMgr, "proposal.veto.quorum")
-	s.Proposals.PropoaslMaxBlockAge = newCompoundSetting[uint64](s.dps_proposals, pdaoMgr, "proposal.max.block.age")
+	s.Proposals.VotePhase1Time = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, SettingName_Proposals_VotePhase1Time)
+	s.Proposals.VotePhase2Time = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, SettingName_Proposals_VotePhase2Time)
+	s.Proposals.VoteDelayTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, SettingName_Proposals_VoteDelayTime)
+	s.Proposals.ExecuteTime = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, SettingName_Proposals_ExecuteTime)
+	s.Proposals.ProposalBond = newUintSetting(s.dps_proposals, pdaoMgr, SettingName_Proposals_ProposalBond)
+	s.Proposals.ChallengeBond = newUintSetting(s.dps_proposals, pdaoMgr, SettingName_Proposals_ChallengeBond)
+	s.Proposals.ChallengePeriod = newCompoundSetting[time.Duration](s.dps_proposals, pdaoMgr, SettingName_Proposals_ChallengePeriod)
+	s.Proposals.ProposalQuorum = newCompoundSetting[float64](s.dps_proposals, pdaoMgr, SettingName_Proposals_ProposalQuorum)
+	s.Proposals.ProposalVetoQuorum = newCompoundSetting[float64](s.dps_proposals, pdaoMgr, SettingName_Proposals_ProposalVetoQuorum)
+	s.Proposals.ProposalMaxBlockAge = newCompoundSetting[uint64](s.dps_proposals, pdaoMgr, SettingName_Proposals_ProposalMaxBlockAge)
 
 	// Rewards
-	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, "rpl.rewards.claim.period.time")
+	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, SettingName_Rewards_IntervalTime)
 
 	// Security
-	s.Security.MembersQuorum = newCompoundSetting[float64](s.dps_security, pdaoMgr, "members.quorum")
-	s.Security.MembersLeaveTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "members.leave.time")
-	s.Security.ProposalVoteTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "proposal.vote.time")
-	s.Security.ProposalExecuteTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "proposal.execute.time")
-	s.Security.ProposalActionTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, "proposal.action.time")
+	s.Security.MembersQuorum = newCompoundSetting[float64](s.dps_security, pdaoMgr, SettingName_Security_MembersQuorum)
+	s.Security.MembersLeaveTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, SettingName_Security_MembersLeaveTime)
+	s.Security.ProposalVoteTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, SettingName_Security_ProposalVoteTime)
+	s.Security.ProposalExecuteTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, SettingName_Security_ProposalExecuteTime)
+	s.Security.ProposalActionTime = newCompoundSetting[time.Duration](s.dps_security, pdaoMgr, SettingName_Security_ProposalActionTime)
 
 	return s, nil
 }

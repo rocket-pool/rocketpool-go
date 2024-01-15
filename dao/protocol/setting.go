@@ -17,7 +17,7 @@ import (
 type IProtocolDaoSetting[ProposeType core.CallReturnType] interface {
 	core.IQueryable
 	GetContract() rocketpool.ContractName
-	GetPath() string
+	GetSettingName() SettingName
 	ProposeSet(value ProposeType, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 }
@@ -33,16 +33,16 @@ type ProtocolDaoBoolSetting struct {
 	// === Internal fields ===
 	settingContract rocketpool.ContractName
 	pdaoMgr         *ProtocolDaoManager
-	path            string
+	settingName     SettingName
 }
 
 // Creates a new bool setting
-func newBoolSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoBoolSetting {
+func newBoolSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, settingName SettingName) *ProtocolDaoBoolSetting {
 	return &ProtocolDaoBoolSetting{
-		SimpleField:     core.NewSimpleField[bool](settingContract, "getSettingBool", path),
+		SimpleField:     core.NewSimpleField[bool](settingContract, "getSettingBool", settingName),
 		settingContract: rocketpool.ContractName(settingContract.Name),
 		pdaoMgr:         pdaoMgr,
-		path:            path,
+		settingName:     settingName,
 	}
 }
 
@@ -52,18 +52,18 @@ func (s *ProtocolDaoBoolSetting) GetContract() rocketpool.ContractName {
 }
 
 // Gets the underlying path for the setting within the contracts
-func (s *ProtocolDaoBoolSetting) GetPath() string {
-	return s.path
+func (s *ProtocolDaoBoolSetting) GetSettingName() SettingName {
+	return s.settingName
 }
 
 // Creates a proposal to change the setting
 func (s *ProtocolDaoBoolSetting) ProposeSet(value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetBool("", s.settingContract, s.path, value, blockNumber, treeNodes, opts)
+	return s.pdaoMgr.ProposeSetBool("", s.settingContract, s.settingName, value, blockNumber, treeNodes, opts)
 }
 
 // Bootstraps the setting with a new value
 func (s *ProtocolDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.BootstrapBool(s.settingContract, s.path, value, opts)
+	return s.pdaoMgr.BootstrapBool(s.settingContract, s.settingName, value, opts)
 }
 
 /// ===================
@@ -77,16 +77,16 @@ type ProtocolDaoUintSetting struct {
 	// === Internal fields ===
 	settingContract rocketpool.ContractName
 	pdaoMgr         *ProtocolDaoManager
-	path            string
+	settingName     SettingName
 }
 
 // Creates a new uint setting
-func newUintSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoUintSetting {
+func newUintSetting(settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, settingName SettingName) *ProtocolDaoUintSetting {
 	return &ProtocolDaoUintSetting{
-		SimpleField:     core.NewSimpleField[*big.Int](settingContract, "getSettingUint", path),
+		SimpleField:     core.NewSimpleField[*big.Int](settingContract, "getSettingUint", settingName),
 		settingContract: rocketpool.ContractName(settingContract.Name),
 		pdaoMgr:         pdaoMgr,
-		path:            path,
+		settingName:     settingName,
 	}
 }
 
@@ -96,18 +96,18 @@ func (s *ProtocolDaoUintSetting) GetContract() rocketpool.ContractName {
 }
 
 // Gets the underlying path for the setting within the contracts
-func (s *ProtocolDaoUintSetting) GetPath() string {
-	return s.path
+func (s *ProtocolDaoUintSetting) GetSettingName() SettingName {
+	return s.settingName
 }
 
 // Creates a proposal to change the setting
 func (s *ProtocolDaoUintSetting) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, value, blockNumber, treeNodes, opts)
+	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.settingName, value, blockNumber, treeNodes, opts)
 }
 
 // Bootstraps the setting with a new value
 func (s *ProtocolDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.BootstrapUint(s.settingContract, s.path, value, opts)
+	return s.pdaoMgr.BootstrapUint(s.settingContract, s.settingName, value, opts)
 }
 
 /// =======================
@@ -121,16 +121,16 @@ type ProtocolDaoCompoundSetting[DataType core.FormattedUint256Type] struct {
 	// === Internal fields ===
 	settingContract rocketpool.ContractName
 	pdaoMgr         *ProtocolDaoManager
-	path            string
+	settingName     SettingName
 }
 
 // Creates a new compound setting
-func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, path string) *ProtocolDaoCompoundSetting[DataType] {
+func newCompoundSetting[DataType core.FormattedUint256Type](settingContract *core.Contract, pdaoMgr *ProtocolDaoManager, settingName SettingName) *ProtocolDaoCompoundSetting[DataType] {
 	s := &ProtocolDaoCompoundSetting[DataType]{
-		FormattedUint256Field: core.NewFormattedUint256Field[DataType](settingContract, "getSettingUint", path),
+		FormattedUint256Field: core.NewFormattedUint256Field[DataType](settingContract, "getSettingUint", settingName),
 		settingContract:       rocketpool.ContractName(settingContract.Name),
 		pdaoMgr:               pdaoMgr,
-		path:                  path,
+		settingName:           settingName,
 	}
 
 	return s
@@ -142,16 +142,16 @@ func (s *ProtocolDaoCompoundSetting[DataType]) GetContract() rocketpool.Contract
 }
 
 // Gets the underlying path for the setting within the contracts
-func (s *ProtocolDaoCompoundSetting[DataType]) GetPath() string {
-	return s.path
+func (s *ProtocolDaoCompoundSetting[DataType]) GetSettingName() SettingName {
+	return s.settingName
 }
 
 // Creates a proposal to change the setting
 func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.path, value, blockNumber, treeNodes, opts)
+	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.settingName, value, blockNumber, treeNodes, opts)
 }
 
 // Bootstraps the setting with a new value
 func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.pdaoMgr.BootstrapUint(s.settingContract, s.path, value, opts)
+	return s.pdaoMgr.BootstrapUint(s.settingContract, s.settingName, value, opts)
 }

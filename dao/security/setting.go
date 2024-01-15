@@ -43,5 +43,5 @@ func (s *SecurityCouncilBoolSetting) GetProtocolDaoSetting() *protocol.ProtocolD
 
 // Creates a proposal to change the setting
 func (s *SecurityCouncilBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return s.secMgr.ProposeSetBool("", s.setting.GetContract(), s.setting.GetPath(), value, opts)
+	return s.secMgr.ProposeSetBool("", s.setting.GetContract(), s.setting.GetSettingName(), value, opts)
 }
