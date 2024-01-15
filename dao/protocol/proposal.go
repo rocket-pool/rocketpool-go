@@ -103,6 +103,7 @@ type ProtocolDaoProposal struct {
 	idBig *big.Int
 	rp    *rocketpool.RocketPool
 	dpp   *core.Contract
+	dpps  *core.Contract
 	dpv   *core.Contract
 }
 
@@ -116,6 +117,10 @@ func NewProtocolDaoProposal(rp *rocketpool.RocketPool, id uint64) (*ProtocolDaoP
 	dpp, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolProposal)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO proposal contract: %w", err)
+	}
+	dpps, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolProposals)
+	if err != nil {
+		return nil, fmt.Errorf("error getting protocol DAO proposals contract: %w", err)
 	}
 	dpv, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolVerifier)
 	if err != nil {
@@ -153,6 +158,7 @@ func NewProtocolDaoProposal(rp *rocketpool.RocketPool, id uint64) (*ProtocolDaoP
 		idBig: idBig,
 		rp:    rp,
 		dpp:   dpp,
+		dpps:  dpps,
 		dpv:   dpv,
 	}, nil
 }
@@ -162,18 +168,40 @@ func NewProtocolDaoProposal(rp *rocketpool.RocketPool, id uint64) (*ProtocolDaoP
 // =============
 
 // Get the option that the address voted on for the proposal, and whether or not it's voted yet
-func (p *ProtocolDaoProposal) GetAddressVoteDirection(mc *batch.MultiCaller, out *types.VoteDirection, address common.Address) {
-	core.AddCallRaw(mc, p.dpp, out, "getReceiptDirection", p.idBig, address)
+func (p *ProtocolDaoProposal) GetAddressVoteDirection(mc *batch.MultiCaller, address common.Address) func() types.VoteDirection {
+	out := new(uint8)
+	core.AddCall(mc, p.dpp, out, "getReceiptDirection", p.idBig, address)
+
+	return func() types.VoteDirection {
+		return types.VoteDirection(*out)
+	}
 }
 
 // Get the tree node of the proposal's voting tree at the given index
-func (p *ProtocolDaoProposal) GetTreeNode(mc *batch.MultiCaller, out *types.VotingTreeNode, nodeIndex uint64) {
+func (p *ProtocolDaoProposal) GetTreeNode(mc *batch.MultiCaller, nodeIndex uint64) func() types.VotingTreeNode {
+	type nodeRaw struct {
+		Sum  *big.Int `json:"sum"`
+		Hash [32]byte `json:"hash"`
+	}
+	out := new(nodeRaw)
 	core.AddCallRaw(mc, p.dpv, out, "getNode", p.idBig, big.NewInt(int64(nodeIndex)))
+
+	return func() types.VotingTreeNode {
+		return types.VotingTreeNode{
+			Sum:  out.Sum,
+			Hash: common.BytesToHash(out.Hash[:]),
+		}
+	}
 }
 
 // Get the state of a challenge on a proposal and tree node index
-func (p *ProtocolDaoProposal) GetChallengeState(mc *batch.MultiCaller, out *types.ChallengeState, index uint64) {
-	core.AddCallRaw(mc, p.dpv, out, "getChallengeState", p.idBig, big.NewInt(int64(index)))
+func (p *ProtocolDaoProposal) GetChallengeState(mc *batch.MultiCaller, index uint64) func() types.ChallengeState {
+	out := new(uint8)
+	core.AddCall(mc, p.dpv, out, "getChallengeState", p.idBig, big.NewInt(int64(index)))
+
+	return func() types.ChallengeState {
+		return types.ChallengeState(*out)
+	}
 }
 
 // ====================
@@ -240,7 +268,7 @@ func (p *ProtocolDaoProposal) ClaimBondProposer(indices []uint64, opts *bind.Tra
 // Get a proposal's payload as a human-readable string
 func (p *ProtocolDaoProposal) GetProposalPayloadString() (string, error) {
 	// Get proposal DAO contract ABI
-	daoContractAbi := p.dpp.ABI
+	daoContractAbi := p.dpps.ABI
 
 	// Get proposal payload method
 	payload := p.Payload.Get()
