@@ -15,7 +15,7 @@ import (
 // A general interface for settings, parameterized by the type required for proposals and boostrapping
 type IOracleDaoSetting[ProposeType core.CallReturnType] interface {
 	core.IQueryable
-	GetPath() string
+	GetSettingName() SettingName
 	ProposeSet(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
 }
