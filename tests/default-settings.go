@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/utils/eth"
@@ -21,7 +22,16 @@ func CreateDefaults(mgr *TestManager) error {
 	var err error
 	once.Do(func() {
 		// Get the timestamp of the deploy block from hardhat - needed for inflation's default
-		targetBlock := big.NewInt(0).Add(mgr.RocketPool.DeployBlock, big.NewInt(34)) // Inflation timing started 34 blocks after the deploy block
+		var fromBlock *big.Int
+		err := mgr.RocketPool.Query(func(mc *batch.MultiCaller) error {
+			mgr.RocketPool.Storage.GetDeployBlock(mc, &fromBlock)
+			return nil
+		}, nil)
+		if err != nil {
+			err = fmt.Errorf("error getting deployment block: %w", err)
+			return
+		}
+		targetBlock := big.NewInt(0).Add(fromBlock, big.NewInt(34)) // Inflation timing started 34 blocks after the deploy block
 		var header *types.Header
 		header, err = mgr.Client.HeaderByNumber(context.Background(), targetBlock)
 		if err != nil {

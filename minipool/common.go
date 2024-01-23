@@ -282,7 +282,6 @@ func (c *MinipoolCommon) CalculateUserShare(mc *batch.MultiCaller, share_Out **b
 
 // Get the data from this minipool's MinipoolPrestaked event
 func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.CallOpts) (PrestakeData, error) {
-
 	addressFilter := []common.Address{c.Address}
 	topicFilter := [][]common.Hash{{c.contract.ABI.Events["MinipoolPrestaked"].ID}}
 
@@ -293,7 +292,16 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 	}
 
 	// Grab the lowest block number worth querying from (should never have to go back this far in practice)
-	fromBlock := c.rp.DeployBlock.Uint64()
+	var fromBlockBig *big.Int
+	err = c.rp.Query(func(mc *batch.MultiCaller) error {
+		c.rp.Storage.GetDeployBlock(mc, &fromBlockBig)
+		return nil
+	}, nil)
+	if err != nil {
+		return PrestakeData{}, fmt.Errorf("error getting deployment block: %w", err)
+	}
+
+	fromBlock := fromBlockBig.Uint64()
 	var log gethtypes.Log
 	found := false
 
@@ -304,10 +312,9 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 			from = fromBlock
 		}
 
-		fromBig := big.NewInt(0).SetUint64(from)
 		toBig := big.NewInt(0).SetUint64(i)
 
-		logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, fromBig, toBig, nil)
+		logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, fromBlockBig, toBig, nil)
 		if err != nil {
 			return PrestakeData{}, fmt.Errorf("error getting prestake logs for minipool %s: %w", c.Address.Hex(), err)
 		}

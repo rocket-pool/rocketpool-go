@@ -2,11 +2,13 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
@@ -23,7 +25,13 @@ func GetLogs(rp *rocketpool.RocketPool, addressFilter []common.Address, topicFil
 
 	// Get the block that Rocket Pool was deployed on as the lower bound if one wasn't specified
 	if fromBlock == nil {
-		fromBlock = rp.DeployBlock
+		err := rp.Query(func(mc *batch.MultiCaller) error {
+			rp.Storage.GetDeployBlock(mc, &fromBlock)
+			return nil
+		}, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error getting deployment block: %w", err)
+		}
 	}
 
 	if intervalSize == nil {

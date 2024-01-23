@@ -28,7 +28,6 @@ const (
 type RocketPool struct {
 	Client                   core.ExecutionClient
 	Storage                  *storage.Storage
-	DeployBlock              *big.Int
 	MulticallAddress         *common.Address
 	BalanceBatcher           *batch.BalanceBatcher
 	VersionManager           *VersionManager
@@ -68,16 +67,6 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		instanceAbis:             map[ContractName]*abi.ABI{},
 	}
 	rp.VersionManager = NewVersionManager(rp)
-
-	// Get the block the protocol was deployed on
-	err = rp.Query(func(mc *batch.MultiCaller) error {
-		rp.Storage.GetDeployBlock(mc, &rp.DeployBlock)
-		return nil
-	}, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error getting deployment block: %w", err)
-	}
-
 	return rp, nil
 }
 
