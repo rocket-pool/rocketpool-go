@@ -90,6 +90,8 @@ var ContractNames = []ContractName{
 
 	ContractName_RocketAuctionManager,
 
+	ContractName_RocketClaimDAO,
+
 	ContractName_RocketDAOProposal,
 
 	ContractName_RocketDAOProtocol,
@@ -100,7 +102,10 @@ var ContractNames = []ContractName{
 	ContractName_RocketDAOProtocolSettingsMinipool,
 	ContractName_RocketDAOProtocolSettingsNetwork,
 	ContractName_RocketDAOProtocolSettingsNode,
+	ContractName_RocketDAOProtocolSettingsProposals,
 	ContractName_RocketDAOProtocolSettingsRewards,
+	ContractName_RocketDAOProtocolSettingsSecurity,
+	ContractName_RocketDAOProtocolVerifier,
 
 	ContractName_RocketDAONodeTrustedActions,
 	ContractName_RocketDAONodeTrusted,
@@ -124,6 +129,7 @@ var ContractNames = []ContractName{
 	ContractName_RocketNetworkFees,
 	ContractName_RocketNetworkPenalties,
 	ContractName_RocketNetworkPrices,
+	ContractName_RocketNetworkVoting,
 
 	ContractName_RocketNodeDeposit,
 	ContractName_RocketNodeDistributorFactory,
@@ -132,6 +138,10 @@ var ContractNames = []ContractName{
 
 	ContractName_RocketMerkleDistributorMainnet,
 	ContractName_RocketRewardsPool,
+
+	ContractName_RocketDAOSecurity,
+	ContractName_RocketDAOSecurityActions,
+	ContractName_RocketDAOSecurityProposals,
 
 	ContractName_RocketSmoothingPool,
 
