@@ -2,8 +2,8 @@ package state
 
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
-	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -22,7 +22,7 @@ func GetProtocolDaoProposalDetails(rp *rocketpool.RocketPool, contracts *Network
 
 	// Get all of the parameters
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		return core.QueryAllFields(prop, mc)
+		return eth.QueryAllFields(prop, mc)
 	}, opts)
 	return prop, err
 }

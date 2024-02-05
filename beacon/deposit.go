@@ -5,9 +5,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/beacon"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/types"
 )
 
 // ===============
@@ -20,7 +21,8 @@ type BeaconDeposit struct {
 	DepositRoot *core.SimpleField[common.Hash]
 
 	// === Internal fields ===
-	cd *core.Contract
+	cd    *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -38,7 +40,8 @@ func NewBeaconDeposit(rp *rocketpool.RocketPool) (*BeaconDeposit, error) {
 	return &BeaconDeposit{
 		DepositRoot: core.NewSimpleField[common.Hash](cd, "get_deposit_root"),
 
-		cd: cd,
+		cd:    cd,
+		txMgr: rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -47,6 +50,6 @@ func NewBeaconDeposit(rp *rocketpool.RocketPool) (*BeaconDeposit, error) {
 // ====================
 
 // Deposit to the Beacon contract, creating a new validator
-func (c *BeaconDeposit) Deposit(opts *bind.TransactOpts, pubkey types.ValidatorPubkey, withdrawalCredentials common.Hash, signature types.ValidatorSignature, depositDataRoot common.Hash) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.cd, "deposit", opts, pubkey, withdrawalCredentials, signature, depositDataRoot)
+func (c *BeaconDeposit) Deposit(opts *bind.TransactOpts, pubkey beacon.ValidatorPubkey, withdrawalCredentials common.Hash, signature beacon.ValidatorSignature, depositDataRoot common.Hash) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.cd.Contract, "deposit", opts, pubkey, withdrawalCredentials, signature, depositDataRoot)
 }

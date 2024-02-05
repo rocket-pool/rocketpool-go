@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -110,7 +111,7 @@ type IErc20Token interface {
 	BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, address common.Address)
 
 	// Transfer tokens to a different address
-	Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+	Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error)
 }
 
 // ===============
@@ -122,6 +123,7 @@ type Erc20Contract struct {
 	Details  Erc20ContractDetails
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
+	txMgr    *eth.TransactionManager
 }
 
 // Details for ERC20 contracts
@@ -136,7 +138,7 @@ type Erc20ContractDetails struct {
 // ====================
 
 // Creates a contract wrapper for the ERC20 at the given address
-func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client core.ExecutionClient, opts *bind.CallOpts) (*Erc20Contract, error) {
+func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client eth.IExecutionClient, opts *bind.CallOpts) (*Erc20Contract, error) {
 	// Parse the ABI
 	if erc20Abi == nil {
 		abiParsed, err := abi.JSON(strings.NewReader(Erc20AbiString))
@@ -148,16 +150,18 @@ func NewErc20Contract(rp *rocketpool.RocketPool, address common.Address, client 
 
 	// Create contract
 	contract := &core.Contract{
-		Contract: bind.NewBoundContract(address, *erc20Abi, client, client, client),
-		Address:  &address,
-		ABI:      erc20Abi,
-		Client:   client,
+		Contract: &eth.Contract{
+			ContractImpl: bind.NewBoundContract(address, *erc20Abi, client, client, client),
+			Address:      address,
+			ABI:          erc20Abi,
+		},
 	}
 
 	// Create the wrapper
 	wrapper := &Erc20Contract{
 		Details:  Erc20ContractDetails{},
 		contract: contract,
+		txMgr:    rp.GetTransactionManager(),
 	}
 
 	// Get the details
@@ -188,6 +192,6 @@ func (c *Erc20Contract) BalanceOf(mc *batch.MultiCaller, balance_Out **big.Int, 
 // ====================
 
 // Get info for transferring the ERC20 to another address
-func (c *Erc20Contract) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "transfer", opts, to, amount)
+func (c *Erc20Contract) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "transfer", opts, to, amount)
 }

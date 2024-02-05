@@ -4,20 +4,10 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/types"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
-
-// ==================
-// === Interfaces ===
-// ==================
-
-// Represents structs that can have their values queried during a multicall
-type IQueryable interface {
-	// Adds the struct's values to the provided multicall query before it runs
-	AddToQuery(mc *batch.MultiCaller)
-}
 
 // ===================
 // === SimpleField ===

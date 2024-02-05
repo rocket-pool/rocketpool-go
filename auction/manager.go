@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -29,8 +30,9 @@ type AuctionManager struct {
 	LotCount *core.FormattedUint256Field[uint64]
 
 	// === Internal fields ===
-	rp *rocketpool.RocketPool
-	am *core.Contract
+	rp    *rocketpool.RocketPool
+	am    *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // Details for RocketAuctionManager
@@ -55,8 +57,9 @@ func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 		RemainingRplBalance: core.NewSimpleField[*big.Int](am, "getRemainingRPLBalance"),
 		LotCount:            core.NewFormattedUint256Field[uint64](am, "getLotCount"),
 
-		rp: rp,
-		am: am,
+		rp:    rp,
+		am:    am,
+		txMgr: rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -65,6 +68,6 @@ func NewAuctionManager(rp *rocketpool.RocketPool) (*AuctionManager, error) {
 // ====================
 
 // Get info for creating a new lot
-func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.am, "createLot", opts)
+func (c *AuctionManager) CreateLot(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.am.Contract, "createLot", opts)
 }

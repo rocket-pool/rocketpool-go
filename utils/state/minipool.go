@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/nodeset-org/eth-utils/beacon"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/minipool"
@@ -29,7 +30,7 @@ type NativeMinipoolDetails struct {
 	// Redstone
 	Exists                            bool
 	MinipoolAddress                   common.Address
-	Pubkey                            types.ValidatorPubkey
+	Pubkey                            beacon.ValidatorPubkey
 	StatusRaw                         uint8
 	StatusBlock                       *big.Int
 	StatusTime                        *big.Int

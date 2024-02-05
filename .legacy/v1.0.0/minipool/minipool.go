@@ -11,7 +11,6 @@ import (
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	rptypes "github.com/rocket-pool/rocketpool-go/types"
 )
 
 // Settings
@@ -23,9 +22,9 @@ const (
 
 // Minipool details
 type MinipoolDetails struct {
-	Address common.Address          `json:"address"`
-	Exists  bool                    `json:"exists"`
-	Pubkey  rptypes.ValidatorPubkey `json:"pubkey"`
+	Address common.Address           `json:"address"`
+	Exists  bool                     `json:"exists"`
+	Pubkey  rpbeacon.ValidatorPubkey `json:"pubkey"`
 }
 
 // The counts of minipools per status
@@ -210,17 +209,17 @@ func GetNodeMinipoolAddresses(rp *rocketpool.RocketPool, nodeAddress common.Addr
 }
 
 // Get a node's validating minipool pubkeys
-func GetNodeValidatingMinipoolPubkeys(rp *rocketpool.RocketPool, nodeAddress common.Address, opts *bind.CallOpts, legacyRocketMinipoolManagerAddress *common.Address) ([]rptypes.ValidatorPubkey, error) {
+func GetNodeValidatingMinipoolPubkeys(rp *rocketpool.RocketPool, nodeAddress common.Address, opts *bind.CallOpts, legacyRocketMinipoolManagerAddress *common.Address) ([]rpbeacon.ValidatorPubkey, error) {
 
 	// Get minipool count
 	minipoolCount, err := GetNodeValidatingMinipoolCount(rp, nodeAddress, opts, legacyRocketMinipoolManagerAddress)
 	if err != nil {
-		return []rptypes.ValidatorPubkey{}, err
+		return []rpbeacon.ValidatorPubkey{}, err
 	}
 
 	// Load pubkeys in batches
 	var lock = sync.RWMutex{}
-	pubkeys := make([]rptypes.ValidatorPubkey, minipoolCount)
+	pubkeys := make([]rpbeacon.ValidatorPubkey, minipoolCount)
 	for bsi := uint64(0); bsi < minipoolCount; bsi += MinipoolAddressBatchSize {
 
 		// Get batch start & end index
@@ -250,7 +249,7 @@ func GetNodeValidatingMinipoolPubkeys(rp *rocketpool.RocketPool, nodeAddress com
 			})
 		}
 		if err := wg.Wait(); err != nil {
-			return []rptypes.ValidatorPubkey{}, err
+			return []rpbeacon.ValidatorPubkey{}, err
 		}
 
 	}
@@ -266,7 +265,7 @@ func GetMinipoolDetails(rp *rocketpool.RocketPool, minipoolAddress common.Addres
 	// Data
 	var wg errgroup.Group
 	var exists bool
-	var pubkey rptypes.ValidatorPubkey
+	var pubkey rpbeacon.ValidatorPubkey
 
 	// Load data
 	wg.Go(func() error {
@@ -475,7 +474,7 @@ func GetNodeValidatingMinipoolAt(rp *rocketpool.RocketPool, nodeAddress common.A
 }
 
 // Get a minipool address by validator pubkey
-func GetMinipoolByPubkey(rp *rocketpool.RocketPool, pubkey rptypes.ValidatorPubkey, opts *bind.CallOpts, legacyRocketMinipoolManagerAddress *common.Address) (common.Address, error) {
+func GetMinipoolByPubkey(rp *rocketpool.RocketPool, pubkey rpbeacon.ValidatorPubkey, opts *bind.CallOpts, legacyRocketMinipoolManagerAddress *common.Address) (common.Address, error) {
 	rocketMinipoolManager, err := getRocketMinipoolManager(rp, legacyRocketMinipoolManagerAddress, opts)
 	if err != nil {
 		return common.Address{}, err
@@ -501,14 +500,14 @@ func GetMinipoolExists(rp *rocketpool.RocketPool, minipoolAddress common.Address
 }
 
 // Get a minipool's validator pubkey
-func GetMinipoolPubkey(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts, legacyRocketMinipoolManagerAddress *common.Address) (rptypes.ValidatorPubkey, error) {
+func GetMinipoolPubkey(rp *rocketpool.RocketPool, minipoolAddress common.Address, opts *bind.CallOpts, legacyRocketMinipoolManagerAddress *common.Address) (rpbeacon.ValidatorPubkey, error) {
 	rocketMinipoolManager, err := getRocketMinipoolManager(rp, legacyRocketMinipoolManagerAddress, opts)
 	if err != nil {
-		return rptypes.ValidatorPubkey{}, err
+		return rpbeacon.ValidatorPubkey{}, err
 	}
-	pubkey := new(rptypes.ValidatorPubkey)
+	pubkey := new(rpbeacon.ValidatorPubkey)
 	if err := rocketMinipoolManager.Call(opts, pubkey, "getMinipoolPubkey", minipoolAddress); err != nil {
-		return rptypes.ValidatorPubkey{}, fmt.Errorf("error getting minipool %s pubkey: %w", minipoolAddress.Hex(), err)
+		return rpbeacon.ValidatorPubkey{}, fmt.Errorf("error getting minipool %s pubkey: %w", minipoolAddress.Hex(), err)
 	}
 	return *pubkey, nil
 }

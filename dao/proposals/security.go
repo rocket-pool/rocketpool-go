@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -18,8 +19,9 @@ type SecurityCouncilProposal struct {
 	*ProposalCommon
 
 	// === Internal fields ===
-	rp  *rocketpool.RocketPool
-	dsp *core.Contract
+	rp    *rocketpool.RocketPool
+	dsp   *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -38,6 +40,7 @@ func newSecurityCouncilProposal(rp *rocketpool.RocketPool, base *ProposalCommon)
 		ProposalCommon: base,
 		rp:             rp,
 		dsp:            dsp,
+		txMgr:          rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -56,7 +59,7 @@ func GetProposalAsSecurity(proposal IProposal) (*SecurityCouncilProposal, bool) 
 
 // Get the basic details
 func (c *SecurityCouncilProposal) QueryAllFields(mc *batch.MultiCaller) {
-	core.QueryAllFields(c.ProposalCommon, mc)
+	eth.QueryAllFields(c.ProposalCommon, mc)
 }
 
 // Get the common fields
@@ -74,16 +77,16 @@ func (c *SecurityCouncilProposal) GetPayloadAsString() (string, error) {
 // ====================
 
 // Get info for cancelling a proposal
-func (c *SecurityCouncilProposal) Cancel(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsp, "cancel", opts, c.idBig)
+func (c *SecurityCouncilProposal) Cancel(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsp.Contract, "cancel", opts, c.idBig)
 }
 
 // Get info for voting on a proposal
-func (c *SecurityCouncilProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsp, "vote", opts, c.idBig, support)
+func (c *SecurityCouncilProposal) VoteOn(support bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsp.Contract, "vote", opts, c.idBig, support)
 }
 
 // Get info for executing a proposal
-func (c *SecurityCouncilProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsp, "execute", opts, c.idBig)
+func (c *SecurityCouncilProposal) Execute(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsp.Contract, "execute", opts, c.idBig)
 }

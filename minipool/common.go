@@ -10,6 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/nodeset-org/eth-utils/beacon"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -88,7 +90,7 @@ type MinipoolCommon struct {
 	Exists *core.SimpleField[bool]
 
 	// The pubkey of the validator on the Beacon Chain managed by this minipool
-	Pubkey *core.SimpleField[types.ValidatorPubkey]
+	Pubkey *core.SimpleField[beacon.ValidatorPubkey]
 
 	// The minipool's 0x01-based withdrawal credentials
 	WithdrawalCredentials *core.SimpleField[common.Hash]
@@ -108,6 +110,7 @@ type MinipoolCommon struct {
 	mpMgr    *core.Contract
 	mpQueue  *core.Contract
 	mpStatus *core.Contract
+	txMgr    *eth.TransactionManager
 }
 
 // The data from a minipool's MinipoolPrestaked event
@@ -122,12 +125,12 @@ type MinipoolPrestakeEvent struct {
 
 // Formatted MinipoolPrestaked event data
 type PrestakeData struct {
-	Pubkey                types.ValidatorPubkey    `json:"pubkey"`
-	WithdrawalCredentials common.Hash              `json:"withdrawalCredentials"`
-	Amount                *big.Int                 `json:"amount"`
-	Signature             types.ValidatorSignature `json:"signature"`
-	DepositDataRoot       common.Hash              `json:"depositDataRoot"`
-	Time                  time.Time                `json:"time"`
+	Pubkey                beacon.ValidatorPubkey    `json:"pubkey"`
+	WithdrawalCredentials common.Hash               `json:"withdrawalCredentials"`
+	Amount                *big.Int                  `json:"amount"`
+	Signature             beacon.ValidatorSignature `json:"signature"`
+	DepositDataRoot       common.Hash               `json:"depositDataRoot"`
+	Time                  time.Time                 `json:"time"`
 }
 
 // ====================
@@ -151,7 +154,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 		return nil, fmt.Errorf("error getting minipool status contract: %w", err)
 	}
 
-	address := *contract.Address
+	address := contract.Address
 	penaltyCountKey := crypto.Keccak256Hash([]byte("network.penalties.penalty"), address.Bytes())
 	return &MinipoolCommon{
 		Address: address,
@@ -178,7 +181,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 
 		// MinipoolManager
 		Exists:                core.NewSimpleField[bool](mpMgr, "getMinipoolExists", address),
-		Pubkey:                core.NewSimpleField[types.ValidatorPubkey](mpMgr, "getMinipoolPubkey", address),
+		Pubkey:                core.NewSimpleField[beacon.ValidatorPubkey](mpMgr, "getMinipoolPubkey", address),
 		WithdrawalCredentials: core.NewSimpleField[common.Hash](mpMgr, "getMinipoolWithdrawalCredentials", address),
 		RplSlashed:            core.NewSimpleField[bool](mpMgr, "getMinipoolRPLSlashed", address),
 		DepositType:           core.NewFormattedUint8Field[types.MinipoolDeposit](mpMgr, "getMinipoolDepositType", address),
@@ -191,6 +194,7 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 		mpMgr:    mpMgr,
 		mpQueue:  mpQueue,
 		mpStatus: mpStatus,
+		txMgr:    rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -215,55 +219,55 @@ func (c *MinipoolCommon) GetContract() *core.Contract {
 // === Minipool ===
 
 // Get info for refunding node ETH from the minipool
-func (c *MinipoolCommon) Refund(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "refund", opts)
+func (c *MinipoolCommon) Refund(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "refund", opts)
 }
 
 // Get info for progressing the prelaunch minipool to staking
-func (c *MinipoolCommon) Stake(validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "stake", opts, validatorSignature[:], depositDataRoot)
+func (c *MinipoolCommon) Stake(validatorSignature beacon.ValidatorSignature, depositDataRoot common.Hash, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "stake", opts, validatorSignature[:], depositDataRoot)
 }
 
 // Get info for dissolving the initialized or prelaunch minipool
-func (c *MinipoolCommon) Dissolve(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "dissolve", opts)
+func (c *MinipoolCommon) Dissolve(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "dissolve", opts)
 }
 
 // Get info for withdrawing node balances from the dissolved minipool and closing it
-func (c *MinipoolCommon) Close(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "close", opts)
+func (c *MinipoolCommon) Close(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "close", opts)
 }
 
 // Get info for finalising a minipool to get the RPL stake back
-func (c *MinipoolCommon) Finalise(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "finalise", opts)
+func (c *MinipoolCommon) Finalise(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "finalise", opts)
 }
 
 // Get info for upgrading this minipool to the latest network delegate contract
-func (c *MinipoolCommon) DelegateUpgrade(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "delegateUpgrade", opts)
+func (c *MinipoolCommon) DelegateUpgrade(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "delegateUpgrade", opts)
 }
 
 // Get info for rolling back to the previous delegate contract
-func (c *MinipoolCommon) DelegateRollback(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "delegateRollback", opts)
+func (c *MinipoolCommon) DelegateRollback(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "delegateRollback", opts)
 }
 
 // Get info for setting the UseLatestDelegate flag (if set to true, will automatically use the latest delegate contract)
-func (c *MinipoolCommon) SetUseLatestDelegate(setting bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "setUseLatestDelegate", opts, setting)
+func (c *MinipoolCommon) SetUseLatestDelegate(setting bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "setUseLatestDelegate", opts, setting)
 }
 
 // Get info for voting to scrub a minipool
-func (c *MinipoolCommon) VoteScrub(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "voteScrub", opts)
+func (c *MinipoolCommon) VoteScrub(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "voteScrub", opts)
 }
 
 // === MinipoolStatus ===
 
 // Get info for submitting a minipool withdrawable event
-func (c *MinipoolCommon) SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.mpStatus, "submitMinipoolWithdrawable", opts, c.Address)
+func (c *MinipoolCommon) SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.mpStatus.Contract, "submitMinipoolWithdrawable", opts, c.Address)
 }
 
 // =============
@@ -333,17 +337,17 @@ func (c *MinipoolCommon) GetPrestakeEvent(intervalSize *big.Int, opts *bind.Call
 
 	// Decode the event
 	prestakeEvent := new(MinipoolPrestakeEvent)
-	c.contract.Contract.UnpackLog(prestakeEvent, "MinipoolPrestaked", log)
+	c.contract.ContractImpl.UnpackLog(prestakeEvent, "MinipoolPrestaked", log)
 	if err != nil {
 		return PrestakeData{}, fmt.Errorf("error unpacking prestake data: %w", err)
 	}
 
 	// Convert the event to a more useable struct
 	prestakeData := PrestakeData{
-		Pubkey:                types.BytesToValidatorPubkey(prestakeEvent.Pubkey),
+		Pubkey:                beacon.ValidatorPubkey(prestakeEvent.Pubkey),
 		WithdrawalCredentials: common.BytesToHash(prestakeEvent.WithdrawalCredentials),
 		Amount:                prestakeEvent.Amount,
-		Signature:             types.BytesToValidatorSignature(prestakeEvent.Signature),
+		Signature:             beacon.ValidatorSignature(prestakeEvent.Signature),
 		DepositDataRoot:       prestakeEvent.DepositDataRoot,
 		Time:                  time.Unix(prestakeEvent.Time.Int64(), 0),
 	}

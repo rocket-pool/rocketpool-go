@@ -7,11 +7,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/beacon"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/types"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
 // ===============
@@ -135,6 +135,7 @@ type Node struct {
 	mpFactory     *core.Contract
 	mpMgr         *core.Contract
 	storage       *core.Contract
+	txMgr         *eth.TransactionManager
 }
 
 // ====================
@@ -232,6 +233,7 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		mpFactory:     minipoolFactory,
 		mpMgr:         minipoolManager,
 		storage:       rp.Storage.Contract,
+		txMgr:         rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -256,109 +258,109 @@ func (c *Node) GetVotingPowerAtBlock(mc *batch.MultiCaller, power_Out **big.Int,
 // === NetworkVoting ===
 
 // Get info for initializing on-chain voting for the node
-func (c *Node) InitializeVoting(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkVoting, "initialiseVoting", opts)
+func (c *Node) InitializeVoting(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.networkVoting.Contract, "initialiseVoting", opts)
 }
 
 // Get info for setting the voting delegate for the node
-func (c *Node) SetVotingDelegate(newDelegate common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkVoting, "setDelegate", opts, newDelegate)
+func (c *Node) SetVotingDelegate(newDelegate common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.networkVoting.Contract, "setDelegate", opts, newDelegate)
 }
 
 // === NodeDeposit ===
 
 // Get info for making a node deposit and creating a new minipool
-func (c *Node) Deposit(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeDeposit, "deposit", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], validatorSignature[:], depositDataRoot, salt, expectedMinipoolAddress)
+func (c *Node) Deposit(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey beacon.ValidatorPubkey, validatorSignature beacon.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeDeposit.Contract, "deposit", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], validatorSignature[:], depositDataRoot, salt, expectedMinipoolAddress)
 }
 
 // Get info for making a node deposit and creating a new minipool by using the credit balance
-func (c *Node) DepositWithCredit(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, validatorSignature types.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeDeposit, "depositWithCredit", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], validatorSignature[:], depositDataRoot, salt, expectedMinipoolAddress)
+func (c *Node) DepositWithCredit(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey beacon.ValidatorPubkey, validatorSignature beacon.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeDeposit.Contract, "depositWithCredit", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], validatorSignature[:], depositDataRoot, salt, expectedMinipoolAddress)
 }
 
 // Get info for making a vacant minipool for solo staker migration
-func (c *Node) CreateVacantMinipool(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey types.ValidatorPubkey, salt *big.Int, expectedMinipoolAddress common.Address, currentBalance *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeDeposit, "createVacantMinipool", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], salt, expectedMinipoolAddress, currentBalance)
+func (c *Node) CreateVacantMinipool(bondAmount *big.Int, minimumNodeFee float64, validatorPubkey beacon.ValidatorPubkey, salt *big.Int, expectedMinipoolAddress common.Address, currentBalance *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeDeposit.Contract, "createVacantMinipool", opts, bondAmount, eth.EthToWei(minimumNodeFee), validatorPubkey[:], salt, expectedMinipoolAddress, currentBalance)
 }
 
 // Withdraw unused ETH that was donated (staked on behalf of the node)
-func (c *Node) WithdrawDonatedEth(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeDeposit, "withdrawEth", opts, c.Address, amount)
+func (c *Node) WithdrawDonatedEth(amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeDeposit.Contract, "withdrawEth", opts, c.Address, amount)
 }
 
 // === NodeManager ===
 
 // Get info for registering a node
-func (c *Node) Register(timezoneLocation string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *Node) Register(timezoneLocation string, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	_, err := time.LoadLocation(timezoneLocation)
 	if err != nil {
 		return nil, fmt.Errorf("error verifying timezone [%s]: %w", timezoneLocation, err)
 	}
-	return core.NewTransactionInfo(c.nodeMgr, "registerNode", opts, timezoneLocation)
+	return c.txMgr.CreateTransactionInfo(c.nodeMgr.Contract, "registerNode", opts, timezoneLocation)
 }
 
 // Get info for setting a node's timezone location
-func (c *Node) SetTimezoneLocation(timezoneLocation string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *Node) SetTimezoneLocation(timezoneLocation string, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	_, err := time.LoadLocation(timezoneLocation)
 	if err != nil {
 		return nil, fmt.Errorf("error verifying timezone [%s]: %w", timezoneLocation, err)
 	}
-	return core.NewTransactionInfo(c.nodeMgr, "setTimezoneLocation", opts, timezoneLocation)
+	return c.txMgr.CreateTransactionInfo(c.nodeMgr.Contract, "setTimezoneLocation", opts, timezoneLocation)
 }
 
 // Get info for initializing (creating) the node's fee distributor
-func (c *Node) InitializeFeeDistributor(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "initialiseFeeDistributor", opts)
+func (c *Node) InitializeFeeDistributor(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeMgr.Contract, "initialiseFeeDistributor", opts)
 }
 
 // Get info for opting in or out of the smoothing pool
-func (c *Node) SetSmoothingPoolRegistrationState(optIn bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "setSmoothingPoolRegistrationState", opts, optIn)
+func (c *Node) SetSmoothingPoolRegistrationState(optIn bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeMgr.Contract, "setSmoothingPoolRegistrationState", opts, optIn)
 }
 
 // Get info for setting the RPL withdrawal address
-func (c *Node) SetRplWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "setRPLWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
+func (c *Node) SetRplWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeMgr.Contract, "setRPLWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
 }
 
 // Get info for confirming the RPL withdrawal address
-func (c *Node) ConfirmRplWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeMgr, "confirmRPLWithdrawalAddress", opts, c.Address)
+func (c *Node) ConfirmRplWithdrawalAddress(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeMgr.Contract, "confirmRPLWithdrawalAddress", opts, c.Address)
 }
 
 // === NodeStaking ===
 
 // Get info for staking RPL
-func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeStaking, "stakeRPL", opts, rplAmount)
+func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "stakeRPL", opts, rplAmount)
 }
 
 // Get info for adding or removing an address from the stake-RPL-on-behalf allowlist
-func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeStaking, "setStakeRPLForAllowed", opts, caller, allowed)
+func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "setStakeRPLForAllowed", opts, caller, allowed)
 }
 
 // Get info for withdrawing staked RPL
-func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeStaking, "withdrawRPL", opts, c.Address, rplAmount)
+func (c *Node) WithdrawRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "withdrawRPL", opts, c.Address, rplAmount)
 }
 
 // Get info for enabling or disabling RPL locking (for Protocol DAO votes or challenges)
-func (c *Node) SetRplLockingAllowed(allowed bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.nodeStaking, "setRPLLockingAllowed", opts, c.Address, allowed)
+func (c *Node) SetRplLockingAllowed(allowed bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "setRPLLockingAllowed", opts, c.Address, allowed)
 }
 
 // === Storage ===
 
 // Get info for setting the node's primary withdrawal address
-func (c *Node) SetPrimaryWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.storage, "setWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
+func (c *Node) SetPrimaryWithdrawalAddress(withdrawalAddress common.Address, confirm bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.storage.Contract, "setWithdrawalAddress", opts, c.Address, withdrawalAddress, confirm)
 }
 
 // Get info for confirming the node's primary withdrawal address
-func (c *Node) ConfirmPrimaryWithdrawalAddress(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.storage, "confirmWithdrawalAddress", opts, c.Address)
+func (c *Node) ConfirmPrimaryWithdrawalAddress(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.storage.Contract, "confirmWithdrawalAddress", opts, c.Address)
 }
 
 // ===================
@@ -378,7 +380,7 @@ func (c *Node) GetNodeDistributor(distributorAddress common.Address, includeDeta
 	// Get details via a multicall query
 	if includeDetails {
 		err = c.rp.Query(func(mc *batch.MultiCaller) error {
-			core.QueryAllFields(distributor, mc)
+			eth.QueryAllFields(distributor, mc)
 			return nil
 		}, opts)
 		if err != nil {

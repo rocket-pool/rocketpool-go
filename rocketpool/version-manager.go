@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/go-version"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/core"
 )
 
@@ -46,10 +47,11 @@ func getLegacyContractWithAddress(rp *RocketPool, contractName string, address c
 	}
 
 	contract := &core.Contract{
-		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
-		Address:  &address,
-		ABI:      abi,
-		Client:   rp.Client,
+		Contract: &eth.Contract{
+			ContractImpl: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
+			Address:      address,
+			ABI:          abi,
+		},
 	}
 
 	return contract, nil

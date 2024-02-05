@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/tests"
 )
@@ -21,7 +21,7 @@ func Test_ChallengeAndKick(t *testing.T) {
 	t.Logf("Time increased by %s", odaoMgr.Settings.Member.ChallengeWindow.Formatted())
 
 	// Decide it
-	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
+	err = rp.CreateAndWaitForTransaction(func() (*eth.TransactionInfo, error) {
 		return odaoMgr.DecideChallenge(account.Address, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {
@@ -54,7 +54,7 @@ func Test_ChallengeResolve(t *testing.T) {
 	account, member := prepChallenge(t)
 
 	// Respond with the new account
-	err := rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
+	err := rp.CreateAndWaitForTransaction(func() (*eth.TransactionInfo, error) {
 		return odaoMgr.DecideChallenge(account.Address, account.Transactor)
 	}, true, account.Transactor)
 	if err != nil {
@@ -147,7 +147,7 @@ func prepChallenge(t *testing.T) (*tests.Account, *oracle.OracleDaoMember) {
 	}
 
 	// Issue a challenge to it
-	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
+	err = rp.CreateAndWaitForTransaction(func() (*eth.TransactionInfo, error) {
 		return odaoMgr.MakeChallenge(account.Address, odao1.Transactor)
 	}, true, odao1.Transactor)
 	if err != nil {

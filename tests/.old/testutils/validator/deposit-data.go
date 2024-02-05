@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/beacon"
 	"github.com/prysmaticlabs/go-ssz"
 
 	"github.com/rocket-pool/rocketpool-go/types"
@@ -23,7 +24,7 @@ type depositData struct {
 }
 
 // Get the validator pubkey
-func GetValidatorPubkey(pubkey int) (types.ValidatorPubkey, error) {
+func GetValidatorPubkey(pubkey int) (beacon.ValidatorPubkey, error) {
 	if pubkey == 1 {
 		return types.HexToValidatorPubkey(tests.ValidatorPubkey)
 	} else if pubkey == 2 {
@@ -31,12 +32,12 @@ func GetValidatorPubkey(pubkey int) (types.ValidatorPubkey, error) {
 	} else if pubkey == 3 {
 		return types.HexToValidatorPubkey(tests.ValidatorPubkey3)
 	} else {
-		return types.ValidatorPubkey{}, fmt.Errorf("Invalid pubkey index %d", pubkey)
+		return beacon.ValidatorPubkey{}, fmt.Errorf("Invalid pubkey index %d", pubkey)
 	}
 }
 
 // Get the validator deposit signature
-func GetValidatorSignature(pubkey int) (types.ValidatorSignature, error) {
+func GetValidatorSignature(pubkey int) (beacon.ValidatorSignature, error) {
 	if pubkey == 1 {
 		return types.HexToValidatorSignature(tests.ValidatorSignature)
 	} else if pubkey == 2 {
@@ -44,12 +45,12 @@ func GetValidatorSignature(pubkey int) (types.ValidatorSignature, error) {
 	} else if pubkey == 3 {
 		return types.HexToValidatorSignature(tests.ValidatorSignature3)
 	} else {
-		return types.ValidatorSignature{}, fmt.Errorf("Invalid pubkey index %d", pubkey)
+		return beacon.ValidatorSignature{}, fmt.Errorf("Invalid pubkey index %d", pubkey)
 	}
 }
 
 // Get the validator deposit depositDataRoot
-func GetDepositDataRoot(validatorPubkey types.ValidatorPubkey, withdrawalCredentials common.Hash, validatorSignature types.ValidatorSignature) (common.Hash, error) {
+func GetDepositDataRoot(validatorPubkey beacon.ValidatorPubkey, withdrawalCredentials common.Hash, validatorSignature beacon.ValidatorSignature) (common.Hash, error) {
 	return ssz.HashTreeRoot(depositData{
 		PublicKey:             validatorPubkey.Bytes(),
 		WithdrawalCredentials: withdrawalCredentials[:],

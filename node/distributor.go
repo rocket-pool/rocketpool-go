@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -32,6 +33,7 @@ type NodeDistributor struct {
 	// === Internal fields ===
 	rp       *rocketpool.RocketPool
 	contract *core.Contract
+	txMgr    *eth.TransactionManager
 }
 
 // ====================
@@ -54,6 +56,7 @@ func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, d
 
 		rp:       rp,
 		contract: contract,
+		txMgr:    rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -62,6 +65,6 @@ func NewNodeDistributor(rp *rocketpool.RocketPool, nodeAddress common.Address, d
 // ====================
 
 // Get info for distributing the contract's balance to the rETH contract and the user
-func (c *NodeDistributor) Distribute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "distribute", opts)
+func (c *NodeDistributor) Distribute(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "distribute", opts)
 }

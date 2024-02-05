@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -18,8 +19,9 @@ type OracleDaoProposal struct {
 	*ProposalCommon
 
 	// === Internal fields ===
-	rp   *rocketpool.RocketPool
-	dntp *core.Contract
+	rp    *rocketpool.RocketPool
+	dntp  *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -38,6 +40,7 @@ func newOracleDaoProposal(rp *rocketpool.RocketPool, base *ProposalCommon) (*Ora
 		ProposalCommon: base,
 		rp:             rp,
 		dntp:           dntp,
+		txMgr:          rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -56,7 +59,7 @@ func GetProposalAsOracle(proposal IProposal) (*OracleDaoProposal, bool) {
 
 // Get the basic details
 func (c *OracleDaoProposal) QueryAllFields(mc *batch.MultiCaller) {
-	core.QueryAllFields(c.ProposalCommon, mc)
+	eth.QueryAllFields(c.ProposalCommon, mc)
 }
 
 // Get the common fields
@@ -74,16 +77,16 @@ func (c *OracleDaoProposal) GetPayloadAsString() (string, error) {
 // ====================
 
 // Get info for cancelling a proposal
-func (c *OracleDaoProposal) Cancel(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "cancel", opts, c.idBig)
+func (c *OracleDaoProposal) Cancel(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dntp.Contract, "cancel", opts, c.idBig)
 }
 
 // Get info for voting on a proposal
-func (c *OracleDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "vote", opts, c.idBig, support)
+func (c *OracleDaoProposal) VoteOn(support bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dntp.Contract, "vote", opts, c.idBig, support)
 }
 
 // Get info for executing a proposal
-func (c *OracleDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dntp, "execute", opts, c.idBig)
+func (c *OracleDaoProposal) Execute(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dntp.Contract, "execute", opts, c.idBig)
 }

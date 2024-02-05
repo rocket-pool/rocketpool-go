@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
@@ -32,10 +33,11 @@ type SecurityCouncilManager struct {
 	Settings *SecurityCouncilSettings
 
 	// === Internal fields ===
-	rp  *rocketpool.RocketPool
-	ds  *core.Contract
-	dsa *core.Contract
-	dsp *core.Contract
+	rp    *rocketpool.RocketPool
+	ds    *core.Contract
+	dsa   *core.Contract
+	dsp   *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -62,10 +64,11 @@ func NewSecurityCouncilManager(rp *rocketpool.RocketPool, pSettings *protocol.Pr
 		MemberCount:               core.NewFormattedUint256Field[uint64](ds, "getMemberCount"),
 		MemberQuorumVotesRequired: core.NewFormattedUint256Field[float64](ds, "getMemberQuorumVotesRequired"),
 
-		rp:  rp,
-		ds:  ds,
-		dsa: dsa,
-		dsp: dsp,
+		rp:    rp,
+		ds:    ds,
+		dsa:   dsa,
+		dsp:   dsp,
+		txMgr: rp.GetTransactionManager(),
 	}
 	settings, err := newSecurityCouncilSettings(secMgr, pSettings)
 	if err != nil {
@@ -86,34 +89,34 @@ func NewSecurityCouncilManager(rp *rocketpool.RocketPool, pSettings *protocol.Pr
 // === DAOSecurityActions ===
 
 // Get info for joining the security council
-func (c *SecurityCouncilManager) Join(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsa, "actionJoin", opts)
+func (c *SecurityCouncilManager) Join(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsa.Contract, "actionJoin", opts)
 }
 
 // Get info for removing a member from the security council
-func (c *SecurityCouncilManager) Kick(address common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsa, "actionKick", opts, address)
+func (c *SecurityCouncilManager) Kick(address common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsa.Contract, "actionKick", opts, address)
 }
 
 // Get info for removing multiple members from the security council
-func (c *SecurityCouncilManager) KickMulti(addresses []common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsa, "actionKickMulti", opts, addresses)
+func (c *SecurityCouncilManager) KickMulti(addresses []common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsa.Contract, "actionKickMulti", opts, addresses)
 }
 
 // Get info for requesting to leave the security council
-func (c *SecurityCouncilManager) RequestLeave(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsa, "actionRequestLeave", opts)
+func (c *SecurityCouncilManager) RequestLeave(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsa.Contract, "actionRequestLeave", opts)
 }
 
 // Get info for leaving the security council
-func (c *SecurityCouncilManager) Leave(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dsa, "actionLeave", opts)
+func (c *SecurityCouncilManager) Leave(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dsa.Contract, "actionLeave", opts)
 }
 
 // === DAOSecurityProposals ===
 
 // Get info for proposing a uint setting
-func (c *SecurityCouncilManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -121,7 +124,7 @@ func (c *SecurityCouncilManager) ProposeSetUint(message string, contractName roc
 }
 
 // Get info for proposing a bool setting
-func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -129,7 +132,7 @@ func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName roc
 }
 
 // Get info for proposing to invite a new member to the security council
-func (c *SecurityCouncilManager) ProposeInvite(message string, newMemberID string, newMemberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeInvite(message string, newMemberID string, newMemberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("invite %s (%s)", newMemberID, newMemberAddress.Hex())
 	}
@@ -137,7 +140,7 @@ func (c *SecurityCouncilManager) ProposeInvite(message string, newMemberID strin
 }
 
 // Get info for proposing to kick a member from the security council
-func (c *SecurityCouncilManager) ProposeKick(message string, memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeKick(message string, memberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("kick %s", memberAddress.Hex())
 	}
@@ -145,7 +148,7 @@ func (c *SecurityCouncilManager) ProposeKick(message string, memberAddress commo
 }
 
 // Get info for proposing to kick multiple members from the security council
-func (c *SecurityCouncilManager) ProposeKickMulti(message string, memberAddresses []common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeKickMulti(message string, memberAddresses []common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = "kick multiple members"
 	}
@@ -153,7 +156,7 @@ func (c *SecurityCouncilManager) ProposeKickMulti(message string, memberAddresse
 }
 
 // Get info for proposing to kick a member from the security council and replace it with a new member
-func (c *SecurityCouncilManager) ProposeReplace(message string, existingMemberAddress common.Address, newMemberID string, newMemberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeReplace(message string, existingMemberAddress common.Address, newMemberID string, newMemberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("replace %s with %s (%s)", existingMemberAddress.Hex(), newMemberID, newMemberAddress.Hex())
 	}
@@ -161,12 +164,12 @@ func (c *SecurityCouncilManager) ProposeReplace(message string, existingMemberAd
 }
 
 // Internal method used for actually constructing and submitting a proposal
-func (c *SecurityCouncilManager) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*core.TransactionInfo, error) {
+func (c *SecurityCouncilManager) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*eth.TransactionInfo, error) {
 	payload, err := c.dsp.ABI.Pack(method, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding payload: %w", err)
 	}
-	return core.NewTransactionInfo(c.dsp, "propose", opts, message, payload)
+	return c.txMgr.CreateTransactionInfo(c.dsp.Contract, "propose", opts, message, payload)
 }
 
 // =================
@@ -208,7 +211,7 @@ func (c *SecurityCouncilManager) CreateMemberFromAddress(address common.Address,
 
 	if includeDetails {
 		err = c.rp.Query(func(mc *batch.MultiCaller) error {
-			core.QueryAllFields(member, mc)
+			eth.QueryAllFields(member, mc)
 			return nil
 		}, opts)
 		if err != nil {
@@ -237,7 +240,7 @@ func (c *SecurityCouncilManager) CreateMembersFromAddresses(addresses []common.A
 		err := c.rp.BatchQuery(int(memberCount), securityCouncilMemberBatchSize,
 			func(mc *batch.MultiCaller, index int) error {
 				member := members[index]
-				core.QueryAllFields(member, mc)
+				eth.QueryAllFields(member, mc)
 				return nil
 			},
 			opts,

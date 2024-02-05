@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
@@ -14,10 +15,10 @@ import (
 
 // A general interface for settings, parameterized by the type required for proposals and boostrapping
 type IOracleDaoSetting[ProposeType core.CallReturnType] interface {
-	core.IQueryable
+	eth.IQueryable
 	GetSettingName() SettingName
-	ProposeSet(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
-	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+	ProposeSet(value ProposeType, opts *bind.TransactOpts) (*eth.TransactionInfo, error)
+	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*eth.TransactionInfo, error)
 }
 
 /// ===================
@@ -50,12 +51,12 @@ func (s *OracleDaoBoolSetting) GetSettingName() SettingName {
 }
 
 // Creates a proposal to change the setting
-func (s *OracleDaoBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.odaoMgr.ProposeSetBool("", s.settingContract, s.settingName, value, opts)
 }
 
 // Bootstraps the setting with a new value
-func (s *OracleDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapBool(s.settingContract, s.settingName, value, opts)
 }
 
@@ -89,12 +90,12 @@ func (s *OracleDaoUintSetting) GetSettingName() SettingName {
 }
 
 // Creates a proposal to change the setting
-func (s *OracleDaoUintSetting) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoUintSetting) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.odaoMgr.ProposeSetUint("", s.settingContract, s.settingName, value, opts)
 }
 
 // Bootstraps the setting with a new value
-func (s *OracleDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapUint(s.settingContract, s.settingName, value, opts)
 }
 
@@ -130,11 +131,11 @@ func (s *OracleDaoCompoundSetting[DataType]) GetSettingName() SettingName {
 }
 
 // Creates a proposal to change the setting
-func (s *OracleDaoCompoundSetting[DataType]) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoCompoundSetting[DataType]) ProposeSet(value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.odaoMgr.ProposeSetUint("", s.settingContract, s.settingName, value, opts)
 }
 
 // Bootstraps the setting with a new value
-func (s *OracleDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *OracleDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.odaoMgr.BootstrapUint(s.settingContract, s.settingName, value, opts)
 }

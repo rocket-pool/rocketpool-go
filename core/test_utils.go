@@ -10,7 +10,7 @@ import (
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/types"
+	"github.com/nodeset-org/eth-utils/beacon"
 )
 
 // ==================
@@ -40,9 +40,9 @@ func (f *SimpleField[ValueType]) Set(value ValueType) {
 	case *common.Hash:
 		castedValue := any(value).(common.Hash)
 		copy((*val).Bytes(), castedValue.Bytes())
-	case *types.ValidatorPubkey:
-		castedValue := any(value).(types.ValidatorPubkey)
-		copy((*val).Bytes(), castedValue.Bytes())
+	case *beacon.ValidatorPubkey:
+		castedValue := any(value).(beacon.ValidatorPubkey)
+		copy((*val)[:], castedValue[:])
 	case *[]byte:
 		castedValue := any(value).([]byte)
 		copy(*val, castedValue)

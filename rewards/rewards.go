@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -44,6 +45,7 @@ type RewardsPool struct {
 	// === Internal fields ===
 	rp          *rocketpool.RocketPool
 	rewardsPool *core.Contract
+	txMgr       *eth.TransactionManager
 }
 
 // Info for a rewards snapshot event
@@ -109,6 +111,7 @@ func NewRewardsPool(rp *rocketpool.RocketPool) (*RewardsPool, error) {
 
 		rp:          rp,
 		rewardsPool: rewardsPool,
+		txMgr:       rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -163,8 +166,8 @@ func (c *RewardsPool) GetTrustedNodeSubmittedSpecificRewards(mc *batch.MultiCall
 // ====================
 
 // Get info for submitting a Merkle Tree-based snapshot for a rewards interval
-func (c *RewardsPool) SubmitRewardSnapshot(submission RewardSubmission, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.rewardsPool, "submitRewardSnapshot", opts, submission)
+func (c *RewardsPool) SubmitRewardSnapshot(submission RewardSubmission, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.rewardsPool.Contract, "submitRewardSnapshot", opts, submission)
 }
 
 // =============
@@ -182,7 +185,7 @@ func (c *RewardsPool) GetRewardsEvent(rp *rocketpool.RocketPool, index uint64, r
 	block := *blockWrapper
 
 	// Create the list of addresses to check
-	currentAddress := *c.rewardsPool.Address
+	currentAddress := c.rewardsPool.Address
 	if rocketRewardsPoolAddresses == nil {
 		rocketRewardsPoolAddresses = []common.Address{currentAddress}
 	} else {

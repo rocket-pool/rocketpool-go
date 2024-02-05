@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -105,6 +106,7 @@ type ProtocolDaoProposal struct {
 	dpp   *core.Contract
 	dpps  *core.Contract
 	dpv   *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -160,6 +162,7 @@ func NewProtocolDaoProposal(rp *rocketpool.RocketPool, id uint64) (*ProtocolDaoP
 		dpp:   dpp,
 		dpps:  dpps,
 		dpv:   dpv,
+		txMgr: rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -209,56 +212,56 @@ func (p *ProtocolDaoProposal) GetChallengeState(mc *batch.MultiCaller, index uin
 // ====================
 
 // Get info for voting on a proposal
-func (p *ProtocolDaoProposal) Vote(voteDirection types.VoteDirection, votingPower *big.Int, nodeIndex uint64, witness []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpp, "vote", opts, p.idBig, voteDirection, votingPower, big.NewInt(int64(nodeIndex)), witness)
+func (p *ProtocolDaoProposal) Vote(voteDirection types.VoteDirection, votingPower *big.Int, nodeIndex uint64, witness []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpp.Contract, "vote", opts, p.idBig, voteDirection, votingPower, big.NewInt(int64(nodeIndex)), witness)
 }
 
 // Get info for overriding a delegate's vote during phase 2
-func (p *ProtocolDaoProposal) OverrideVote(voteDirection types.VoteDirection, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpp, "overrideVote", opts, p.idBig, voteDirection)
+func (p *ProtocolDaoProposal) OverrideVote(voteDirection types.VoteDirection, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpp.Contract, "overrideVote", opts, p.idBig, voteDirection)
 }
 
 // Get info for finalizing a vetoed proposal by burning the proposer's bond
-func (p *ProtocolDaoProposal) Finalize(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpp, "finalise", opts, p.idBig)
+func (p *ProtocolDaoProposal) Finalize(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpp.Contract, "finalise", opts, p.idBig)
 }
 
 // Get info for executing a proposal
-func (p *ProtocolDaoProposal) Execute(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpp, "execute", opts, p.idBig)
+func (p *ProtocolDaoProposal) Execute(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpp.Contract, "execute", opts, p.idBig)
 }
 
 // Get info for defeaing a proposal if the proposer fails to respond to a challenge within the challenge window, providing the node index that wasn't responded to
-func (p *ProtocolDaoProposal) Defeat(index uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpv, "defeatProposal", opts, p.idBig, big.NewInt(int64(index)))
+func (p *ProtocolDaoProposal) Defeat(index uint64, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpv.Contract, "defeatProposal", opts, p.idBig, big.NewInt(int64(index)))
 }
 
 // Get info for challenging the proposal at a specific tree node index, providing a Merkle proof of the node as well
-func (p *ProtocolDaoProposal) CreateChallenge(index uint64, node types.VotingTreeNode, witness []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpv, "createChallenge", opts, p.idBig, big.NewInt((int64(index))), node, witness)
+func (p *ProtocolDaoProposal) CreateChallenge(index uint64, node types.VotingTreeNode, witness []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpv.Contract, "createChallenge", opts, p.idBig, big.NewInt((int64(index))), node, witness)
 }
 
 // Get info for submitting the Merkle root for the proposal at the specific index in response to a challenge
-func (p *ProtocolDaoProposal) SubmitRoot(index uint64, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(p.dpv, "submitRoot", opts, p.idBig, big.NewInt((int64(index))), treeNodes)
+func (p *ProtocolDaoProposal) SubmitRoot(index uint64, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return p.txMgr.CreateTransactionInfo(p.dpv.Contract, "submitRoot", opts, p.idBig, big.NewInt((int64(index))), treeNodes)
 }
 
 // Get info for claiming any RPL bond refunds or rewards for a proposal, as a challenger
-func (p *ProtocolDaoProposal) ClaimBondChallenger(indices []uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (p *ProtocolDaoProposal) ClaimBondChallenger(indices []uint64, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	indicesBig := make([]*big.Int, len(indices))
 	for i, index := range indices {
 		indicesBig[i] = big.NewInt(int64(index))
 	}
-	return core.NewTransactionInfo(p.dpv, "claimBondChallenger", opts, p.idBig, indicesBig)
+	return p.txMgr.CreateTransactionInfo(p.dpv.Contract, "claimBondChallenger", opts, p.idBig, indicesBig)
 }
 
 // Get info for claiming any RPL bond refunds or rewards for a proposal, as the proposer
-func (p *ProtocolDaoProposal) ClaimBondProposer(indices []uint64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (p *ProtocolDaoProposal) ClaimBondProposer(indices []uint64, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	indicesBig := make([]*big.Int, len(indices))
 	for i, index := range indices {
 		indicesBig[i] = big.NewInt(int64(index))
 	}
-	return core.NewTransactionInfo(p.dpv, "claimBondProposer", opts, p.idBig, indicesBig)
+	return p.txMgr.CreateTransactionInfo(p.dpv.Contract, "claimBondProposer", opts, p.idBig, indicesBig)
 }
 
 // =============

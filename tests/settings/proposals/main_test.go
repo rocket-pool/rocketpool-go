@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
-	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/proposals"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
@@ -58,8 +58,8 @@ func TestMain(m *testing.M) {
 
 	// Get all of the current settings
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		core.QueryAllFields(odaoMgr.Settings, mc)
-		core.QueryAllFields(pdaoMgr.Settings, mc)
+		eth.QueryAllFields(odaoMgr.Settings, mc)
+		eth.QueryAllFields(pdaoMgr.Settings, mc)
 		return nil
 	}, nil)
 	if err != nil {

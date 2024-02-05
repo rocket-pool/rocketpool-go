@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -31,8 +32,9 @@ type TokenReth struct {
 	CollateralRate *core.FormattedUint256Field[float64]
 
 	// === Internal fields ===
-	rp   *rocketpool.RocketPool
-	reth *core.Contract
+	rp    *rocketpool.RocketPool
+	reth  *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -53,8 +55,9 @@ func NewTokenReth(rp *rocketpool.RocketPool) (*TokenReth, error) {
 		TotalCollateral: core.NewSimpleField[*big.Int](reth, "getTotalCollateral"),
 		CollateralRate:  core.NewFormattedUint256Field[float64](reth, "getCollateralRate"),
 
-		rp:   rp,
-		reth: reth,
+		rp:    rp,
+		reth:  reth,
+		txMgr: rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -93,23 +96,23 @@ func (c *TokenReth) GetRethValueOfEth(mc *batch.MultiCaller, value_Out **big.Int
 // === Core ERC-20 functions ===
 
 // Get info for approving rETH's usage by a spender
-func (c *TokenReth) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.reth, "approve", opts, spender, amount)
+func (c *TokenReth) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.reth.Contract, "approve", opts, spender, amount)
 }
 
 // Get info for transferring rETH
-func (c *TokenReth) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.reth, "transfer", opts, to, amount)
+func (c *TokenReth) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.reth.Contract, "transfer", opts, to, amount)
 }
 
 // Get info for transferring rETH from a sender
-func (c *TokenReth) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.reth, "transferFrom", opts, from, to, amount)
+func (c *TokenReth) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.reth.Contract, "transferFrom", opts, from, to, amount)
 }
 
 // === rETH functions ===
 
 // Get info for burning rETH for ETH
-func (c *TokenReth) Burn(amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.reth, "burn", opts, amount)
+func (c *TokenReth) Burn(amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.reth.Contract, "burn", opts, amount)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -24,6 +25,7 @@ type TokenRplFixedSupply struct {
 	// === Internal fields ===
 	rp    *rocketpool.RocketPool
 	fsrpl *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // Details for RocketTokenRPLFixedSupply
@@ -47,6 +49,7 @@ func NewTokenRplFixedSupply(rp *rocketpool.RocketPool) (*TokenRplFixedSupply, er
 
 		rp:    rp,
 		fsrpl: fsrpl,
+		txMgr: rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -73,16 +76,16 @@ func (c *TokenRplFixedSupply) GetAllowance(mc *batch.MultiCaller, allowance_Out 
 // === Core ERC-20 functions ===
 
 // Get info for approving fixed-supply RPL's usage by a spender
-func (c *TokenRplFixedSupply) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.fsrpl, "approve", opts, spender, amount)
+func (c *TokenRplFixedSupply) Approve(spender common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.fsrpl.Contract, "approve", opts, spender, amount)
 }
 
 // Get info for transferring fixed-supply RPL
-func (c *TokenRplFixedSupply) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.fsrpl, "transfer", opts, to, amount)
+func (c *TokenRplFixedSupply) Transfer(to common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.fsrpl.Contract, "transfer", opts, to, amount)
 }
 
 // Get info for transferring fixed-supply RPL from a sender
-func (c *TokenRplFixedSupply) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.fsrpl, "transferFrom", opts, from, to, amount)
+func (c *TokenRplFixedSupply) TransferFrom(from common.Address, to common.Address, amount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.fsrpl.Contract, "transferFrom", opts, from, to, amount)
 }

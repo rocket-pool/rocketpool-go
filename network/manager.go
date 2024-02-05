@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -63,6 +64,7 @@ type NetworkManager struct {
 	networkPenalties *core.Contract
 	networkPrices    *core.Contract
 	networkVoting    *core.Contract
+	txMgr            *eth.TransactionManager
 }
 
 // Info for a balances updated event
@@ -153,6 +155,7 @@ func NewNetworkManager(rp *rocketpool.RocketPool) (*NetworkManager, error) {
 		networkPenalties: networkPenalties,
 		networkPrices:    networkPrices,
 		networkVoting:    networkVoting,
+		txMgr:            rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -181,22 +184,22 @@ func (c *NetworkManager) GetVotingNodeCountAtBlock(mc *batch.MultiCaller, out **
 // === NetworkBalances ===
 
 // Get info for network balance submission
-func (c *NetworkManager) SubmitBalances(block uint64, slotTimestamp uint64, totalEth *big.Int, stakingEth *big.Int, rethSupply *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkBalances, "submitBalances", opts, big.NewInt(int64(block)), big.NewInt(int64(slotTimestamp)), totalEth, stakingEth, rethSupply)
+func (c *NetworkManager) SubmitBalances(block uint64, slotTimestamp uint64, totalEth *big.Int, stakingEth *big.Int, rethSupply *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.networkBalances.Contract, "submitBalances", opts, big.NewInt(int64(block)), big.NewInt(int64(slotTimestamp)), totalEth, stakingEth, rethSupply)
 }
 
 // === NetworkPenalties ===
 
 // Get info for minipool penalty submission
-func (c *NetworkManager) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkPenalties, "submitPenalty", opts, minipoolAddress, block)
+func (c *NetworkManager) SubmitPenalty(minipoolAddress common.Address, block *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.networkPenalties.Contract, "submitPenalty", opts, minipoolAddress, block)
 }
 
 // === NetworkPrices ===
 
 // Get info for network price submission
-func (c *NetworkManager) SubmitPrices(block uint64, slotTimestamp uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.networkPrices, "submitPrices", opts, big.NewInt(int64(block)), big.NewInt(int64(slotTimestamp)), rplPrice)
+func (c *NetworkManager) SubmitPrices(block uint64, slotTimestamp uint64, rplPrice *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.networkPrices.Contract, "submitPrices", opts, big.NewInt(int64(block)), big.NewInt(int64(slotTimestamp)), rplPrice)
 }
 
 // =============
@@ -225,7 +228,7 @@ func (c *NetworkManager) GetNodeVotingInfo(blockNumber uint32, nodeAddresses []c
 // Returns an array of block numbers for balances submissions the given trusted node has submitted since fromBlock
 func (c *NetworkManager) GetBalancesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.networkBalances.Address}
+	addressFilter := []common.Address{c.networkBalances.Address}
 	topicFilter := [][]common.Hash{{c.networkBalances.ABI.Events["BalancesSubmitted"].ID}, {common.BytesToHash(nodeAddress[:])}}
 
 	// Get the event logs
@@ -249,7 +252,7 @@ func (c *NetworkManager) GetBalancesSubmissions(nodeAddress common.Address, from
 // Returns an array of members who submitted a balance since fromBlock
 func (c *NetworkManager) GetLatestBalancesSubmissions(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) ([]common.Address, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.networkBalances.Address}
+	addressFilter := []common.Address{c.networkBalances.Address}
 	topicFilter := [][]common.Hash{{c.networkBalances.ABI.Events["BalancesSubmitted"].ID}}
 
 	// Get the event logs
@@ -270,7 +273,7 @@ func (c *NetworkManager) GetLatestBalancesSubmissions(fromBlock uint64, interval
 // Get the event emitted when the network balances were updated
 func (c *NetworkManager) GetBalancesUpdatedEvent(blockNumber uint64, opts *bind.CallOpts) (bool, BalancesUpdated, error) {
 	// Create the list of addresses to check
-	currentAddress := *c.networkBalances.Address
+	currentAddress := c.networkBalances.Address
 	rocketNetworkBalancesAddress := []common.Address{currentAddress}
 
 	// Construct a filter query for relevant logs
@@ -315,7 +318,7 @@ func (c *NetworkManager) GetBalancesUpdatedEvent(blockNumber uint64, opts *bind.
 // Returns an array of block numbers for prices submissions the given trusted node has submitted since fromBlock
 func (c *NetworkManager) GetPricesSubmissions(nodeAddress common.Address, fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (*[]uint64, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.networkPrices.Address}
+	addressFilter := []common.Address{c.networkPrices.Address}
 	topicFilter := [][]common.Hash{{c.networkPrices.ABI.Events["PricesSubmitted"].ID}, {common.BytesToHash(nodeAddress[:])}}
 
 	// Get the event logs
@@ -338,7 +341,7 @@ func (c *NetworkManager) GetPricesSubmissions(nodeAddress common.Address, fromBl
 // Returns an array of members who submitted prices since fromBlock
 func (c *NetworkManager) GetLatestPricesSubmissions(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) ([]common.Address, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.networkPrices.Address}
+	addressFilter := []common.Address{c.networkPrices.Address}
 	topicFilter := [][]common.Hash{{c.networkPrices.ABI.Events["PricesSubmitted"].ID}}
 
 	// Get the event logs
@@ -359,7 +362,7 @@ func (c *NetworkManager) GetLatestPricesSubmissions(fromBlock uint64, intervalSi
 // Get the event info for a price update
 func (c *NetworkManager) GetPriceUpdatedEvent(blockNumber uint64, opts *bind.CallOpts) (bool, PriceUpdated, error) {
 	// Create the list of addresses to check
-	currentAddress := *c.networkPrices.Address
+	currentAddress := c.networkPrices.Address
 	rocketNetworkPricesAddress := []common.Address{currentAddress}
 
 	// Construct a filter query for relevant logs

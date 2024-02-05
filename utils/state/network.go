@@ -7,10 +7,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -160,7 +160,7 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts, i
 	details.IntervalStart = convertToTime(intervalStart)
 	details.IntervalDuration = convertToDuration(intervalDuration)
 	details.ScrubPeriod = convertToDuration(scrubPeriodSeconds)
-	details.SmoothingPoolAddress = *contracts.RocketSmoothingPool.Address
+	details.SmoothingPoolAddress = contracts.RocketSmoothingPool.Address
 	details.TotalQueueCapacity = totalQueueCapacity
 	details.EffectiveQueueCapacity = effectiveQueueCapacity
 	details.QueueLength = totalQueueLength
@@ -183,8 +183,8 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts, i
 
 	// Get various balances
 	addresses := []common.Address{
-		*contracts.RocketSmoothingPool.Address,
-		*contracts.RocketTokenRETH.Address,
+		contracts.RocketSmoothingPool.Address,
+		contracts.RocketTokenRETH.Address,
 	}
 	balances, err := contracts.BalanceBatcher.GetEthBalances(addresses, opts)
 	if err != nil {

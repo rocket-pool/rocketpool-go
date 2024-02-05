@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -26,8 +27,9 @@ type DepositPoolManager struct {
 	ExcessBalance *core.SimpleField[*big.Int]
 
 	// === Internal fields ===
-	rp *rocketpool.RocketPool
-	dp *core.Contract
+	rp    *rocketpool.RocketPool
+	dp    *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -47,8 +49,9 @@ func NewDepositPoolManager(rp *rocketpool.RocketPool) (*DepositPoolManager, erro
 		UserBalance:   core.NewSimpleField[*big.Int](dp, "getUserBalance"),
 		ExcessBalance: core.NewSimpleField[*big.Int](dp, "getExcessBalance"),
 
-		rp: rp,
-		dp: dp,
+		rp:    rp,
+		dp:    dp,
+		txMgr: rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -57,11 +60,11 @@ func NewDepositPoolManager(rp *rocketpool.RocketPool) (*DepositPoolManager, erro
 // ====================
 
 // Get info for making a deposit
-func (c *DepositPoolManager) Deposit(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "deposit", opts)
+func (c *DepositPoolManager) Deposit(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dp.Contract, "deposit", opts)
 }
 
 // Get info for assigning deposits
-func (c *DepositPoolManager) AssignDeposits(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "assignDeposits", opts)
+func (c *DepositPoolManager) AssignDeposits(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dp.Contract, "assignDeposits", opts)
 }

@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
@@ -15,11 +16,11 @@ import (
 
 // A general interface for settings, parameterized by the type required for proposals and boostrapping
 type IProtocolDaoSetting[ProposeType core.CallReturnType] interface {
-	core.IQueryable
+	eth.IQueryable
 	GetContract() rocketpool.ContractName
 	GetSettingName() SettingName
-	ProposeSet(value ProposeType, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error)
-	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*core.TransactionInfo, error)
+	ProposeSet(value ProposeType, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error)
+	Bootstrap(value ProposeType, opts *bind.TransactOpts) (*eth.TransactionInfo, error)
 }
 
 /// ===================
@@ -57,12 +58,12 @@ func (s *ProtocolDaoBoolSetting) GetSettingName() SettingName {
 }
 
 // Creates a proposal to change the setting
-func (s *ProtocolDaoBoolSetting) ProposeSet(value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoBoolSetting) ProposeSet(value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.pdaoMgr.ProposeSetBool("", s.settingContract, s.settingName, value, blockNumber, treeNodes, opts)
 }
 
 // Bootstraps the setting with a new value
-func (s *ProtocolDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoBoolSetting) Bootstrap(value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.pdaoMgr.BootstrapBool(s.settingContract, s.settingName, value, opts)
 }
 
@@ -101,12 +102,12 @@ func (s *ProtocolDaoUintSetting) GetSettingName() SettingName {
 }
 
 // Creates a proposal to change the setting
-func (s *ProtocolDaoUintSetting) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoUintSetting) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.settingName, value, blockNumber, treeNodes, opts)
 }
 
 // Bootstraps the setting with a new value
-func (s *ProtocolDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoUintSetting) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.pdaoMgr.BootstrapUint(s.settingContract, s.settingName, value, opts)
 }
 
@@ -147,11 +148,11 @@ func (s *ProtocolDaoCompoundSetting[DataType]) GetSettingName() SettingName {
 }
 
 // Creates a proposal to change the setting
-func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoCompoundSetting[DataType]) ProposeSet(value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.pdaoMgr.ProposeSetUint("", s.settingContract, s.settingName, value, blockNumber, treeNodes, opts)
 }
 
 // Bootstraps the setting with a new value
-func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (s *ProtocolDaoCompoundSetting[DataType]) Bootstrap(value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return s.pdaoMgr.BootstrapUint(s.settingContract, s.settingName, value, opts)
 }

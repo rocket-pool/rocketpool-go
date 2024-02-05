@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -34,10 +35,11 @@ type OracleDaoManager struct {
 	Settings *OracleDaoSettings
 
 	// === Internal fields ===
-	rp   *rocketpool.RocketPool
-	dnt  *core.Contract
-	dnta *core.Contract
-	dntp *core.Contract
+	rp    *rocketpool.RocketPool
+	dnt   *core.Contract
+	dnta  *core.Contract
+	dntp  *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // ====================
@@ -64,10 +66,11 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 		MemberCount:        core.NewFormattedUint256Field[uint64](dnt, "getMemberCount"),
 		MinimumMemberCount: core.NewFormattedUint256Field[uint64](dnt, "getMemberMinRequired"),
 
-		rp:   rp,
-		dnt:  dnt,
-		dnta: dnta,
-		dntp: dntp,
+		rp:    rp,
+		dnt:   dnt,
+		dnta:  dnta,
+		dntp:  dntp,
+		txMgr: rp.GetTransactionManager(),
 	}
 	settings, err := newOracleDaoSettings(odaoMgr)
 	if err != nil {
@@ -84,55 +87,55 @@ func NewOracleDaoManager(rp *rocketpool.RocketPool) (*OracleDaoManager, error) {
 // === DAONodeTrusted ===
 
 // Bootstrap a bool setting
-func (c *OracleDaoManager) BootstrapBool(contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnt, "bootstrapSettingBool", opts, contractName, string(setting), value)
+func (c *OracleDaoManager) BootstrapBool(contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnt.Contract, "bootstrapSettingBool", opts, contractName, string(setting), value)
 }
 
 // Bootstrap a uint setting
-func (c *OracleDaoManager) BootstrapUint(contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnt, "bootstrapSettingUint", opts, contractName, string(setting), value)
+func (c *OracleDaoManager) BootstrapUint(contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnt.Contract, "bootstrapSettingUint", opts, contractName, string(setting), value)
 }
 
 // Bootstrap a member into the Oracle DAO
-func (c *OracleDaoManager) BootstrapMember(id string, url string, nodeAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnt, "bootstrapMember", opts, id, url, nodeAddress)
+func (c *OracleDaoManager) BootstrapMember(id string, url string, nodeAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnt.Contract, "bootstrapMember", opts, id, url, nodeAddress)
 }
 
 // Bootstrap a contract upgrade
-func (c *OracleDaoManager) BootstrapUpgrade(upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) BootstrapUpgrade(upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)
 	}
-	return core.NewTransactionInfo(c.dnt, "bootstrapUpgrade", opts, upgradeType, contractName, compressedAbi, contractAddress)
+	return c.txMgr.CreateTransactionInfo(c.dnt.Contract, "bootstrapUpgrade", opts, upgradeType, contractName, compressedAbi, contractAddress)
 }
 
 // === DAONodeTrustedActions ===
 
 // Get info for joining the Oracle DAO
-func (c *OracleDaoManager) Join(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnta, "actionJoin", opts)
+func (c *OracleDaoManager) Join(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnta.Contract, "actionJoin", opts)
 }
 
 // Get info for leaving the Oracle DAO
-func (c *OracleDaoManager) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnta, "actionLeave", opts, rplBondRefundAddress)
+func (c *OracleDaoManager) Leave(rplBondRefundAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnta.Contract, "actionLeave", opts, rplBondRefundAddress)
 }
 
 // Get info for making a challenge to an Oracle DAO member
-func (c *OracleDaoManager) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnta, "actionChallengeMake", opts, memberAddress)
+func (c *OracleDaoManager) MakeChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnta.Contract, "actionChallengeMake", opts, memberAddress)
 }
 
 // Get info for deciding a challenge to an Oracle DAO member
-func (c *OracleDaoManager) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dnta, "actionChallengeDecide", opts, memberAddress)
+func (c *OracleDaoManager) DecideChallenge(memberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dnta.Contract, "actionChallengeDecide", opts, memberAddress)
 }
 
 // === DAONodeTrustedProposals ===
 
 // Get info for proposing to invite a new member to the Oracle DAO
-func (c *OracleDaoManager) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeInviteMember(message string, newMemberAddress common.Address, newMemberId string, newMemberUrl string, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	newMemberUrl = strings.Sanitize(newMemberUrl)
 	if message == "" {
 		message = fmt.Sprintf("invite %s (%s)", newMemberId, newMemberAddress.Hex())
@@ -141,12 +144,12 @@ func (c *OracleDaoManager) ProposeInviteMember(message string, newMemberAddress 
 }
 
 // Get info for proposing to leave the Oracle DAO
-func (c *OracleDaoManager) ProposeMemberLeave(message string, memberAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeMemberLeave(message string, memberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return c.submitProposal(opts, message, "proposalLeave", memberAddress)
 }
 
 // Get info for proposing to kick a member from the Oracle DAO
-func (c *OracleDaoManager) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeKickMember(message string, memberAddress common.Address, rplFineAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("kick %s", memberAddress.Hex())
 	}
@@ -154,7 +157,7 @@ func (c *OracleDaoManager) ProposeKickMember(message string, memberAddress commo
 }
 
 // Get info for proposing a bool setting
-func (c *OracleDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -162,7 +165,7 @@ func (c *OracleDaoManager) ProposeSetBool(message string, contractName rocketpoo
 }
 
 // Get info for proposing a uint setting
-func (c *OracleDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -170,7 +173,7 @@ func (c *OracleDaoManager) ProposeSetUint(message string, contractName rocketpoo
 }
 
 // Get info for proposing a contract upgrade
-func (c *OracleDaoManager) ProposeUpgradeContract(message string, upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) ProposeUpgradeContract(message string, upgradeType string, contractName rocketpool.ContractName, contractAbi string, contractAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	compressedAbi, err := core.EncodeAbiStr(contractAbi)
 	if err != nil {
 		return nil, fmt.Errorf("error compressing ABI: %w", err)
@@ -179,12 +182,12 @@ func (c *OracleDaoManager) ProposeUpgradeContract(message string, upgradeType st
 }
 
 // Internal method used for actually constructing and submitting a proposal
-func (c *OracleDaoManager) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*core.TransactionInfo, error) {
+func (c *OracleDaoManager) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*eth.TransactionInfo, error) {
 	payload, err := c.dntp.ABI.Pack(method, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding payload: %w", err)
 	}
-	return core.NewTransactionInfo(c.dntp, "propose", opts, message, payload)
+	return c.txMgr.CreateTransactionInfo(c.dntp.Contract, "propose", opts, message, payload)
 }
 
 // =================
@@ -226,7 +229,7 @@ func (c *OracleDaoManager) CreateMemberFromAddress(address common.Address, inclu
 
 	if includeDetails {
 		err = c.rp.Query(func(mc *batch.MultiCaller) error {
-			core.QueryAllFields(member, mc)
+			eth.QueryAllFields(member, mc)
 			return nil
 		}, opts)
 		if err != nil {
@@ -255,7 +258,7 @@ func (c *OracleDaoManager) CreateMembersFromAddresses(addresses []common.Address
 		err := c.rp.BatchQuery(int(memberCount), oracleDaoMemberBatchSize,
 			func(mc *batch.MultiCaller, index int) error {
 				member := members[index]
-				core.QueryAllFields(member, mc)
+				eth.QueryAllFields(member, mc)
 				return nil
 			},
 			opts,
@@ -276,7 +279,7 @@ func (c *OracleDaoManager) CreateMembersFromAddresses(addresses []common.Address
 // Returns the most recent block number that the number of trusted nodes changed since fromBlock
 func (c *OracleDaoManager) GetLatestMemberCountChangedBlock(fromBlock uint64, intervalSize *big.Int, opts *bind.CallOpts) (uint64, error) {
 	// Construct a filter query for relevant logs
-	addressFilter := []common.Address{*c.dnta.Address}
+	addressFilter := []common.Address{c.dnta.Address}
 	topicFilter := [][]common.Hash{{
 		c.dnta.ABI.Events["ActionJoined"].ID,
 		c.dnta.ABI.Events["ActionLeave"].ID,

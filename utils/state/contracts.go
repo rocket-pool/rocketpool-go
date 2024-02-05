@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/hashicorp/go-version"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -202,10 +203,11 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 
 		// Create the contract binding
 		contract := &core.Contract{
-			Contract: bind.NewBoundContract(wrapper.address, *abi, rp.Client, rp.Client, rp.Client),
-			Address:  &wrappers[i].address,
-			ABI:      abi,
-			Client:   rp.Client,
+			Contract: &eth.Contract{
+				ContractImpl: bind.NewBoundContract(wrapper.address, *abi, rp.Client, rp.Client, rp.Client),
+				Address:      wrappers[i].address,
+				ABI:          abi,
+			},
 		}
 
 		// Set the contract in the main wrapper object
@@ -230,8 +232,8 @@ func (c *NetworkContracts) getCurrentVersion(rp *rocketpool.RocketPool) error {
 	var nodeStakingVersion uint8
 	var nodeMgrVersion uint8
 	err := rp.Query(func(mc *batch.MultiCaller) error {
-		rocketpool.GetContractVersion(mc, &nodeStakingVersion, *c.RocketNodeStaking.Address)
-		rocketpool.GetContractVersion(mc, &nodeMgrVersion, *c.RocketNodeManager.Address)
+		rocketpool.GetContractVersion(mc, &nodeStakingVersion, c.RocketNodeStaking.Address)
+		rocketpool.GetContractVersion(mc, &nodeMgrVersion, c.RocketNodeManager.Address)
 		return nil
 	}, opts)
 	if err != nil {

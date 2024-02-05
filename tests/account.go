@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/nodeset-org/eth-utils/eth"
 )
 
 // An account containing an address and a transactor for it

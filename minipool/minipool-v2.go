@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -74,7 +75,7 @@ func GetMinipoolAsV2(mp IMinipool) (*MinipoolV2, bool) {
 
 // Query all of the minipool details
 func (c *MinipoolV2) QueryAllFields(mc *batch.MultiCaller) {
-	core.QueryAllFields(c.MinipoolCommon, mc)
+	eth.QueryAllFields(c.MinipoolCommon, mc)
 }
 
 // ====================
@@ -85,8 +86,8 @@ func (c *MinipoolV2) QueryAllFields(mc *batch.MultiCaller) {
 // !!! WARNING !!!
 // DO NOT CALL THIS until the minipool's validator has exited from the Beacon Chain
 // and the balance has been deposited into the minipool!
-func (c *MinipoolV2) DistributeBalance(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "distributeBalance", opts)
+func (c *MinipoolV2) DistributeBalance(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "distributeBalance", opts)
 }
 
 // Get info for distributing the minipool's ETH balance to the node operator and rETH staking pool,
@@ -94,6 +95,6 @@ func (c *MinipoolV2) DistributeBalance(opts *bind.TransactOpts) (*core.Transacti
 // !!! WARNING !!!
 // DO NOT CALL THIS until the minipool's validator has exited from the Beacon Chain
 // and the balance has been deposited into the minipool!
-func (c *MinipoolV2) DistributeBalanceAndFinalise(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "distributeBalanceAndFinalise", opts)
+func (c *MinipoolV2) DistributeBalanceAndFinalise(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "distributeBalanceAndFinalise", opts)
 }

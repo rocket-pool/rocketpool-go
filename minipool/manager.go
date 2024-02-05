@@ -6,10 +6,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/beacon"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/types"
 )
 
 // Settings
@@ -113,7 +113,7 @@ func (c *MinipoolManager) GetMinipoolAddress(mc *batch.MultiCaller, address_Out 
 }
 
 // Get a minipool address by pubkey
-func (c *MinipoolManager) GetMinipoolAddressByPubkey(mc *batch.MultiCaller, address_Out *common.Address, pubkey types.ValidatorPubkey) {
+func (c *MinipoolManager) GetMinipoolAddressByPubkey(mc *batch.MultiCaller, address_Out *common.Address, pubkey beacon.ValidatorPubkey) {
 	core.AddCall(mc, c.mpMgr, address_Out, "getMinipoolByPubkey", pubkey[:])
 }
 

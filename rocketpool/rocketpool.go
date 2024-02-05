@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"runtime"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"golang.org/x/sync/errgroup"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -18,7 +19,6 @@ import (
 )
 
 const (
-	defaultConcurrentCallLimit      int = 6
 	defaultAddressBatchSize         int = 1000
 	defaultContractVersionBatchSize int = 500
 	defaultBalanceBatchSize         int = 1000
@@ -26,7 +26,7 @@ const (
 
 // Rocket Pool contract manager
 type RocketPool struct {
-	Client                   core.ExecutionClient
+	Client                   eth.IExecutionClient
 	Storage                  *storage.Storage
 	MulticallAddress         *common.Address
 	BalanceBatcher           *batch.BalanceBatcher
@@ -38,10 +38,12 @@ type RocketPool struct {
 	// Internal fields
 	contracts    map[ContractName]*core.Contract
 	instanceAbis map[ContractName]*abi.ABI // Used for instanced contracts like minipools or fee distributors
+	txMgr        *eth.TransactionManager
+	queryMgr     *eth.QueryManager
 }
 
 // Create new contract manager
-func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Address, multicallAddress common.Address, balanceBatcherAddress common.Address) (*RocketPool, error) {
+func NewRocketPool(client eth.IExecutionClient, rocketStorageAddress common.Address, multicallAddress common.Address, balanceBatcherAddress common.Address) (*RocketPool, error) {
 	// Create the RocketStorage binding
 	storage, err := storage.NewStorage(client, rocketStorageAddress)
 	if err != nil {
@@ -49,7 +51,8 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 	}
 
 	// Create the balance batcher
-	balanceBatcher, err := batch.NewBalanceBatcher(client, balanceBatcherAddress, defaultBalanceBatchSize, defaultConcurrentCallLimit)
+	concurrentCallLimit := runtime.NumCPU() / 2
+	balanceBatcher, err := batch.NewBalanceBatcher(client, balanceBatcherAddress, defaultBalanceBatchSize, concurrentCallLimit)
 	if err != nil {
 		return nil, fmt.Errorf("error creating balance batcher: %w", err)
 	}
@@ -60,13 +63,18 @@ func NewRocketPool(client core.ExecutionClient, rocketStorageAddress common.Addr
 		Storage:                  storage,
 		MulticallAddress:         &multicallAddress,
 		BalanceBatcher:           balanceBatcher,
-		ConcurrentCallLimit:      defaultConcurrentCallLimit,
+		ConcurrentCallLimit:      concurrentCallLimit,
 		AddressBatchSize:         defaultAddressBatchSize,
 		ContractVersionBatchSize: defaultContractVersionBatchSize,
 		contracts:                map[ContractName]*core.Contract{},
 		instanceAbis:             map[ContractName]*abi.ABI{},
 	}
 	rp.VersionManager = NewVersionManager(rp)
+	rp.txMgr, err = eth.NewTransactionManager(client, eth.DefaultSafeGasBuffer, eth.DefaultSafeGasMultiplier)
+	if err != nil {
+		return nil, fmt.Errorf("error creating transaction manager: %w", err)
+	}
+	rp.queryMgr = eth.NewQueryManager(client, multicallAddress, rp.ConcurrentCallLimit)
 	return rp, nil
 }
 
@@ -117,11 +125,12 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 
 		// Make the contract binding
 		contract := &core.Contract{
-			Name:     string(contractName),
-			Contract: bind.NewBoundContract(addresses[i], *abi, rp.Client, rp.Client, rp.Client),
-			Address:  &addresses[i],
-			ABI:      abi,
-			Client:   rp.Client,
+			Contract: &eth.Contract{
+				Name:         string(contractName),
+				ContractImpl: bind.NewBoundContract(addresses[i], *abi, rp.Client, rp.Client, rp.Client),
+				Address:      addresses[i],
+				ABI:          abi,
+			},
 		}
 		rp.contracts[contractName] = contract
 	}
@@ -130,7 +139,7 @@ func (rp *RocketPool) LoadContracts(opts *bind.CallOpts, contractNames ...Contra
 	results, err = rp.FlexQuery(func(mc *batch.MultiCaller) error {
 		for _, contractName := range contractNames {
 			contract := rp.contracts[contractName]
-			err := GetContractVersion(mc, &contract.Version, *contract.Address)
+			err := GetContractVersion(mc, &contract.Version, contract.Address)
 			if err != nil {
 				return fmt.Errorf("error getting version for contract %s: %w", string(contractName), err)
 			}
@@ -209,11 +218,12 @@ func (rp *RocketPool) MakeContract(contractName ContractName, address common.Add
 
 	// Create and return
 	return &core.Contract{
-		Name:     string(contractName),
-		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
-		Address:  &address,
-		ABI:      abi,
-		Client:   rp.Client,
+		Contract: &eth.Contract{
+			Name:         string(contractName),
+			ContractImpl: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
+			Address:      address,
+			ABI:          abi,
+		},
 	}, nil
 }
 
@@ -224,6 +234,14 @@ func (rp *RocketPool) GetAbi(contractName ContractName) (*abi.ABI, error) {
 		return nil, fmt.Errorf("ABI for contract %s has not been loaded yet", string(contractName))
 	}
 	return abi, nil
+}
+
+func (rp *RocketPool) GetTransactionManager() *eth.TransactionManager {
+	return rp.txMgr
+}
+
+func (rp *RocketPool) GetQueryManager() *eth.QueryManager {
+	return rp.queryMgr
 }
 
 // =============
@@ -240,10 +258,11 @@ func (rp *RocketPool) CreateMinipoolContractFromEncodedAbi(address common.Addres
 
 	// Create and return
 	return &core.Contract{
-		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
-		Address:  &address,
-		ABI:      abi,
-		Client:   rp.Client,
+		Contract: &eth.Contract{
+			ContractImpl: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
+			Address:      address,
+			ABI:          abi,
+		},
 	}, nil
 }
 
@@ -251,10 +270,11 @@ func (rp *RocketPool) CreateMinipoolContractFromEncodedAbi(address common.Addres
 func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi *abi.ABI) (*core.Contract, error) {
 	// Create and return
 	return &core.Contract{
-		Contract: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
-		Address:  &address,
-		ABI:      abi,
-		Client:   rp.Client,
+		Contract: &eth.Contract{
+			ContractImpl: bind.NewBoundContract(address, *abi, rp.Client, rp.Client, rp.Client),
+			Address:      address,
+			ABI:          abi,
+		},
 	}, nil
 }
 
@@ -266,31 +286,8 @@ func (rp *RocketPool) CreateMinipoolContractFromAbi(address common.Address, abi 
 // The 'query' function is an optional general-purpose function you can use to add whatever you want to the multicall
 // before running it. The 'queryables' can be used to simply list a collection of IQueryable objects, each of which will
 // run 'AddToQuery()' on the multicall for convenience.
-func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.CallOpts, queryables ...core.IQueryable) error {
-	// Create the multicaller
-	mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
-	if err != nil {
-		return fmt.Errorf("error creating multicaller: %w", err)
-	}
-
-	// Add the query function
-	if query != nil {
-		err = query(mc)
-		if err != nil {
-			return fmt.Errorf("error running multicall query: %w", err)
-		}
-	}
-
-	// Add the queryables
-	core.AddQueryablesToMulticall(mc, queryables...)
-
-	// Execute the multicall
-	_, err = mc.FlexibleCall(true, opts)
-	if err != nil {
-		return fmt.Errorf("error executing multicall: %w", err)
-	}
-
-	return nil
+func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.CallOpts, queryables ...eth.IQueryable) error {
+	return rp.queryMgr.Query(query, opts, queryables...)
 }
 
 // Run a multicall query that doesn't perform any return type allocation
@@ -298,119 +295,19 @@ func (rp *RocketPool) Query(query func(*batch.MultiCaller) error, opts *bind.Cal
 // The 'query' function is an optional general-purpose function you can use to add whatever you want to the multicall
 // before running it. The 'queryables' can be used to simply list a collection of IQueryable objects, each of which will
 // run 'AddToQuery()' on the multicall for convenience.
-func (rp *RocketPool) FlexQuery(query func(*batch.MultiCaller) error, opts *bind.CallOpts, queryables ...core.IQueryable) ([]bool, error) {
-	// Create the multicaller
-	mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
-	if err != nil {
-		return nil, fmt.Errorf("error creating multicaller: %w", err)
-	}
-
-	// Run the query
-	if query != nil {
-		err = query(mc)
-		if err != nil {
-			return nil, fmt.Errorf("error running multicall query: %w", err)
-		}
-	}
-
-	// Add the queryables
-	core.AddQueryablesToMulticall(mc, queryables...)
-
-	// Execute the multicall
-	return mc.FlexibleCall(false, opts)
+func (rp *RocketPool) FlexQuery(query func(*batch.MultiCaller) error, opts *bind.CallOpts, queryables ...eth.IQueryable) ([]bool, error) {
+	return rp.queryMgr.FlexQuery(query, opts, queryables...)
 }
 
 // Create and execute a multicall query that is too big for one call and must be run in batches
 func (rp *RocketPool) BatchQuery(count int, batchSize int, query func(*batch.MultiCaller, int) error, opts *bind.CallOpts) error {
-	// Sync
-	var wg errgroup.Group
-	wg.SetLimit(rp.ConcurrentCallLimit)
-
-	// Run getters in batches
-	for i := 0; i < count; i += batchSize {
-		i := i
-		max := i + batchSize
-		if max > count {
-			max = count
-		}
-
-		// Load details
-		wg.Go(func() error {
-			mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
-			if err != nil {
-				return err
-			}
-			for j := i; j < max; j++ {
-				err := query(mc, j)
-				if err != nil {
-					return fmt.Errorf("error running query adder: %w", err)
-				}
-			}
-			_, err = mc.FlexibleCall(true, opts)
-			if err != nil {
-				return fmt.Errorf("error executing multicall: %w", err)
-			}
-			return nil
-		})
-	}
-
-	// Wait for them all to complete
-	if err := wg.Wait(); err != nil {
-		return fmt.Errorf("error during multicall query: %w", err)
-	}
-
-	return nil
+	return rp.queryMgr.BatchQuery(count, batchSize, query, opts)
 }
 
 // Create and execute a multicall query that is too big for one call and must be run in batches.
 // Use this if one of the calls is allowed to fail without interrupting the others; the returned result array provides information about the success of each call.
 func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch.MultiCaller, int) error, handleResult func(bool, int) error, opts *bind.CallOpts) error {
-	// Sync
-	var wg errgroup.Group
-	wg.SetLimit(rp.ConcurrentCallLimit)
-
-	// Run getters in batches
-	for i := 0; i < count; i += batchSize {
-		i := i
-		max := i + batchSize
-		if max > count {
-			max = count
-		}
-
-		// Load details
-		wg.Go(func() error {
-			mc, err := batch.NewMultiCaller(rp.Client, *rp.MulticallAddress)
-			if err != nil {
-				return err
-			}
-			for j := i; j < max; j++ {
-				err := query(mc, j)
-				if err != nil {
-					return fmt.Errorf("error running query adder: %w", err)
-				}
-			}
-			results, err := mc.FlexibleCall(false, opts)
-			if err != nil {
-				return fmt.Errorf("error executing multicall: %w", err)
-			}
-			for j, result := range results {
-				err = handleResult(result, j+i)
-				if err != nil {
-					return fmt.Errorf("error running query result handler: %w", err)
-				}
-			}
-
-			return nil
-		})
-	}
-
-	// Wait for them all to complete
-	if err := wg.Wait(); err != nil {
-		return fmt.Errorf("error during multicall query: %w", err)
-	}
-
-	// Return
-	return nil
+	return rp.queryMgr.FlexBatchQuery(count, batchSize, query, handleResult, opts)
 }
 
 // ===========================
@@ -419,29 +316,28 @@ func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch
 
 // Signs a transaction but does not submit it to the network. Use this if you want to sign something offline and submit it later,
 // or submit it as part of a bundle.
-func (rp *RocketPool) SignTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
-	opts.NoSend = true
-	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
+func (rp *RocketPool) SignTransaction(txInfo *eth.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	return rp.txMgr.SignTransaction(txInfo, opts)
 }
 
 // Signs and submits a transaction to the network.
 // The nonce and gas fee info in the provided opts will be used.
 // The value will come from the provided txInfo. It will *not* use the value in the provided opts.
-func (rp *RocketPool) ExecuteTransaction(txInfo *core.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
-	return core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
+func (rp *RocketPool) ExecuteTransaction(txInfo *eth.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	return rp.txMgr.ExecuteTransaction(txInfo, opts)
 }
 
 // Creates, signs, and submits a transaction to the network using the nonce and value from the original TX info.
 // Use this if you don't care about the estimated gas cost and just want to run it as quickly as possible.
 // If failOnSimErrors is true, it will treat a simualtion / gas estimation error as a failure and stop before the transaction is submitted to the network.
-func (rp *RocketPool) CreateAndExecuteTransaction(creator func() (*core.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) (*types.Transaction, error) {
+func (rp *RocketPool) CreateAndExecuteTransaction(creator func() (*eth.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) (*types.Transaction, error) {
 
 	txInfo, err := creator()
 	if err != nil {
 		return nil, fmt.Errorf("error creating TX info: %w", err)
 	}
-	if failOnSimError && txInfo.SimError != "" {
-		return nil, fmt.Errorf("error simulating TX: %s", txInfo.SimError)
+	if failOnSimError && txInfo.SimulationResult.SimulationError != "" {
+		return nil, fmt.Errorf("error simulating TX: %s", txInfo.SimulationResult.SimulationError)
 	}
 
 	return rp.ExecuteTransaction(txInfo, opts)
@@ -452,14 +348,14 @@ func (rp *RocketPool) CreateAndExecuteTransaction(creator func() (*core.Transact
 // The value will come from the provided txInfo. It will *not* use the value in the provided opts.
 // Use this if you don't care about the estimated gas cost and just want to run it as quickly as possible.
 // If failOnSimErrors is true, it will treat a simualtion / gas estimation error as a failure and stop before the transaction is submitted to the network.
-func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) error {
+func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*eth.TransactionInfo, error), failOnSimError bool, opts *bind.TransactOpts) error {
 	// Create the TX
 	txInfo, err := creator()
 	if err != nil {
 		return fmt.Errorf("error creating TX info: %w", err)
 	}
-	if failOnSimError && txInfo.SimError != "" {
-		return fmt.Errorf("error simulating TX: %s", txInfo.SimError)
+	if failOnSimError && txInfo.SimulationResult.SimulationError != "" {
+		return fmt.Errorf("error simulating TX: %s", txInfo.SimulationResult.SimulationError)
 	}
 
 	// Execute the TX
@@ -482,7 +378,7 @@ func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*core.Transact
 // The GasFeeCap and GasTipCap from opts will be used for all transactions.
 // NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
 // Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
-func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*core.TransactionSubmission, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*eth.TransactionSubmission, opts *bind.TransactOpts) ([]*types.Transaction, error) {
 	if opts.Nonce == nil {
 		// Get the latest nonce and use that as the nonce for the first TX
 		nonce, err := rp.Client.NonceAt(context.Background(), opts.From, nil)
@@ -496,7 +392,7 @@ func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*core.Transaction
 	for i, txSubmission := range txSubmissions {
 		txInfo := txSubmission.TxInfo
 		opts.GasLimit = txSubmission.GasLimit
-		tx, err := core.ExecuteTransaction(rp.Client, txInfo.Data, txInfo.To, txInfo.Value, opts)
+		tx, err := rp.txMgr.ExecuteTransaction(txInfo, opts)
 		if err != nil {
 			return nil, fmt.Errorf("error creating transaction %d in bundle: %w", i, err)
 		}
@@ -515,16 +411,16 @@ func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*core.Transaction
 // If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
 // NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
 // Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
-func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core.TransactionSubmission, error), failOnSimErrors bool, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*eth.TransactionSubmission, error), failOnSimErrors bool, opts *bind.TransactOpts) ([]*types.Transaction, error) {
 	// Create the TXs
-	txSubmissions := make([]*core.TransactionSubmission, len(creators))
+	txSubmissions := make([]*eth.TransactionSubmission, len(creators))
 	for i, creator := range creators {
 		txSubmission, err := creator()
 		if err != nil {
 			return nil, fmt.Errorf("error creating TX submission for TX %d: %w", i, err)
 		}
-		if failOnSimErrors && txSubmission.TxInfo.SimError != "" {
-			return nil, fmt.Errorf("error simulating TX %d: %s", i, txSubmission.TxInfo.SimError)
+		if failOnSimErrors && txSubmission.TxInfo.SimulationResult.SimulationError != "" {
+			return nil, fmt.Errorf("error simulating TX %d: %s", i, txSubmission.TxInfo.SimulationResult.SimulationError)
 		}
 		txSubmissions[i] = txSubmission
 	}
@@ -540,16 +436,16 @@ func (rp *RocketPool) BatchCreateAndExecuteTransactions(creators []func() (*core
 // If failOnSimErrors is true, it will treat simualtion / gas estimation errors as failures and stop before any of transactions are submitted to the network.
 // NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
 // Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
-func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*core.TransactionSubmission, error), failOnSimErrors bool, opts *bind.TransactOpts) error {
+func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*eth.TransactionSubmission, error), failOnSimErrors bool, opts *bind.TransactOpts) error {
 	// Create the TXs
-	txSubmissions := make([]*core.TransactionSubmission, len(creators))
+	txSubmissions := make([]*eth.TransactionSubmission, len(creators))
 	for i, creator := range creators {
 		txSubmission, err := creator()
 		if err != nil {
 			return fmt.Errorf("error creating TX submission for TX %d: %w", i, err)
 		}
-		if failOnSimErrors && txSubmission.TxInfo.SimError != "" {
-			return fmt.Errorf("error simulating TX %d: %s", i, txSubmission.TxInfo.SimError)
+		if failOnSimErrors && txSubmission.TxInfo.SimulationResult.SimulationError != "" {
+			return fmt.Errorf("error simulating TX %d: %s", i, txSubmission.TxInfo.SimulationResult.SimulationError)
 		}
 		txSubmissions[i] = txSubmission
 	}
@@ -571,69 +467,22 @@ func (rp *RocketPool) BatchCreateAndWaitForTransactions(creators []func() (*core
 
 // Wait for a transaction to get included in blocks
 func (rp *RocketPool) WaitForTransaction(tx *types.Transaction) error {
-	// Wait for transaction to be included
-	txReceipt, err := bind.WaitMined(context.Background(), rp.Client, tx)
-	if err != nil {
-		return fmt.Errorf("error running transaction %s: %w", tx.Hash().Hex(), err)
-	}
-
-	// Check transaction status
-	if txReceipt.Status == 0 {
-		return fmt.Errorf("transaction %s failed with status 0", tx.Hash().Hex())
-	}
-
-	// Return
-	return nil
+	return rp.txMgr.WaitForTransaction(tx)
 }
 
 // Wait for a set of transactions to get included in blocks
 func (rp *RocketPool) WaitForTransactions(txs []*types.Transaction) error {
-	var wg errgroup.Group
-	for _, tx := range txs {
-		tx := tx
-		wg.Go(func() error {
-			return rp.WaitForTransaction(tx)
-		})
-	}
-
-	err := wg.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for transactions: %w", err)
-	}
-
-	return nil
+	return rp.txMgr.WaitForTransactions(txs)
 }
 
 // Wait for a transaction to get included in blocks
 func (rp *RocketPool) WaitForTransactionByHash(hash common.Hash) error {
-	// Get the TX
-	tx, err := rp.getTransactionFromHash(hash)
-	if err != nil {
-		return fmt.Errorf("error getting transaction %s: %w", hash.Hex(), err)
-	}
-
-	// Wait for transaction to be included
-	return rp.WaitForTransaction(tx)
+	return rp.txMgr.WaitForTransactionByHash(hash)
 }
 
 // Wait for a set of transactions to get included in blocks
 func (rp *RocketPool) WaitForTransactionsByHash(hashes []common.Hash) error {
-	var wg errgroup.Group
-
-	// Get the TXs from the hashes
-	for _, hash := range hashes {
-		hash := hash
-		wg.Go(func() error {
-			return rp.WaitForTransactionByHash(hash)
-		})
-	}
-	err := wg.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for transactions: %w", err)
-	}
-
-	// Wait for the TXs
-	return nil
+	return rp.txMgr.WaitForTransactionsByHash(hashes)
 }
 
 // Get a TX from its hash

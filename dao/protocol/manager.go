@@ -11,13 +11,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 	"github.com/rocket-pool/rocketpool-go/types"
 	"github.com/rocket-pool/rocketpool-go/utils"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 )
 
 // Settings
@@ -44,13 +44,14 @@ type ProtocolDaoManager struct {
 	DepthPerRound *core.FormattedUint256Field[uint64]
 
 	// === Internal fields ===
-	rp   *rocketpool.RocketPool
-	cd   *core.Contract
-	dp   *core.Contract
-	dpp  *core.Contract
-	dpps *core.Contract
-	dpsr *core.Contract
-	dpv  *core.Contract
+	rp    *rocketpool.RocketPool
+	cd    *core.Contract
+	dp    *core.Contract
+	dpp   *core.Contract
+	dpps  *core.Contract
+	dpsr  *core.Contract
+	dpv   *core.Contract
+	txMgr *eth.TransactionManager
 }
 
 // Rewards claimer percents
@@ -135,13 +136,14 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 		ProposalCount:                core.NewFormattedUint256Field[uint64](dpp, "getTotal"),
 		DepthPerRound:                core.NewFormattedUint256Field[uint64](dpv, "getDepthPerRound"),
 
-		rp:   rp,
-		cd:   cd,
-		dp:   dp,
-		dpp:  dpp,
-		dpps: dpps,
-		dpsr: dpsr,
-		dpv:  dpv,
+		rp:    rp,
+		cd:    cd,
+		dp:    dp,
+		dpp:   dpp,
+		dpps:  dpps,
+		dpsr:  dpsr,
+		dpv:   dpv,
+		txMgr: rp.GetTransactionManager(),
 	}
 	settings, err := newProtocolDaoSettings(pdaoMgr)
 	if err != nil {
@@ -191,29 +193,29 @@ func (c *ProtocolDaoManager) GetProtocolDaoRewardsPercent(mc *batch.MultiCaller,
 // === DAOProtocol ===
 
 // Get info for bootstrapping a bool setting
-func (c *ProtocolDaoManager) BootstrapBool(contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingBool", opts, contractName, string(setting), value)
+func (c *ProtocolDaoManager) BootstrapBool(contractName rocketpool.ContractName, setting SettingName, value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dp.Contract, "bootstrapSettingBool", opts, contractName, string(setting), value)
 }
 
 // Get info for bootstrapping a uint256 setting
-func (c *ProtocolDaoManager) BootstrapUint(contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingUint", opts, contractName, string(setting), value)
+func (c *ProtocolDaoManager) BootstrapUint(contractName rocketpool.ContractName, setting SettingName, value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dp.Contract, "bootstrapSettingUint", opts, contractName, string(setting), value)
 }
 
 // Get info for bootstrapping an address setting
-func (c *ProtocolDaoManager) BootstrapAddress(contractName rocketpool.ContractName, setting SettingName, value common.Address, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingAddress", opts, contractName, string(setting), value)
+func (c *ProtocolDaoManager) BootstrapAddress(contractName rocketpool.ContractName, setting SettingName, value common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dp.Contract, "bootstrapSettingAddress", opts, contractName, string(setting), value)
 }
 
 // Get info for bootstrapping a rewards claimer
-func (c *ProtocolDaoManager) BootstrapClaimer(contractName rocketpool.ContractName, amount float64, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.dp, "bootstrapSettingClaimer", opts, contractName, eth.EthToWei(amount))
+func (c *ProtocolDaoManager) BootstrapClaimer(contractName rocketpool.ContractName, amount float64, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.dp.Contract, "bootstrapSettingClaimer", opts, contractName, eth.EthToWei(amount))
 }
 
 // === DAOProtocolProposals ===
 
 // Get info for submitting a proposal to update a bool Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting SettingName, value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting SettingName, value bool, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -221,7 +223,7 @@ func (c *ProtocolDaoManager) ProposeSetBool(message string, contractName rocketp
 }
 
 // Get info for submitting a proposal to update a uint Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting SettingName, value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting SettingName, value *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -229,7 +231,7 @@ func (c *ProtocolDaoManager) ProposeSetUint(message string, contractName rocketp
 }
 
 // Get info for submitting a proposal to update an address Protocol DAO setting
-func (c *ProtocolDaoManager) ProposeSetAddress(message string, contractName rocketpool.ContractName, setting SettingName, value common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetAddress(message string, contractName rocketpool.ContractName, setting SettingName, value common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
@@ -237,7 +239,7 @@ func (c *ProtocolDaoManager) ProposeSetAddress(message string, contractName rock
 }
 
 // Get info for submitting a proposal to update multiple Protocol DAO settings at once
-func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []rocketpool.ContractName, settings []SettingName, settingTypes []types.ProposalSettingType, values []any, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []rocketpool.ContractName, settings []SettingName, settingTypes []types.ProposalSettingType, values []any, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	settingNameStrings := make([]string, len(settings))
 	for i, setting := range settings {
 		settingNameStrings[i] = string(setting)
@@ -253,7 +255,7 @@ func (c *ProtocolDaoManager) ProposeSetMulti(message string, contractNames []roc
 }
 
 // Get info for submitting a proposal to update the allocations of RPL rewards
-func (c *ProtocolDaoManager) ProposeSetRewardsPercentages(message string, odaoPercentage *big.Int, pdaoPercentage *big.Int, nodePercentage *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeSetRewardsPercentages(message string, odaoPercentage *big.Int, pdaoPercentage *big.Int, nodePercentage *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = "set rewards percentages"
 	}
@@ -261,7 +263,7 @@ func (c *ProtocolDaoManager) ProposeSetRewardsPercentages(message string, odaoPe
 }
 
 // Get info for submitting a proposal to spend a portion of the Rocket Pool treasury one time
-func (c *ProtocolDaoManager) ProposeOneTimeTreasurySpend(message, invoiceID string, recipient common.Address, amount *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeOneTimeTreasurySpend(message, invoiceID string, recipient common.Address, amount *big.Int, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("propose one-time treasury spend - invoice %s", invoiceID)
 	}
@@ -269,7 +271,7 @@ func (c *ProtocolDaoManager) ProposeOneTimeTreasurySpend(message, invoiceID stri
 }
 
 // Get info for submitting a proposal to spend a portion of the Rocket Pool treasury in a recurring manner
-func (c *ProtocolDaoManager) ProposeRecurringTreasurySpend(message string, contractName string, recipient common.Address, amountPerPeriod *big.Int, periodLength time.Duration, startTime time.Time, numberOfPeriods uint64, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeRecurringTreasurySpend(message string, contractName string, recipient common.Address, amountPerPeriod *big.Int, periodLength time.Duration, startTime time.Time, numberOfPeriods uint64, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("propose recurring treasury spend - contract %s", contractName)
 	}
@@ -277,7 +279,7 @@ func (c *ProtocolDaoManager) ProposeRecurringTreasurySpend(message string, contr
 }
 
 // Get info for submitting a proposal to update a recurring Rocket Pool treasury spending plan
-func (c *ProtocolDaoManager) ProposeRecurringTreasurySpendUpdate(message string, contractName string, recipient common.Address, amountPerPeriod *big.Int, periodLength time.Duration, numberOfPeriods uint64, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeRecurringTreasurySpendUpdate(message string, contractName string, recipient common.Address, amountPerPeriod *big.Int, periodLength time.Duration, numberOfPeriods uint64, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("propose recurring treasury spend update - contract %s", contractName)
 	}
@@ -285,7 +287,7 @@ func (c *ProtocolDaoManager) ProposeRecurringTreasurySpendUpdate(message string,
 }
 
 // Get info for submitting a proposal to invite a member to the security council
-func (c *ProtocolDaoManager) ProposeInviteToSecurityCouncil(message string, id string, address common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeInviteToSecurityCouncil(message string, id string, address common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("invite %s (%s) to the security council", id, address.Hex())
 	}
@@ -293,7 +295,7 @@ func (c *ProtocolDaoManager) ProposeInviteToSecurityCouncil(message string, id s
 }
 
 // Get info for submitting a proposal to kick a member from the security council
-func (c *ProtocolDaoManager) ProposeKickFromSecurityCouncil(message string, address common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeKickFromSecurityCouncil(message string, address common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("kick %s from the security council", address.Hex())
 	}
@@ -301,7 +303,7 @@ func (c *ProtocolDaoManager) ProposeKickFromSecurityCouncil(message string, addr
 }
 
 // Get info for submitting a proposal to kick multiple members from the security council
-func (c *ProtocolDaoManager) ProposeKickMultiFromSecurityCouncil(message string, addresses []common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeKickMultiFromSecurityCouncil(message string, addresses []common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = "kick multiple members from the security council"
 	}
@@ -309,7 +311,7 @@ func (c *ProtocolDaoManager) ProposeKickMultiFromSecurityCouncil(message string,
 }
 
 // Get info for submitting a proposal to replace a member of the security council with another one in a single TX
-func (c *ProtocolDaoManager) ProposeReplaceSecurityCouncilMember(message string, existingMemberAddress common.Address, newMemberID string, newMemberAddress common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) ProposeReplaceSecurityCouncilMember(message string, existingMemberAddress common.Address, newMemberID string, newMemberAddress common.Address, blockNumber uint32, treeNodes []types.VotingTreeNode, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("replace %s on the security council with %s (%s)", existingMemberAddress.Hex(), newMemberID, newMemberAddress.Hex())
 	}
@@ -317,7 +319,7 @@ func (c *ProtocolDaoManager) ProposeReplaceSecurityCouncilMember(message string,
 }
 
 // Submit a protocol DAO proposal
-func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber uint32, treeNodes []types.VotingTreeNode, message string, method string, args ...interface{}) (*core.TransactionInfo, error) {
+func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber uint32, treeNodes []types.VotingTreeNode, message string, method string, args ...interface{}) (*eth.TransactionInfo, error) {
 	payload, err := c.dpps.ABI.Pack(method, args...)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding payload: %w", err)
@@ -326,7 +328,7 @@ func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber
 	if err != nil {
 		return nil, fmt.Errorf("error simulating proposal execution: %w", err)
 	}
-	return core.NewTransactionInfo(c.dpp, "propose", opts, message, payload, blockNumber, treeNodes)
+	return c.txMgr.CreateTransactionInfo(c.dpp.Contract, "propose", opts, message, payload, blockNumber, treeNodes)
 }
 
 /// =============
@@ -342,7 +344,7 @@ func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, interv
 		proposalIdBig.FillBytes(idBuffers[i].Bytes())
 	}
 	rootSubmittedEvent := c.dpv.ABI.Events["RootSubmitted"]
-	addressFilter := []common.Address{*c.dpv.Address}
+	addressFilter := []common.Address{c.dpv.Address}
 	topicFilter := [][]common.Hash{{rootSubmittedEvent.ID}, idBuffers}
 
 	// Get the event logs
@@ -393,7 +395,7 @@ func (c *ProtocolDaoManager) GetChallengeSubmittedEvents(proposalIDs []uint64, i
 		proposalIdBig.FillBytes(idBuffers[i].Bytes())
 	}
 	challengeSubmittedEvent := c.dpv.ABI.Events["ChallengeSubmitted"]
-	addressFilter := []common.Address{*c.dpv.Address}
+	addressFilter := []common.Address{c.dpv.Address}
 	topicFilter := [][]common.Hash{{challengeSubmittedEvent.ID}, idBuffers}
 
 	// Get the event logs
@@ -447,7 +449,7 @@ func (c *ProtocolDaoManager) GetProposals(proposalCount uint64, includeDetails b
 	// Get all details if requested
 	if includeDetails {
 		err := c.rp.BatchQuery(int(proposalCount), proposalBatchSize, func(mc *batch.MultiCaller, index int) error {
-			core.QueryAllFields(props[index], mc)
+			eth.QueryAllFields(props[index], mc)
 			return nil
 		}, opts)
 		if err != nil {
@@ -462,8 +464,8 @@ func (c *ProtocolDaoManager) GetProposals(proposalCount uint64, includeDetails b
 // Simulate a proposal's execution to verify it won't revert
 func (c *ProtocolDaoManager) simulateProposalExecution(payload []byte) error {
 	_, err := c.rp.Client.EstimateGas(context.Background(), ethereum.CallMsg{
-		From:     *c.dpp.Address,
-		To:       c.dpps.Address,
+		From:     c.dpp.Address,
+		To:       &c.dpps.Address,
 		GasPrice: big.NewInt(0),
 		Value:    nil,
 		Data:     payload,

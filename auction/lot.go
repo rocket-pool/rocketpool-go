@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -65,6 +66,7 @@ type AuctionLot struct {
 	// === Internal fields ===
 	am       *core.Contract
 	indexBig *big.Int
+	txMgr    *eth.TransactionManager
 }
 
 // ====================
@@ -99,6 +101,7 @@ func NewAuctionLot(rp *rocketpool.RocketPool, index uint64) (*AuctionLot, error)
 
 		am:       am,
 		indexBig: indexBig,
+		txMgr:    rp.GetTransactionManager(),
 	}, nil
 }
 
@@ -121,16 +124,16 @@ func (c *AuctionLot) GetLotAddressBidAmount(mc *batch.MultiCaller, out **big.Int
 // ====================
 
 // Get info for placing a bid on a lot
-func (c *AuctionLot) PlaceBid(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.am, "placeBid", opts, c.indexBig)
+func (c *AuctionLot) PlaceBid(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.am.Contract, "placeBid", opts, c.indexBig)
 }
 
 // Get info for claiming RPL from a lot that was bid on
-func (c *AuctionLot) ClaimBid(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.am, "claimBid", opts, c.indexBig)
+func (c *AuctionLot) ClaimBid(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.am.Contract, "claimBid", opts, c.indexBig)
 }
 
 // Get info for recovering unclaimed RPL from a lot
-func (c *AuctionLot) RecoverUnclaimedRpl(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.am, "recoverUnclaimedRPL", opts, c.indexBig)
+func (c *AuctionLot) RecoverUnclaimedRpl(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.am.Contract, "recoverUnclaimedRPL", opts, c.indexBig)
 }

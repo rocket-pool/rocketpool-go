@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/dao/protocol"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -20,7 +20,7 @@ type TestManager struct {
 	OwnerAccount     *Account
 	NonOwnerAccounts []*Account
 	RocketPool       *rocketpool.RocketPool
-	Client           core.ExecutionClient
+	Client           eth.IExecutionClient
 
 	baselineSnapshotID    string
 	initializedSnapshotID string
@@ -236,9 +236,9 @@ func (m *TestManager) initializeImpl(odaoMgr *oracle.OracleDaoManager) error {
 	}
 
 	// Bootstrap all of the relevant parameters
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionSubmission, error){
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(true, owner.Transactor))
+	err = rp.BatchCreateAndWaitForTransactions([]func() (*eth.TransactionSubmission, error){
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.IsRegistrationEnabled.Bootstrap(true, owner.Transactor))
 		},
 	}, true, owner.Transactor)
 	if err != nil {

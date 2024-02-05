@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 )
@@ -44,11 +45,12 @@ func GetContractVersion(mc *batch.MultiCaller, version_Out *uint8, address commo
 
 	// Get the contract version
 	contract := &core.Contract{
-		Contract: bind.NewBoundContract(address, *versionAbi, nil, nil, nil),
-		Address:  &address,
-		ABI:      versionAbi,
-		Version:  0,
-		Client:   nil,
+		Contract: &eth.Contract{
+			ContractImpl: bind.NewBoundContract(address, *versionAbi, nil, nil, nil),
+			Address:      address,
+			ABI:          versionAbi,
+		},
+		Version: 0,
 	}
 	core.AddCall(mc, contract, version_Out, "version")
 	return nil
@@ -66,9 +68,10 @@ func GetRocketVersionContractForAddress(rp *RocketPool, address common.Address) 
 	}
 
 	return &core.Contract{
-		Contract: bind.NewBoundContract(address, *versionAbi, rp.Client, rp.Client, rp.Client),
-		Address:  &address,
-		ABI:      versionAbi,
-		Client:   rp.Client,
+		Contract: &eth.Contract{
+			ContractImpl: bind.NewBoundContract(address, *versionAbi, rp.Client, rp.Client, rp.Client),
+			Address:      address,
+			ABI:          versionAbi,
+		},
 	}, nil
 }

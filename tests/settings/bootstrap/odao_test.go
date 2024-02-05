@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/tests"
 	settings_test "github.com/rocket-pool/rocketpool-go/tests/settings"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -20,7 +20,7 @@ func Test_BootstrapChallengeCooldown(t *testing.T) {
 	newVal := tests.ODaoDefaults.Member.ChallengeCooldown.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Member.ChallengeCooldown.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Member.ChallengeCooldown.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -29,7 +29,7 @@ func Test_BootstrapChallengeCost(t *testing.T) {
 	newVal := big.NewInt(0).Add(tests.ODaoDefaults.Member.ChallengeCost.Get(), eth.EthToWei(1))
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Member.ChallengeCost.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Member.ChallengeCost.Bootstrap(newVal, opts)
 	})
 }
@@ -38,7 +38,7 @@ func Test_BootstrapChallengeWindow(t *testing.T) {
 	newVal := tests.ODaoDefaults.Member.ChallengeWindow.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Member.ChallengeWindow.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Member.ChallengeWindow.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -47,7 +47,7 @@ func Test_BootstrapQuorum(t *testing.T) {
 	newVal := tests.ODaoDefaults.Member.Quorum.Formatted() + 0.15
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Member.Quorum.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Member.Quorum.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -56,7 +56,7 @@ func Test_BootstrapRplBond(t *testing.T) {
 	newVal := big.NewInt(0).Add(tests.ODaoDefaults.Member.RplBond.Get(), eth.EthToWei(1000))
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Member.RplBond.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Member.RplBond.Bootstrap(newVal, opts)
 	})
 }
@@ -65,7 +65,7 @@ func Test_BootstrapBondReductionCancellationQuorum(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.BondReductionCancellationQuorum.Formatted() + 0.15
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.BondReductionCancellationQuorum.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -74,7 +74,7 @@ func Test_BootstrapBondReductionWindowLength(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.BondReductionWindowLength.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.BondReductionWindowLength.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.BondReductionWindowLength.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -83,7 +83,7 @@ func Test_BootstrapBondReductionWindowStart(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.BondReductionWindowStart.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.BondReductionWindowStart.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.BondReductionWindowStart.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -92,7 +92,7 @@ func Test_BootstrapScrubPenaltyEnabled(t *testing.T) {
 	newVal := !tests.ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Get()
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.IsScrubPenaltyEnabled.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.IsScrubPenaltyEnabled.Bootstrap(newVal, opts)
 	})
 }
@@ -101,7 +101,7 @@ func Test_BootstrapPromotionScrubPeriod(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.PromotionScrubPeriod.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.PromotionScrubPeriod.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.PromotionScrubPeriod.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -110,7 +110,7 @@ func Test_BootstrapScrubPeriod(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.ScrubPeriod.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.ScrubPeriod.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.ScrubPeriod.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -119,7 +119,7 @@ func Test_BootstrapScrubQuorum(t *testing.T) {
 	newVal := tests.ODaoDefaults.Minipool.ScrubQuorum.Formatted() + 0.15
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Minipool.ScrubQuorum.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Minipool.ScrubQuorum.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -128,7 +128,7 @@ func Test_BootstrapProposalActionTime(t *testing.T) {
 	newVal := tests.ODaoDefaults.Proposal.ActionTime.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Proposal.ActionTime.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Proposal.ActionTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -137,7 +137,7 @@ func Test_BootstrapProposalCooldownTime(t *testing.T) {
 	newVal := tests.ODaoDefaults.Proposal.CooldownTime.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Proposal.CooldownTime.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Proposal.CooldownTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -146,7 +146,7 @@ func Test_BootstrapProposalExecuteTime(t *testing.T) {
 	newVal := tests.ODaoDefaults.Proposal.ExecuteTime.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Proposal.ExecuteTime.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Proposal.ExecuteTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -155,7 +155,7 @@ func Test_BootstrapVoteDelayTime(t *testing.T) {
 	newVal := tests.ODaoDefaults.Proposal.VoteDelayTime.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Proposal.VoteDelayTime.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Proposal.VoteDelayTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -164,7 +164,7 @@ func Test_BootstrapVoteTime(t *testing.T) {
 	newVal := tests.ODaoDefaults.Proposal.VoteTime.Formatted() + time.Hour
 	testOdaoParameterBootstrap(t, func(newSettings *oracle.OracleDaoSettings) {
 		newSettings.Proposal.VoteTime.Set(newVal)
-	}, func() (*core.TransactionInfo, error) {
+	}, func() (*eth.TransactionInfo, error) {
 		return odaoMgr.Settings.Proposal.VoteTime.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
@@ -219,58 +219,58 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 	t.Log("Updated details all differ from original details")
 
 	// Set the new settings
-	txSubmissions := []*core.TransactionSubmission{}
-	bootstrappers := []func() (*core.TransactionSubmission, error){
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeCooldown.Bootstrap(newOdaoSettings.Member.ChallengeCooldown.Raw(), opts))
+	txSubmissions := []*eth.TransactionSubmission{}
+	bootstrappers := []func() (*eth.TransactionSubmission, error){
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeCooldown.Bootstrap(newOdaoSettings.Member.ChallengeCooldown.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeCost.Bootstrap(newOdaoSettings.Member.ChallengeCost.Get(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeCost.Bootstrap(newOdaoSettings.Member.ChallengeCost.Get(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeWindow.Bootstrap(newOdaoSettings.Member.ChallengeWindow.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.ChallengeWindow.Bootstrap(newOdaoSettings.Member.ChallengeWindow.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.Quorum.Bootstrap(newOdaoSettings.Member.Quorum.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.Quorum.Bootstrap(newOdaoSettings.Member.Quorum.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.RplBond.Bootstrap(newOdaoSettings.Member.RplBond.Get(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Member.RplBond.Bootstrap(newOdaoSettings.Member.RplBond.Get(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.Bootstrap(newOdaoSettings.Minipool.BondReductionCancellationQuorum.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionCancellationQuorum.Bootstrap(newOdaoSettings.Minipool.BondReductionCancellationQuorum.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionWindowLength.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowLength.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionWindowLength.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowLength.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionWindowStart.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowStart.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.BondReductionWindowStart.Bootstrap(newOdaoSettings.Minipool.BondReductionWindowStart.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.IsScrubPenaltyEnabled.Bootstrap(newOdaoSettings.Minipool.IsScrubPenaltyEnabled.Get(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.IsScrubPenaltyEnabled.Bootstrap(newOdaoSettings.Minipool.IsScrubPenaltyEnabled.Get(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.PromotionScrubPeriod.Bootstrap(newOdaoSettings.Minipool.PromotionScrubPeriod.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.PromotionScrubPeriod.Bootstrap(newOdaoSettings.Minipool.PromotionScrubPeriod.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.ScrubPeriod.Bootstrap(newOdaoSettings.Minipool.ScrubPeriod.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.ScrubPeriod.Bootstrap(newOdaoSettings.Minipool.ScrubPeriod.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.ScrubQuorum.Bootstrap(newOdaoSettings.Minipool.ScrubQuorum.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Minipool.ScrubQuorum.Bootstrap(newOdaoSettings.Minipool.ScrubQuorum.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.ActionTime.Bootstrap(newOdaoSettings.Proposal.ActionTime.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.ActionTime.Bootstrap(newOdaoSettings.Proposal.ActionTime.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.CooldownTime.Bootstrap(newOdaoSettings.Proposal.CooldownTime.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.CooldownTime.Bootstrap(newOdaoSettings.Proposal.CooldownTime.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.ExecuteTime.Bootstrap(newOdaoSettings.Proposal.ExecuteTime.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.ExecuteTime.Bootstrap(newOdaoSettings.Proposal.ExecuteTime.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.VoteDelayTime.Bootstrap(newOdaoSettings.Proposal.VoteDelayTime.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.VoteDelayTime.Bootstrap(newOdaoSettings.Proposal.VoteDelayTime.Raw(), opts))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.VoteTime.Bootstrap(newOdaoSettings.Proposal.VoteTime.Raw(), opts))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Settings.Proposal.VoteTime.Bootstrap(newOdaoSettings.Proposal.VoteTime.Raw(), opts))
 		},
 	}
 	for i, bootstrapper := range bootstrappers {
@@ -279,8 +279,8 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 			t.Fatalf("error running boostrapper %d: %s", i, err.Error())
 			continue
 		}
-		if txSubmission.TxInfo.SimError != "" {
-			t.Fatalf("error simming boostrapper %d: %s", i, txSubmission.TxInfo.SimError)
+		if txSubmission.TxInfo.SimulationResult.SimulationError != "" {
+			t.Fatalf("error simming boostrapper %d: %s", i, txSubmission.TxInfo.SimulationResult.SimulationError)
 		}
 		txSubmissions = append(txSubmissions, txSubmission)
 	}
@@ -309,7 +309,7 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 
 	// Get new values and make sure they match
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		core.QueryAllFields(odaoMgr.Settings, mc)
+		eth.QueryAllFields(odaoMgr.Settings, mc)
 		return nil
 	}, nil)
 	if err != nil {
@@ -319,7 +319,7 @@ func Test_AllODaoBoostrapFunctions(t *testing.T) {
 	t.Log("New settings match expected settings")
 }
 
-func testOdaoParameterBootstrap(t *testing.T, setter func(*oracle.OracleDaoSettings), bootstrapper func() (*core.TransactionInfo, error)) {
+func testOdaoParameterBootstrap(t *testing.T, setter func(*oracle.OracleDaoSettings), bootstrapper func() (*eth.TransactionInfo, error)) {
 	// Revert to the baseline at the end of the test
 	t.Cleanup(func() {
 		err := mgr.RevertToBaseline()
@@ -366,8 +366,8 @@ func testOdaoParameterBootstrap(t *testing.T, setter func(*oracle.OracleDaoSetti
 	if err != nil {
 		t.Fatalf("error running boostrapper: %s", err.Error())
 	}
-	if txInfo.SimError != "" {
-		t.Fatalf("error simming boostrapper: %s", txInfo.SimError)
+	if txInfo.SimulationResult.SimulationError != "" {
+		t.Fatalf("error simming boostrapper: %s", txInfo.SimulationResult.SimulationError)
 	}
 	t.Log("Bootstrapper constructed")
 
@@ -386,7 +386,7 @@ func testOdaoParameterBootstrap(t *testing.T, setter func(*oracle.OracleDaoSetti
 
 	// Get new values and make sure they match
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		core.QueryAllFields(odaoMgr.Settings, mc)
+		eth.QueryAllFields(odaoMgr.Settings, mc)
 		return nil
 	}, nil)
 	if err != nil {

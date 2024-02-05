@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/nodeset-org/eth-utils/eth"
 	"github.com/rocket-pool/rocketpool-go/dao/oracle"
 	"github.com/rocket-pool/rocketpool-go/node"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
@@ -12,13 +12,13 @@ import (
 )
 
 // Mint old RPL for unit testing
-func MintLegacyRpl(rp *rocketpool.RocketPool, ownerAccount *Account, toAccount *Account, amount *big.Int) (*core.TransactionInfo, error) {
+func MintLegacyRpl(rp *rocketpool.RocketPool, ownerAccount *Account, toAccount *Account, amount *big.Int) (*eth.TransactionInfo, error) {
 	fsrpl, err := rp.GetContract(rocketpool.ContractName_RocketTokenRPLFixedSupply)
 	if err != nil {
 		return nil, fmt.Errorf("error creating legacy RPL contract: %w", err)
 	}
 
-	return core.NewTransactionInfo(fsrpl, "mint", ownerAccount.Transactor, toAccount.Address, amount)
+	return rp.GetTransactionManager().CreateTransactionInfo(fsrpl.Contract, "mint", ownerAccount.Transactor, toAccount.Address, amount)
 }
 
 // Registers a new Rocket Pool node
@@ -30,7 +30,7 @@ func RegisterNode(rp *rocketpool.RocketPool, account *Account, timezone string) 
 	}
 
 	// Register the node
-	err = rp.CreateAndWaitForTransaction(func() (*core.TransactionInfo, error) {
+	err = rp.CreateAndWaitForTransaction(func() (*eth.TransactionInfo, error) {
 		return node.Register(timezone, account.Transactor)
 	}, true, account.Transactor)
 	if err != nil {
@@ -79,12 +79,12 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	rplBond := oSettings.Member.RplBond.Get()
 
 	// Bootstrap it and mint RPL for it
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionSubmission, error){
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor))
+	err = rp.BatchCreateAndWaitForTransactions([]func() (*eth.TransactionSubmission, error){
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.BootstrapMember(id, url, nodeAccount.Address, owner.Transactor))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(MintLegacyRpl(rp, owner, nodeAccount, rplBond))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(MintLegacyRpl(rp, owner, nodeAccount, rplBond))
 		},
 	}, true, owner.Transactor)
 	if err != nil {
@@ -92,18 +92,18 @@ func BootstrapNodeToOdao(rp *rocketpool.RocketPool, owner *Account, nodeAccount 
 	}
 
 	// Swap RPL and Join the oDAO
-	err = rp.BatchCreateAndWaitForTransactions([]func() (*core.TransactionSubmission, error){
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(fsrpl.Approve(*rplContract.Address, rplBond, nodeAccount.Transactor))
+	err = rp.BatchCreateAndWaitForTransactions([]func() (*eth.TransactionSubmission, error){
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(fsrpl.Approve(rplContract.Address, rplBond, nodeAccount.Transactor))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(rpl.SwapFixedSupplyRplForRpl(rplBond, nodeAccount.Transactor))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(rpl.Approve(*oma.Address, rplBond, nodeAccount.Transactor))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(rpl.Approve(oma.Address, rplBond, nodeAccount.Transactor))
 		},
-		func() (*core.TransactionSubmission, error) {
-			return core.CreateTxSubmissionFromInfo(odaoMgr.Join(nodeAccount.Transactor))
+		func() (*eth.TransactionSubmission, error) {
+			return eth.CreateTxSubmissionFromInfo(odaoMgr.Join(nodeAccount.Transactor))
 		},
 	}, false, nodeAccount.Transactor)
 	if err != nil {

@@ -10,9 +10,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/nodeset-org/eth-utils/beacon"
 	"github.com/rocket-pool/rocketpool-go/core"
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	rptypes "github.com/rocket-pool/rocketpool-go/types"
 )
 
 // BeaconDepositEvent represents a DepositEvent event raised by the BeaconDeposit contract.
@@ -27,17 +27,17 @@ type BeaconDepositEvent struct {
 
 // Formatted Beacon deposit event data
 type DepositData struct {
-	Pubkey                rptypes.ValidatorPubkey    `json:"pubkey"`
-	WithdrawalCredentials common.Hash                `json:"withdrawalCredentials"`
-	Amount                uint64                     `json:"amount"`
-	Signature             rptypes.ValidatorSignature `json:"signature"`
-	TxHash                common.Hash                `json:"txHash"`
-	BlockNumber           uint64                     `json:"blockNumber"`
-	TxIndex               uint                       `json:"txIndex"`
+	Pubkey                beacon.ValidatorPubkey    `json:"pubkey"`
+	WithdrawalCredentials common.Hash               `json:"withdrawalCredentials"`
+	Amount                uint64                    `json:"amount"`
+	Signature             beacon.ValidatorSignature `json:"signature"`
+	TxHash                common.Hash               `json:"txHash"`
+	BlockNumber           uint64                    `json:"blockNumber"`
+	TxIndex               uint                      `json:"txIndex"`
 }
 
 // Gets all of the deposit contract's deposit events for the provided pubkeys
-func GetDeposits(rp *rocketpool.RocketPool, pubkeys map[rptypes.ValidatorPubkey]bool, startBlock *big.Int, intervalSize *big.Int, opts *bind.CallOpts) (map[rptypes.ValidatorPubkey][]DepositData, error) {
+func GetDeposits(rp *rocketpool.RocketPool, pubkeys map[beacon.ValidatorPubkey]bool, startBlock *big.Int, intervalSize *big.Int, opts *bind.CallOpts) (map[beacon.ValidatorPubkey][]DepositData, error) {
 
 	// Get the deposit contract wrapper
 	casperDeposit, err := getCasperDeposit(rp, opts)
@@ -46,10 +46,10 @@ func GetDeposits(rp *rocketpool.RocketPool, pubkeys map[rptypes.ValidatorPubkey]
 	}
 
 	// Create the initial map and pubkey lookup
-	depositMap := make(map[rptypes.ValidatorPubkey][]DepositData, len(pubkeys))
+	depositMap := make(map[beacon.ValidatorPubkey][]DepositData, len(pubkeys))
 
 	// Get the deposit events
-	addressFilter := []common.Address{*casperDeposit.Address}
+	addressFilter := []common.Address{casperDeposit.Address}
 	topicFilter := [][]common.Hash{{casperDeposit.ABI.Events["DepositEvent"].ID}}
 	logs, err := GetLogs(rp, addressFilter, topicFilter, intervalSize, startBlock, nil, nil)
 	if err != nil {
@@ -59,13 +59,13 @@ func GetDeposits(rp *rocketpool.RocketPool, pubkeys map[rptypes.ValidatorPubkey]
 	// Process each event
 	for _, log := range logs {
 		depositEvent := new(BeaconDepositEvent)
-		err = casperDeposit.Contract.UnpackLog(depositEvent, "DepositEvent", log)
+		err = casperDeposit.ContractImpl.UnpackLog(depositEvent, "DepositEvent", log)
 		if err != nil {
 			return nil, err
 		}
 
 		// Check if this is a deposit for one of the pubkeys we're looking for
-		pubkey := rptypes.BytesToValidatorPubkey(depositEvent.Pubkey)
+		pubkey := beacon.ValidatorPubkey(depositEvent.Pubkey)
 		_, exists := pubkeys[pubkey]
 		if exists {
 			// Convert the deposit amount from little-endian binary to a uint64
@@ -81,7 +81,7 @@ func GetDeposits(rp *rocketpool.RocketPool, pubkeys map[rptypes.ValidatorPubkey]
 				Pubkey:                pubkey,
 				WithdrawalCredentials: common.BytesToHash(depositEvent.WithdrawalCredentials),
 				Amount:                amount,
-				Signature:             rptypes.BytesToValidatorSignature(depositEvent.Signature),
+				Signature:             beacon.ValidatorSignature(depositEvent.Signature),
 				TxHash:                log.TxHash,
 				BlockNumber:           log.BlockNumber,
 				TxIndex:               log.TxIndex,

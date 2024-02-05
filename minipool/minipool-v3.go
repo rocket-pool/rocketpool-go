@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/nodeset-org/eth-utils/eth"
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/rocketpool-go/core"
@@ -127,8 +128,8 @@ func GetMinipoolAsV3(mp IMinipool) (*MinipoolV3, bool) {
 
 // Get the basic details
 func (c *MinipoolV3) QueryAllFields(mc *batch.MultiCaller) {
-	core.QueryAllFields(c.MinipoolCommon, mc)
-	core.QueryAllFields(c, mc)
+	eth.QueryAllFields(c.MinipoolCommon, mc)
+	eth.QueryAllFields(c, mc)
 }
 
 // ====================
@@ -138,28 +139,28 @@ func (c *MinipoolV3) QueryAllFields(mc *batch.MultiCaller) {
 // === Minipool ===
 
 // Get info for distributing the minipool's ETH balance to the node operator and rETH staking pool
-func (c *MinipoolV3) DistributeBalance(opts *bind.TransactOpts, rewardsOnly bool) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "distributeBalance", opts, rewardsOnly)
+func (c *MinipoolV3) DistributeBalance(opts *bind.TransactOpts, rewardsOnly bool) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "distributeBalance", opts, rewardsOnly)
 }
 
 // Get info for reducing a minipool's bond
-func (c *MinipoolV3) ReduceBondAmount(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "reduceBondAmount", opts)
+func (c *MinipoolV3) ReduceBondAmount(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "reduceBondAmount", opts)
 }
 
 // Get info for promoting a vacant minipool
-func (c *MinipoolV3) Promote(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.contract, "promote", opts)
+func (c *MinipoolV3) Promote(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "promote", opts)
 }
 
 // === BondReducer ===
 
 // Get info for beginning a minipool bond reduction
-func (c *MinipoolV3) BeginReduceBondAmount(newBondAmount *big.Int, opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.br, "beginReduceBondAmount", opts, c.Address, newBondAmount)
+func (c *MinipoolV3) BeginReduceBondAmount(newBondAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.br.Contract, "beginReduceBondAmount", opts, c.Address, newBondAmount)
 }
 
 // Get info for voting to cancel a minipool's bond reduction
-func (c *MinipoolV3) VoteCancelReduction(opts *bind.TransactOpts) (*core.TransactionInfo, error) {
-	return core.NewTransactionInfo(c.br, "voteCancelReduction", opts, c.Address)
+func (c *MinipoolV3) VoteCancelReduction(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.br.Contract, "voteCancelReduction", opts, c.Address)
 }

@@ -16,7 +16,7 @@ import (
 )
 
 // Estimate the gas of Deposit
-func EstimateDepositGas(rp *rocketpool.RocketPool, minimumNodeFee float64, validatorPubkey rptypes.ValidatorPubkey, validatorSignature rptypes.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts, legacyRocketNodeDepositAddress *common.Address) (rocketpool.GasInfo, error) {
+func EstimateDepositGas(rp *rocketpool.RocketPool, minimumNodeFee float64, validatorPubkey rpbeacon.ValidatorPubkey, validatorSignature rpbeacon.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts, legacyRocketNodeDepositAddress *common.Address) (rocketpool.GasInfo, error) {
 	rocketNodeDeposit, err := getRocketNodeDeposit(rp, legacyRocketNodeDepositAddress, nil)
 	if err != nil {
 		return rocketpool.GasInfo{}, err
@@ -25,7 +25,7 @@ func EstimateDepositGas(rp *rocketpool.RocketPool, minimumNodeFee float64, valid
 }
 
 // Make a node deposit
-func Deposit(rp *rocketpool.RocketPool, minimumNodeFee float64, validatorPubkey rptypes.ValidatorPubkey, validatorSignature rptypes.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts, legacyRocketNodeDepositAddress *common.Address) (*types.Transaction, error) {
+func Deposit(rp *rocketpool.RocketPool, minimumNodeFee float64, validatorPubkey rpbeacon.ValidatorPubkey, validatorSignature rpbeacon.ValidatorSignature, depositDataRoot common.Hash, salt *big.Int, expectedMinipoolAddress common.Address, opts *bind.TransactOpts, legacyRocketNodeDepositAddress *common.Address) (*types.Transaction, error) {
 	rocketNodeDeposit, err := getRocketNodeDeposit(rp, legacyRocketNodeDepositAddress, nil)
 	if err != nil {
 		return nil, err
