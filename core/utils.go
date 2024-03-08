@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/nodeset-org/eth-utils/eth"
 	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/node-manager-core/eth"
 )
 
 // This is a helper for adding calls to multicall that has strongly-typed output and can take in RP contracts
