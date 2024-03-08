@@ -56,9 +56,9 @@ type ProtocolDaoManager struct {
 
 // Rewards claimer percents
 type RplRewardsPercentages struct {
-	OdaoPercentage *big.Int `abi:"_trustedNodePercent"`
-	PdaoPercentage *big.Int `abi:"_protocolPercent"`
-	NodePercentage *big.Int `abi:"_nodePercent"`
+	OdaoPercentage *big.Int `abi:"trustedNodePerc"`
+	PdaoPercentage *big.Int `abi:"protocolPerc"`
+	NodePercentage *big.Int `abi:"nodePerc"`
 }
 
 // Structure of the RootSubmitted event
@@ -93,10 +93,8 @@ type ChallengeSubmitted struct {
 
 // Internal struct - returned by the ChallengeSubmitted event
 type challengeSubmittedRaw struct {
-	ProposalID *big.Int       `json:"proposalId"`
-	Challenger common.Address `json:"challenger"`
-	Index      *big.Int       `json:"index"`
-	Timestamp  *big.Int       `json:"timestamp"`
+	Index     *big.Int `json:"index"`
+	Timestamp *big.Int `json:"timestamp"`
 }
 
 // ====================
@@ -275,7 +273,7 @@ func (c *ProtocolDaoManager) ProposeRecurringTreasurySpend(message string, contr
 	if message == "" {
 		message = fmt.Sprintf("propose recurring treasury spend - contract %s", contractName)
 	}
-	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalTreasuryNewContract", contractName, recipient, amountPerPeriod, big.NewInt(int64(periodLength.Seconds())), big.NewInt(startTime.Unix()), numberOfPeriods)
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalTreasuryNewContract", contractName, recipient, amountPerPeriod, big.NewInt(int64(periodLength.Seconds())), big.NewInt(startTime.Unix()), big.NewInt(int64(numberOfPeriods)))
 }
 
 // Get info for submitting a proposal to update a recurring Rocket Pool treasury spending plan
@@ -283,7 +281,7 @@ func (c *ProtocolDaoManager) ProposeRecurringTreasurySpendUpdate(message string,
 	if message == "" {
 		message = fmt.Sprintf("propose recurring treasury spend update - contract %s", contractName)
 	}
-	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalTreasuryUpdateContract", contractName, recipient, amountPerPeriod, big.NewInt(int64(periodLength.Seconds())), numberOfPeriods)
+	return c.submitProposal(opts, blockNumber, treeNodes, message, "proposalTreasuryUpdateContract", contractName, recipient, amountPerPeriod, big.NewInt(int64(periodLength.Seconds())), big.NewInt(int64(numberOfPeriods)))
 }
 
 // Get info for submitting a proposal to invite a member to the security council
@@ -336,15 +334,33 @@ func (c *ProtocolDaoManager) submitProposal(opts *bind.TransactOpts, blockNumber
 /// =============
 
 // Get RootSubmitted event info
-func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, intervalSize *big.Int, startBlock *big.Int, endBlock *big.Int, opts *bind.CallOpts) ([]RootSubmitted, error) {
+func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, intervalSize *big.Int, startBlock *big.Int, endBlock *big.Int, verifierAddresses []common.Address, opts *bind.CallOpts) ([]RootSubmitted, error) {
 	// Construct a filter query for relevant logs
 	idBuffers := make([]common.Hash, len(proposalIDs))
 	for i, id := range proposalIDs {
 		proposalIdBig := big.NewInt(0).SetUint64(id)
-		proposalIdBig.FillBytes(idBuffers[i].Bytes())
+		proposalIdBig.FillBytes(idBuffers[i][:])
 	}
+
+	// Create the list of addresses to check
+	currentAddress := c.dpv.Address
+	if verifierAddresses == nil {
+		verifierAddresses = []common.Address{currentAddress}
+	} else {
+		found := false
+		for _, address := range verifierAddresses {
+			if address == currentAddress {
+				found = true
+				break
+			}
+		}
+		if !found {
+			verifierAddresses = append(verifierAddresses, currentAddress)
+		}
+	}
+
 	rootSubmittedEvent := c.dpv.ABI.Events["RootSubmitted"]
-	addressFilter := []common.Address{c.dpv.Address}
+	addressFilter := verifierAddresses
 	topicFilter := [][]common.Hash{{rootSubmittedEvent.ID}, idBuffers}
 
 	// Get the event logs
@@ -364,6 +380,15 @@ func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, interv
 			return nil, fmt.Errorf("error unpacking RootSubmitted event data: %w", err)
 		}
 
+		// Get the topic values
+		if len(log.Topics) < 3 {
+			return nil, fmt.Errorf("event had %d topics but at least 3 are required", len(log.Topics))
+		}
+		idHash := log.Topics[1]
+		proposerHash := log.Topics[2]
+		propID := big.NewInt(0).SetBytes(idHash.Bytes())
+		proposer := common.BytesToAddress(proposerHash.Bytes())
+
 		// Convert to a native struct
 		var raw rootSubmittedRaw
 		err = rootSubmittedEvent.Inputs.Copy(&raw, values)
@@ -373,8 +398,8 @@ func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, interv
 
 		// Get the decoded data
 		events = append(events, RootSubmitted{
-			ProposalID:  raw.ProposalID,
-			Proposer:    raw.Proposer,
+			ProposalID:  propID,
+			Proposer:    proposer,
 			BlockNumber: raw.BlockNumber,
 			Index:       raw.Index,
 			Root:        raw.Root,
@@ -387,15 +412,33 @@ func (c *ProtocolDaoManager) GetRootSubmittedEvents(proposalIDs []uint64, interv
 }
 
 // Get ChallengeSubmitted event info
-func (c *ProtocolDaoManager) GetChallengeSubmittedEvents(proposalIDs []uint64, intervalSize *big.Int, startBlock *big.Int, endBlock *big.Int, opts *bind.CallOpts) ([]ChallengeSubmitted, error) {
+func (c *ProtocolDaoManager) GetChallengeSubmittedEvents(proposalIDs []uint64, intervalSize *big.Int, startBlock *big.Int, endBlock *big.Int, verifierAddresses []common.Address, opts *bind.CallOpts) ([]ChallengeSubmitted, error) {
 	// Construct a filter query for relevant logs
 	idBuffers := make([]common.Hash, len(proposalIDs))
 	for i, id := range proposalIDs {
 		proposalIdBig := big.NewInt(0).SetUint64(id)
-		proposalIdBig.FillBytes(idBuffers[i].Bytes())
+		proposalIdBig.FillBytes(idBuffers[i][:])
 	}
+
+	// Create the list of addresses to check
+	currentAddress := c.dpv.Address
+	if verifierAddresses == nil {
+		verifierAddresses = []common.Address{currentAddress}
+	} else {
+		found := false
+		for _, address := range verifierAddresses {
+			if address == currentAddress {
+				found = true
+				break
+			}
+		}
+		if !found {
+			verifierAddresses = append(verifierAddresses, currentAddress)
+		}
+	}
+
 	challengeSubmittedEvent := c.dpv.ABI.Events["ChallengeSubmitted"]
-	addressFilter := []common.Address{c.dpv.Address}
+	addressFilter := verifierAddresses
 	topicFilter := [][]common.Hash{{challengeSubmittedEvent.ID}, idBuffers}
 
 	// Get the event logs
@@ -415,6 +458,15 @@ func (c *ProtocolDaoManager) GetChallengeSubmittedEvents(proposalIDs []uint64, i
 			return nil, fmt.Errorf("error unpacking ChallengeSubmitted event data: %w", err)
 		}
 
+		// Get the topic values
+		if len(log.Topics) < 3 {
+			return nil, fmt.Errorf("event had %d topics but at least 3 are required", len(log.Topics))
+		}
+		idHash := log.Topics[1]
+		challengerHash := log.Topics[2]
+		propID := big.NewInt(0).SetBytes(idHash.Bytes())
+		challenger := common.BytesToAddress(challengerHash.Bytes())
+
 		// Convert to a native struct
 		var raw challengeSubmittedRaw
 		err = challengeSubmittedEvent.Inputs.Copy(&raw, values)
@@ -424,8 +476,8 @@ func (c *ProtocolDaoManager) GetChallengeSubmittedEvents(proposalIDs []uint64, i
 
 		// Get the decoded data
 		events = append(events, ChallengeSubmitted{
-			ProposalID: raw.ProposalID,
-			Challenger: raw.Challenger,
+			ProposalID: propID,
+			Challenger: challenger,
 			Index:      raw.Index,
 			Timestamp:  time.Unix(raw.Timestamp.Int64(), 0),
 		})

@@ -83,7 +83,7 @@ const (
 	SettingName_Proposals_ProposalMaxBlockAge SettingName = "proposal.max.block.age"
 
 	// Rewards
-	SettingName_Rewards_IntervalTime SettingName = "rpl.rewards.claim.period.time"
+	SettingName_Rewards_IntervalPeriods SettingName = "rewards.claimsperiods"
 
 	// Security
 	SettingName_Security_MembersQuorum       SettingName = "members.quorum"
@@ -179,7 +179,7 @@ type ProtocolDaoSettings struct {
 	}
 
 	Rewards struct {
-		IntervalTime *ProtocolDaoCompoundSetting[time.Duration]
+		IntervalPeriods *ProtocolDaoCompoundSetting[uint64]
 	}
 
 	Security struct {
@@ -320,7 +320,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Proposals.ProposalMaxBlockAge = newCompoundSetting[uint64](s.dps_proposals, pdaoMgr, SettingName_Proposals_ProposalMaxBlockAge)
 
 	// Rewards
-	s.Rewards.IntervalTime = newCompoundSetting[time.Duration](s.dps_rewards, pdaoMgr, SettingName_Rewards_IntervalTime)
+	s.Rewards.IntervalPeriods = newCompoundSetting[uint64](s.dps_rewards, pdaoMgr, SettingName_Rewards_IntervalPeriods)
 
 	// Security
 	s.Security.MembersQuorum = newCompoundSetting[float64](s.dps_security, pdaoMgr, SettingName_Security_MembersQuorum)
