@@ -43,6 +43,9 @@ type ProtocolDaoManager struct {
 	// The depth of a network or node voting tree pollard for each round of challenge / response
 	DepthPerRound *core.FormattedUint256Field[uint64]
 
+	// The length of a rewards interval
+	IntervalTime *core.FormattedUint256Field[time.Duration]
+
 	// === Internal fields ===
 	rp    *rocketpool.RocketPool
 	cd    *core.Contract
@@ -133,6 +136,7 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 		LastRewardsPercentagesUpdate: core.NewFormattedUint256Field[time.Time](dpsr, "getRewardsClaimersTimeUpdated"),
 		ProposalCount:                core.NewFormattedUint256Field[uint64](dpp, "getTotal"),
 		DepthPerRound:                core.NewFormattedUint256Field[uint64](dpv, "getDepthPerRound"),
+		IntervalTime:                 core.NewFormattedUint256Field[time.Duration](dpsr, "getRewardsClaimIntervalTime"),
 
 		rp:    rp,
 		cd:    cd,
