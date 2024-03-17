@@ -131,38 +131,6 @@ func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName roc
 	return c.submitProposal(opts, message, "proposalSettingBool", contractName, string(setting), value)
 }
 
-// Get info for proposing to invite a new member to the security council
-func (c *SecurityCouncilManager) ProposeInvite(message string, newMemberID string, newMemberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	if message == "" {
-		message = fmt.Sprintf("invite %s (%s)", newMemberID, newMemberAddress.Hex())
-	}
-	return c.submitProposal(opts, message, "proposalInvite", newMemberID, newMemberAddress)
-}
-
-// Get info for proposing to kick a member from the security council
-func (c *SecurityCouncilManager) ProposeKick(message string, memberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	if message == "" {
-		message = fmt.Sprintf("kick %s", memberAddress.Hex())
-	}
-	return c.submitProposal(opts, message, "proposalKick", memberAddress)
-}
-
-// Get info for proposing to kick multiple members from the security council
-func (c *SecurityCouncilManager) ProposeKickMulti(message string, memberAddresses []common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	if message == "" {
-		message = "kick multiple members"
-	}
-	return c.submitProposal(opts, message, "proposalKick", memberAddresses)
-}
-
-// Get info for proposing to kick a member from the security council and replace it with a new member
-func (c *SecurityCouncilManager) ProposeReplace(message string, existingMemberAddress common.Address, newMemberID string, newMemberAddress common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	if message == "" {
-		message = fmt.Sprintf("replace %s with %s (%s)", existingMemberAddress.Hex(), newMemberID, newMemberAddress.Hex())
-	}
-	return c.submitProposal(opts, message, "proposalReplace", existingMemberAddress, newMemberID, newMemberAddress)
-}
-
 // Internal method used for actually constructing and submitting a proposal
 func (c *SecurityCouncilManager) submitProposal(opts *bind.TransactOpts, message string, method string, args ...interface{}) (*eth.TransactionInfo, error) {
 	payload, err := c.dsp.ABI.Pack(method, args...)
