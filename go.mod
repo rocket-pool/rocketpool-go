@@ -8,7 +8,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.11
 	github.com/hashicorp/go-version v1.6.0
 	github.com/rocket-pool/batch-query v1.0.0
-	github.com/rocket-pool/node-manager-core v0.1.1-0.20240312061552-d728ab84e26e
+	github.com/rocket-pool/node-manager-core v0.1.1-0.20240320090337-d17bc7eb55e3
 	golang.org/x/sync v0.6.0
 )
 

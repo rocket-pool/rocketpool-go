@@ -147,18 +147,33 @@ func (c *NodeManager) GetSmoothingPoolRegisteredNodeCount(nodeCount uint64, opts
 
 // Get the total effective RPL stake of the network
 func (c *NodeManager) GetTotalEffectiveRplStake(nodeCount uint64, opts *bind.CallOpts) (*big.Int, error) {
-	total := big.NewInt(0)
+	// Get the node addresses
+	addresses, err := c.GetNodeAddresses(nodeCount, opts)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]*Node, nodeCount)
 
-	limit := big.NewInt(int64(effectiveStakeBatchSize))
-	for i := 0; i < int(nodeCount); i += effectiveStakeBatchSize {
-		// Get a cumulative effective stake from the batch
-		offset := big.NewInt(int64(i))
-		count := new(*big.Int)
-		if err := c.ns.Call(opts, count, "calculateTotalEffectiveRPLStake", offset, limit); err != nil {
-			return nil, fmt.Errorf("error getting total effective stake (offset %d, limit %d): %w", offset.Uint64(), limit.Uint64(), err)
+	// Get the effective stakes
+	err = c.rp.BatchQuery(int(nodeCount), effectiveStakeBatchSize, func(mc *batch.MultiCaller, i int) error {
+		address := addresses[i]
+		node, err := NewNode(c.rp, address)
+		if err != nil {
+			return fmt.Errorf("error creating node %s binding: %w", address.Hex(), err)
 		}
-		total.Add(total, *count)
+		nodes[i] = node
+		node.EffectiveRplStake.AddToQuery(mc)
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error getting effective stakes: %w", err)
 	}
 
-	return total, nil
+	// Get the total
+	totalEffectiveStake := big.NewInt(0)
+	for _, node := range nodes {
+		totalEffectiveStake.Add(totalEffectiveStake, node.EffectiveRplStake.Get())
+	}
+
+	return totalEffectiveStake, nil
 }
