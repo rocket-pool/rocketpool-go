@@ -12,7 +12,7 @@ import (
 
 // This is a helper for adding calls to multicall that has strongly-typed output and can take in RP contracts
 func AddCall[OutType CallReturnType](mc *batch.MultiCaller, contract *Contract, output *OutType, method string, args ...any) {
-	eth.AddCallToMulticaller(mc, contract.Contract, output, method, args)
+	eth.AddCallToMulticaller(mc, contract.Contract, output, method, args...)
 }
 
 // This is a helper for adding calls to multicall that has untyped output and can take in RP contracts
