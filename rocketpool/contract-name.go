@@ -95,6 +95,7 @@ var ContractNames = []ContractName{
 	ContractName_RocketDAOProposal,
 
 	ContractName_RocketDAOProtocol,
+	ContractName_RocketDAOProtocolProposal,
 	ContractName_RocketDAOProtocolProposals,
 	ContractName_RocketDAOProtocolSettingsAuction,
 	ContractName_RocketDAOProtocolSettingsDeposit,
