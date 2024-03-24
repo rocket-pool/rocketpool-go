@@ -25,15 +25,17 @@ type ISecurityCouncilSetting[ProposeType core.CallReturnType] interface {
 // A simple boolean setting
 type SecurityCouncilBoolSetting struct {
 	// === Internal fields ===
-	setting *protocol.ProtocolDaoBoolSetting
-	secMgr  *SecurityCouncilManager
+	setting   *protocol.ProtocolDaoBoolSetting
+	secMgr    *SecurityCouncilManager
+	namespace string
 }
 
 // Creates a new bool setting
-func newBoolSetting(secMgr *SecurityCouncilManager, setting *protocol.ProtocolDaoBoolSetting) *SecurityCouncilBoolSetting {
+func newBoolSetting(secMgr *SecurityCouncilManager, setting *protocol.ProtocolDaoBoolSetting, namespace string) *SecurityCouncilBoolSetting {
 	return &SecurityCouncilBoolSetting{
-		secMgr:  secMgr,
-		setting: setting,
+		secMgr:    secMgr,
+		setting:   setting,
+		namespace: namespace,
 	}
 }
 
@@ -44,5 +46,5 @@ func (s *SecurityCouncilBoolSetting) GetProtocolDaoSetting() *protocol.ProtocolD
 
 // Creates a proposal to change the setting
 func (s *SecurityCouncilBoolSetting) ProposeSet(value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	return s.secMgr.ProposeSetBool("", s.setting.GetContract(), s.setting.GetSettingName(), value, opts)
+	return s.secMgr.ProposeSetBool("", s.namespace, s.setting.GetSettingName(), value, opts)
 }

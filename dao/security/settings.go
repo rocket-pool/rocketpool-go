@@ -8,6 +8,18 @@ import (
 	"github.com/rocket-pool/rocketpool-go/rocketpool"
 )
 
+// =================
+// === Constants ===
+// =================
+
+const (
+	AuctionNamespace  string = "auction"
+	DepositNamespace  string = "deposit"
+	MinipoolNamespace string = "minipool"
+	NetworkNamespace  string = "network"
+	NodeNamespace     string = "node"
+)
+
 // ===============
 // === Structs ===
 // ===============
@@ -72,26 +84,26 @@ func newSecurityCouncilSettings(secMgr *SecurityCouncilManager, pdaoSettings *pr
 	}
 
 	// Auction
-	s.Auction.IsCreateLotEnabled = newBoolSetting(secMgr, pdaoSettings.Auction.IsCreateLotEnabled)
-	s.Auction.IsBidOnLotEnabled = newBoolSetting(secMgr, pdaoSettings.Auction.IsBidOnLotEnabled)
+	s.Auction.IsCreateLotEnabled = newBoolSetting(secMgr, pdaoSettings.Auction.IsCreateLotEnabled, AuctionNamespace)
+	s.Auction.IsBidOnLotEnabled = newBoolSetting(secMgr, pdaoSettings.Auction.IsBidOnLotEnabled, AuctionNamespace)
 
 	// Deposit
-	s.Deposit.IsDepositingEnabled = newBoolSetting(secMgr, pdaoSettings.Deposit.IsDepositingEnabled)
-	s.Deposit.AreDepositAssignmentsEnabled = newBoolSetting(secMgr, pdaoSettings.Deposit.AreDepositAssignmentsEnabled)
+	s.Deposit.IsDepositingEnabled = newBoolSetting(secMgr, pdaoSettings.Deposit.IsDepositingEnabled, DepositNamespace)
+	s.Deposit.AreDepositAssignmentsEnabled = newBoolSetting(secMgr, pdaoSettings.Deposit.AreDepositAssignmentsEnabled, DepositNamespace)
 
 	// Minipool
-	s.Minipool.IsSubmitWithdrawableEnabled = newBoolSetting(secMgr, pdaoSettings.Minipool.IsSubmitWithdrawableEnabled)
-	s.Minipool.IsBondReductionEnabled = newBoolSetting(secMgr, pdaoSettings.Minipool.IsBondReductionEnabled)
+	s.Minipool.IsSubmitWithdrawableEnabled = newBoolSetting(secMgr, pdaoSettings.Minipool.IsSubmitWithdrawableEnabled, MinipoolNamespace)
+	s.Minipool.IsBondReductionEnabled = newBoolSetting(secMgr, pdaoSettings.Minipool.IsBondReductionEnabled, MinipoolNamespace)
 
 	// Network
-	s.Network.IsSubmitBalancesEnabled = newBoolSetting(secMgr, pdaoSettings.Network.IsSubmitBalancesEnabled)
-	s.Network.IsSubmitRewardsEnabled = newBoolSetting(secMgr, pdaoSettings.Network.IsSubmitRewardsEnabled)
+	s.Network.IsSubmitBalancesEnabled = newBoolSetting(secMgr, pdaoSettings.Network.IsSubmitBalancesEnabled, NetworkNamespace)
+	s.Network.IsSubmitRewardsEnabled = newBoolSetting(secMgr, pdaoSettings.Network.IsSubmitRewardsEnabled, NetworkNamespace)
 
 	// Node
-	s.Node.IsRegistrationEnabled = newBoolSetting(secMgr, pdaoSettings.Node.IsRegistrationEnabled)
-	s.Node.IsSmoothingPoolRegistrationEnabled = newBoolSetting(secMgr, pdaoSettings.Node.IsSmoothingPoolRegistrationEnabled)
-	s.Node.IsDepositingEnabled = newBoolSetting(secMgr, pdaoSettings.Node.IsDepositingEnabled)
-	s.Node.AreVacantMinipoolsEnabled = newBoolSetting(secMgr, pdaoSettings.Node.AreVacantMinipoolsEnabled)
+	s.Node.IsRegistrationEnabled = newBoolSetting(secMgr, pdaoSettings.Node.IsRegistrationEnabled, NodeNamespace)
+	s.Node.IsSmoothingPoolRegistrationEnabled = newBoolSetting(secMgr, pdaoSettings.Node.IsSmoothingPoolRegistrationEnabled, NodeNamespace)
+	s.Node.IsDepositingEnabled = newBoolSetting(secMgr, pdaoSettings.Node.IsDepositingEnabled, NodeNamespace)
+	s.Node.AreVacantMinipoolsEnabled = newBoolSetting(secMgr, pdaoSettings.Node.AreVacantMinipoolsEnabled, NodeNamespace)
 
 	return s, nil
 }

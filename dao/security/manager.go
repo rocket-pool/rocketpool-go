@@ -116,19 +116,19 @@ func (c *SecurityCouncilManager) Leave(opts *bind.TransactOpts) (*eth.Transactio
 // === DAOSecurityProposals ===
 
 // Get info for proposing a uint setting
-func (c *SecurityCouncilManager) ProposeSetUint(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeSetUint(message string, namespace string, setting protocol.SettingName, value *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, message, "proposalSettingUint", contractName, string(setting), value)
+	return c.submitProposal(opts, message, "proposalSettingUint", namespace, string(setting), value)
 }
 
 // Get info for proposing a bool setting
-func (c *SecurityCouncilManager) ProposeSetBool(message string, contractName rocketpool.ContractName, setting protocol.SettingName, value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+func (c *SecurityCouncilManager) ProposeSetBool(message string, namespace string, setting protocol.SettingName, value bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	if message == "" {
 		message = fmt.Sprintf("set %s", setting)
 	}
-	return c.submitProposal(opts, message, "proposalSettingBool", contractName, string(setting), value)
+	return c.submitProposal(opts, message, "proposalSettingBool", namespace, string(setting), value)
 }
 
 // Internal method used for actually constructing and submitting a proposal
