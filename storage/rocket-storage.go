@@ -60,6 +60,11 @@ func (c *Storage) GetUint(mc *batch.MultiCaller, result_Out **big.Int, key commo
 	core.AddCall(mc, c.Contract, result_Out, "getUint", key)
 }
 
+// Get a string value
+func (c *Storage) GetString(mc *batch.MultiCaller, result_Out *string, key common.Hash) {
+	core.AddCall(mc, c.Contract, result_Out, "getString", key)
+}
+
 // Get an address
 func (c *Storage) GetAddress(mc *batch.MultiCaller, address_Out *common.Address, contractName string) {
 	key := crypto.Keccak256Hash([]byte("contract.address"), []byte(contractName))
@@ -69,11 +74,16 @@ func (c *Storage) GetAddress(mc *batch.MultiCaller, address_Out *common.Address,
 // Get an ABI
 func (c *Storage) GetAbi(mc *batch.MultiCaller, abiEncoded_Out *string, contractName string) {
 	key := crypto.Keccak256Hash([]byte("contract.abi"), []byte(contractName))
-	core.AddCall(mc, c.Contract, abiEncoded_Out, "getString", key)
+	c.GetString(mc, abiEncoded_Out, key)
 }
 
 // Get the number of the block that Rocket Pool was deployed on
 func (c *Storage) GetDeployBlock(mc *batch.MultiCaller, result_Out **big.Int) {
 	deployBlockHash := crypto.Keccak256Hash([]byte("deploy.block"))
 	c.GetUint(mc, result_Out, deployBlockHash)
+}
+
+func (c *Storage) GetProtocolVersion(mc *batch.MultiCaller, result_Out *string) {
+	versionHash := crypto.Keccak256Hash([]byte("protocol.version"))
+	c.GetString(mc, result_Out, versionHash)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/hashicorp/go-version"
 	"github.com/rocket-pool/node-manager-core/eth"
 
 	batch "github.com/rocket-pool/batch-query"
@@ -247,6 +248,52 @@ func (rp *RocketPool) GetQueryManager() *eth.QueryManager {
 // =============
 // === Utils ===
 // =============
+
+func (rp *RocketPool) GetProtocolVersion(opts *bind.CallOpts) (*version.Version, error) {
+	// Try getting the version from storage directly if present
+	var protocolVersion string
+	err := rp.Query(func(mc *batch.MultiCaller) error {
+		rp.Storage.GetProtocolVersion(mc, &protocolVersion)
+		return nil
+	}, opts)
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving protocol version: %w", err)
+	}
+
+	// Convert it to a semver
+	if protocolVersion != "" {
+		semver, err := version.NewSemver(protocolVersion)
+		if err != nil {
+			return nil, fmt.Errorf("protocol version stored in contracts [%s] could not be parsed: %w", protocolVersion, err)
+		}
+		return semver, nil
+	}
+
+	// Fall back to the legacy checking behavior
+	nodeStaking, err := rp.GetContract(ContractName_RocketNodeStaking)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node staking contract: %w", err)
+	}
+	nodeMgr, err := rp.GetContract(ContractName_RocketNodeManager)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node manager contract: %w", err)
+	}
+
+	nodeStakingVersion := nodeStaking.Version
+	nodeMgrVersion := nodeMgr.Version
+	// Check for v1.2 (Atlas)
+	if nodeStakingVersion > 3 {
+		return version.NewSemver("1.2.0")
+	}
+
+	// Check for v1.1 (Redstone)
+	if nodeMgrVersion > 1 {
+		return version.NewSemver("1.1.0")
+	}
+
+	// v1.0 (Classic)
+	return version.NewSemver("1.0.0")
+}
 
 // Create a contract directly from its ABI, encoded in string form
 func (rp *RocketPool) CreateMinipoolContractFromEncodedAbi(address common.Address, encodedAbi string) (*core.Contract, error) {
