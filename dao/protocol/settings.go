@@ -111,7 +111,7 @@ type ProtocolDaoSettings struct {
 		IsBidOnLotEnabled     *ProtocolDaoBoolSetting
 		LotMinimumEthValue    *ProtocolDaoUintSetting
 		LotMaximumEthValue    *ProtocolDaoUintSetting
-		LotDuration           *ProtocolDaoCompoundSetting[uint64]
+		LotDuration           *ProtocolDaoCompoundSetting[time.Duration]
 		LotStartingPriceRatio *ProtocolDaoCompoundSetting[float64]
 		LotReservePriceRatio  *ProtocolDaoCompoundSetting[float64]
 	}
@@ -259,7 +259,7 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 	s.Auction.IsBidOnLotEnabled = newBoolSetting(s.dps_auction, pdaoMgr, SettingName_Auction_IsBidOnLotEnabled)
 	s.Auction.LotMinimumEthValue = newUintSetting(s.dps_auction, pdaoMgr, SettingName_Auction_LotMinimumEthValue)
 	s.Auction.LotMaximumEthValue = newUintSetting(s.dps_auction, pdaoMgr, SettingName_Auction_LotMaximumEthValue)
-	s.Auction.LotDuration = newCompoundSetting[uint64](s.dps_auction, pdaoMgr, SettingName_Auction_LotDuration)
+	s.Auction.LotDuration = newCompoundSetting[time.Duration](s.dps_auction, pdaoMgr, SettingName_Auction_LotDuration)
 	s.Auction.LotStartingPriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotStartingPriceRatio)
 	s.Auction.LotReservePriceRatio = newCompoundSetting[float64](s.dps_auction, pdaoMgr, SettingName_Auction_LotReservePriceRatio)
 
