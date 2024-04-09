@@ -4,17 +4,17 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/settings/trustednode"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/trustednode"
 
-	"github.com/rocket-pool/rocketpool-go/auction"
-	"github.com/rocket-pool/rocketpool-go/network"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/tokens"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/auction"
+	"github.com/rocket-pool/rocketpool-go/v2/network"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/tokens"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	auctionutils "github.com/rocket-pool/rocketpool-go/tests/testutils/auction"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
+	auctionutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/auction"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
 )
 
 func TestAuctionDetails(t *testing.T) {

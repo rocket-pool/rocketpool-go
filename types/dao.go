@@ -5,7 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/utils/json"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/json"
 )
 
 // DAO proposal states

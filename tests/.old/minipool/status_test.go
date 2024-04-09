@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/settings/trustednode"
-	"github.com/rocket-pool/rocketpool-go/types"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/trustednode"
+	"github.com/rocket-pool/rocketpool-go/v2/types"
 
-	"github.com/rocket-pool/rocketpool-go/minipool"
-	"github.com/rocket-pool/rocketpool-go/node"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/minipool"
+	"github.com/rocket-pool/rocketpool-go/v2/node"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	minipoolutils "github.com/rocket-pool/rocketpool-go/tests/testutils/minipool"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	minipoolutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/minipool"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
 )
 
 func TestSubmitMinipoolWithdrawable(t *testing.T) {

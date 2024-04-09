@@ -1,14 +1,14 @@
 package dao
 
 import (
-	"github.com/rocket-pool/rocketpool-go/dao"
-	trustednodedao "github.com/rocket-pool/rocketpool-go/dao/trustednode"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	trustednodesettings "github.com/rocket-pool/rocketpool-go/settings/trustednode"
-	rptypes "github.com/rocket-pool/rocketpool-go/types"
+	"github.com/rocket-pool/rocketpool-go/v2/dao"
+	trustednodedao "github.com/rocket-pool/rocketpool-go/v2/dao/trustednode"
+	"github.com/rocket-pool/rocketpool-go/v2/rocketpool"
+	trustednodesettings "github.com/rocket-pool/rocketpool-go/v2/settings/trustednode"
+	rptypes "github.com/rocket-pool/rocketpool-go/v2/types"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/accounts"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/accounts"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
 )
 
 // Pass and execute a proposal

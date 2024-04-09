@@ -7,9 +7,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	strutils "github.com/rocket-pool/rocketpool-go/utils/strings"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
+	"github.com/rocket-pool/rocketpool-go/v2/rocketpool"
+	strutils "github.com/rocket-pool/rocketpool-go/v2/utils/strings"
 )
 
 // Get the proposal's payload as a string

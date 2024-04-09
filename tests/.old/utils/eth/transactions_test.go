@@ -8,12 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/accounts"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	"github.com/rocket-pool/rocketpool-go/utils"
+	"github.com/rocket-pool/rocketpool-go/v2/tests"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/accounts"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	"github.com/rocket-pool/rocketpool-go/v2/utils"
 )
 
 func TestSendTransaction(t *testing.T) {

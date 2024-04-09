@@ -15,8 +15,8 @@ import (
 	"github.com/rocket-pool/node-manager-core/eth"
 
 	batch "github.com/rocket-pool/batch-query"
-	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/storage"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
+	"github.com/rocket-pool/rocketpool-go/v2/storage"
 )
 
 const (

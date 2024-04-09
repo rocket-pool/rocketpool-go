@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/rocket-pool/node-manager-core/eth"
-	"github.com/rocket-pool/rocketpool-go/dao/oracle"
-	"github.com/rocket-pool/rocketpool-go/tests"
+	"github.com/rocket-pool/rocketpool-go/v2/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/v2/tests"
 )
 
 func Test_ChallengeAndKick(t *testing.T) {

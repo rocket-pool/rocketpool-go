@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/dao/oracle"
-	"github.com/rocket-pool/rocketpool-go/dao/proposals"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/tests"
+	"github.com/rocket-pool/rocketpool-go/v2/dao/oracle"
+	"github.com/rocket-pool/rocketpool-go/v2/dao/proposals"
+	"github.com/rocket-pool/rocketpool-go/v2/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/v2/tests"
 )
 
 var (

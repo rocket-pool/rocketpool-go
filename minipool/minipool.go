@@ -2,7 +2,7 @@ package minipool
 
 import (
 	batch "github.com/rocket-pool/batch-query"
-	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
 )
 
 // ==================

@@ -9,10 +9,10 @@ import (
 
 	batch "github.com/rocket-pool/batch-query"
 	"github.com/rocket-pool/node-manager-core/eth"
-	"github.com/rocket-pool/rocketpool-go/core"
-	"github.com/rocket-pool/rocketpool-go/dao/protocol"
-	"github.com/rocket-pool/rocketpool-go/tests"
-	settings_test "github.com/rocket-pool/rocketpool-go/tests/settings"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
+	"github.com/rocket-pool/rocketpool-go/v2/dao/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/tests"
+	settings_test "github.com/rocket-pool/rocketpool-go/v2/tests/settings"
 	"golang.org/x/sync/errgroup"
 )
 

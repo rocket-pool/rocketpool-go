@@ -3,7 +3,7 @@ package rocketpool
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/hashicorp/go-version"
-	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
 )
 
 // A wrapper that holds the updated contract information for this version

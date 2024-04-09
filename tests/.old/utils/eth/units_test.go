@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 )
 
 func TestConversion(t *testing.T) {

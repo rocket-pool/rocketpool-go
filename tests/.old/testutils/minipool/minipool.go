@@ -8,15 +8,15 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/rocket-pool/rocketpool-go/minipool"
-	"github.com/rocket-pool/rocketpool-go/network"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/minipool"
+	"github.com/rocket-pool/rocketpool-go/v2/network"
+	"github.com/rocket-pool/rocketpool-go/v2/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/accounts"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/validator"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/accounts"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/validator"
 )
 
 // Minipool created event

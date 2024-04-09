@@ -6,15 +6,15 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/deposit"
-	"github.com/rocket-pool/rocketpool-go/node"
-	"github.com/rocket-pool/rocketpool-go/rewards"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/settings/trustednode"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	minipoolutils "github.com/rocket-pool/rocketpool-go/tests/testutils/minipool"
-	"github.com/rocket-pool/rocketpool-go/tokens"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/deposit"
+	"github.com/rocket-pool/rocketpool-go/v2/node"
+	"github.com/rocket-pool/rocketpool-go/v2/rewards"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/trustednode"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	minipoolutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/minipool"
+	"github.com/rocket-pool/rocketpool-go/v2/tokens"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 )
 
 func TestNodeRewards(t *testing.T) {

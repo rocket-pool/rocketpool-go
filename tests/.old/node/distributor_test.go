@@ -1,10 +1,11 @@
 package node
 
 import (
-	"github.com/rocket-pool/rocketpool-go/node"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
+	"github.com/rocket-pool/rocketpool-go/v2/node"
+
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
 )
 
 func TestNodeDistributor(t *testing.T) {

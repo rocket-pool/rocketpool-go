@@ -3,10 +3,10 @@ package utils
 import (
 	"time"
 
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/accounts"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/rocketpool"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/accounts"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 )
 
 // Bootstrap all of the parameters to mimic Stage 4 so the unit tests work correctly

@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/rocket-pool/rocketpool-go/utils/json"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/json"
 )
 
 // Minipool statuses

@@ -5,18 +5,18 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/deposit"
-	"github.com/rocket-pool/rocketpool-go/minipool"
-	"github.com/rocket-pool/rocketpool-go/node"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/settings/trustednode"
-	"github.com/rocket-pool/rocketpool-go/tokens"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/deposit"
+	"github.com/rocket-pool/rocketpool-go/v2/minipool"
+	"github.com/rocket-pool/rocketpool-go/v2/node"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/trustednode"
+	"github.com/rocket-pool/rocketpool-go/v2/tokens"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	minipoolutils "github.com/rocket-pool/rocketpool-go/tests/testutils/minipool"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
-	rplutils "github.com/rocket-pool/rocketpool-go/tests/testutils/tokens/rpl"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	minipoolutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/minipool"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
+	rplutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/tokens/rpl"
 )
 
 func TestStakeRPL(t *testing.T) {

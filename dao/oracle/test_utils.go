@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/rocket-pool/rocketpool-go/core"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
 )
 
 func (s *OracleDaoBoolSetting) Equals(other core.IEquatable) (bool, string, string) {

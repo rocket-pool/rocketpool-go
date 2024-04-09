@@ -7,9 +7,9 @@ import (
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/rocket-pool/node-manager-core/beacon"
 
-	"github.com/rocket-pool/rocketpool-go/types"
+	"github.com/rocket-pool/rocketpool-go/v2/types"
 
-	"github.com/rocket-pool/rocketpool-go/tests"
+	"github.com/rocket-pool/rocketpool-go/v2/tests"
 )
 
 // Deposit settings

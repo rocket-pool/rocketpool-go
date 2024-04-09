@@ -3,13 +3,13 @@ package trustednode
 import (
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/settings/trustednode"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/trustednode"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/accounts"
-	daoutils "github.com/rocket-pool/rocketpool-go/tests/testutils/dao"
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/accounts"
+	daoutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/dao"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
 )
 
 func TestBootstrapMembersSettings(t *testing.T) {

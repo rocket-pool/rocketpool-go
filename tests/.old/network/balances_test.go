@@ -3,11 +3,11 @@ package network
 import (
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/network"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/network"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
 )
 
 func TestSubmitBalances(t *testing.T) {

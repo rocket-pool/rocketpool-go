@@ -8,10 +8,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/rocket-pool/rocketpool-go/core"
-	v110_minipool "github.com/rocket-pool/rocketpool-go/legacy/v1.1.0/minipool"
-	"github.com/rocket-pool/rocketpool-go/rocketpool"
-	rptypes "github.com/rocket-pool/rocketpool-go/types"
+	"github.com/rocket-pool/rocketpool-go/v2/core"
+	v110_minipool "github.com/rocket-pool/rocketpool-go/v2/legacy/v1.1.0/minipool"
+	"github.com/rocket-pool/rocketpool-go/v2/rocketpool"
+	rptypes "github.com/rocket-pool/rocketpool-go/v2/types"
 )
 
 // Combine a node's address and a salt to retreive a new salt compatible with depositing

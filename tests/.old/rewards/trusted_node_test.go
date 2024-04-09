@@ -2,14 +2,15 @@ package rewards
 
 import (
 	"context"
-	"github.com/rocket-pool/rocketpool-go/rewards"
-	"github.com/rocket-pool/rocketpool-go/settings/protocol"
-	"github.com/rocket-pool/rocketpool-go/tokens"
 	"math/big"
 	"testing"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
+	"github.com/rocket-pool/rocketpool-go/v2/rewards"
+	"github.com/rocket-pool/rocketpool-go/v2/settings/protocol"
+	"github.com/rocket-pool/rocketpool-go/v2/tokens"
+
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
 )
 
 func TestTrustedNodeRewards(t *testing.T) {

@@ -5,13 +5,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/rocket-pool/rocketpool-go/network"
-	"github.com/rocket-pool/rocketpool-go/tokens"
-	"github.com/rocket-pool/rocketpool-go/utils/eth"
+	"github.com/rocket-pool/rocketpool-go/v2/network"
+	"github.com/rocket-pool/rocketpool-go/v2/tokens"
+	"github.com/rocket-pool/rocketpool-go/v2/utils/eth"
 
-	"github.com/rocket-pool/rocketpool-go/tests/testutils/evm"
-	nodeutils "github.com/rocket-pool/rocketpool-go/tests/testutils/node"
-	rethutils "github.com/rocket-pool/rocketpool-go/tests/testutils/tokens/reth"
+	"github.com/rocket-pool/rocketpool-go/v2/tests/testutils/evm"
+	nodeutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/node"
+	rethutils "github.com/rocket-pool/rocketpool-go/v2/tests/testutils/tokens/reth"
 )
 
 // GetRETHContractETHBalance test under minipool.TestWithdrawValidatorBalance

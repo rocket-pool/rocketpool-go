@@ -1,4 +1,4 @@
-module github.com/rocket-pool/rocketpool-go
+module github.com/rocket-pool/rocketpool-go/v2
 
 go 1.21
 
