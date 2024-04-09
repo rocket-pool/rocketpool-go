@@ -28,7 +28,6 @@ type OracleDaoMemberDetails struct {
 	JoinedTime          time.Time      `json:"joinedTime"`
 	LastProposalTime    time.Time      `json:"lastProposalTime"`
 	RPLBondAmount       *big.Int       `json:"rplBondAmount"`
-	ReplacementAddress  common.Address `json:"replacementAddress"`
 	IsChallenged        bool           `json:"isChallenged"`
 	joinedTimeRaw       *big.Int       `json:"-"`
 	lastProposalTimeRaw *big.Int       `json:"-"`
@@ -187,7 +186,6 @@ func addOracleDaoMemberDetailsCalls(rp *rocketpool.RocketPool, contracts *Networ
 	core.AddCall(mc, contracts.RocketDAONodeTrusted, &details.joinedTimeRaw, "getMemberJoinedTime", address)
 	core.AddCall(mc, contracts.RocketDAONodeTrusted, &details.lastProposalTimeRaw, "getMemberLastProposalTime", address)
 	core.AddCall(mc, contracts.RocketDAONodeTrusted, &details.RPLBondAmount, "getMemberRPLBondAmount", address)
-	core.AddCall(mc, contracts.RocketDAONodeTrusted, &details.ReplacementAddress, "getMemberReplacedAddress", address)
 	core.AddCall(mc, contracts.RocketDAONodeTrusted, &details.IsChallenged, "getMemberIsChallenged", address)
 	return nil
 }
