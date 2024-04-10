@@ -34,9 +34,6 @@ type OracleDaoMember struct {
 	// The time the member joined the Oracle DAO
 	JoinedTime *core.FormattedUint256Field[time.Time]
 
-	// The time the member's address was replaced
-	ReplacedTime *core.FormattedUint256Field[time.Time]
-
 	// The time the member voluntarily left the Oracle DAO
 	LeftTime *core.FormattedUint256Field[time.Time]
 
