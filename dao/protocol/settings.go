@@ -340,8 +340,8 @@ func newProtocolDaoSettings(pdaoMgr *ProtocolDaoManager) (*ProtocolDaoSettings, 
 func (c *ProtocolDaoSettings) GetSettings() map[rocketpool.ContractName]SettingsCategory {
 	catMap := map[rocketpool.ContractName]SettingsCategory{}
 
-	settingsType := reflect.TypeOf(c)
-	settingsVal := reflect.ValueOf(c)
+	settingsVal := reflect.ValueOf(c).Elem()
+	settingsType := reflect.TypeOf(settingsVal.Interface())
 	fieldCount := settingsType.NumField()
 	for i := 0; i < fieldCount; i++ {
 		categoryField := settingsType.Field(i)
@@ -361,7 +361,7 @@ func (c *ProtocolDaoSettings) GetSettings() map[rocketpool.ContractName]Settings
 			categoryFieldVal := settingsVal.Field(i)
 			settingCount := categoryFieldType.NumField()
 			for j := 0; j < settingCount; j++ {
-				setting := categoryFieldVal.Field(i).Interface()
+				setting := categoryFieldVal.Field(j).Interface()
 
 				// Try bool settings
 				boolSetting, isBoolSetting := setting.(IProtocolDaoSetting[bool])

@@ -127,7 +127,7 @@ func NewProtocolDaoManager(rp *rocketpool.RocketPool) (*ProtocolDaoManager, erro
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol settings rewards contract: %w", err)
 	}
-	dpv, err := rp.GetContract(rocketpool.ContractName_RocketDAOProposal)
+	dpv, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolVerifier)
 	if err != nil {
 		return nil, fmt.Errorf("error getting protocol DAO protocol verifier contract: %w", err)
 	}
