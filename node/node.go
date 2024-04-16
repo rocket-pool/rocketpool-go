@@ -259,7 +259,12 @@ func (c *Node) GetVotingPowerAtBlock(mc *batch.MultiCaller, power_Out **big.Int,
 
 // Get info for initializing on-chain voting for the node
 func (c *Node) InitializeVoting(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	return c.txMgr.CreateTransactionInfo(c.networkVoting.Contract, "initialiseVoting", opts)
+	return c.txMgr.CreateTransactionInfo(c.networkVoting.Contract, "initialiseVoting0", opts)
+}
+
+// Get info for initializing on-chain voting for the node, specifying an optional delegate along with it
+func (c *Node) InitializeVotingWithDelegate(delegate common.Address, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.networkVoting.Contract, "initialiseVoting", opts, delegate)
 }
 
 // Get info for setting the voting delegate for the node
