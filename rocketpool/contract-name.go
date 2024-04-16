@@ -50,7 +50,7 @@ const (
 	ContractName_RocketMinipoolManager     ContractName = "rocketMinipoolManager"
 	ContractName_RocketMinipoolFactory     ContractName = "rocketMinipoolFactory"
 	ContractName_RocketMinipoolQueue       ContractName = "rocketMinipoolQueue"
-	ContractName_RocketMinipoolStatus      ContractName = "rocketMinipoolStatus"
+	//ContractName_RocketMinipoolStatus      ContractName = "rocketMinipoolStatus"
 
 	// Network
 	ContractName_RocketNetworkBalances  ContractName = "rocketNetworkBalances"
@@ -124,7 +124,6 @@ var ContractNames = []ContractName{
 	ContractName_RocketMinipoolManager,
 	ContractName_RocketMinipoolFactory,
 	ContractName_RocketMinipoolQueue,
-	ContractName_RocketMinipoolStatus,
 
 	ContractName_RocketNetworkBalances,
 	ContractName_RocketNetworkFees,

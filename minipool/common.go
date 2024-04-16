@@ -109,7 +109,6 @@ type MinipoolCommon struct {
 	rp       *rocketpool.RocketPool
 	mpMgr    *core.Contract
 	mpQueue  *core.Contract
-	mpStatus *core.Contract
 	txMgr    *eth.TransactionManager
 }
 
@@ -147,11 +146,6 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 	mpQueue, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolQueue)
 	if err != nil {
 		return nil, fmt.Errorf("error getting minipool queue contract: %w", err)
-	}
-
-	mpStatus, err := rp.GetContract(rocketpool.ContractName_RocketMinipoolStatus)
-	if err != nil {
-		return nil, fmt.Errorf("error getting minipool status contract: %w", err)
 	}
 
 	address := contract.Address
@@ -193,7 +187,6 @@ func newMinipoolCommonFromVersion(rp *rocketpool.RocketPool, contract *core.Cont
 		contract: contract,
 		mpMgr:    mpMgr,
 		mpQueue:  mpQueue,
-		mpStatus: mpStatus,
 		txMgr:    rp.GetTransactionManager(),
 	}, nil
 }
@@ -261,13 +254,6 @@ func (c *MinipoolCommon) SetUseLatestDelegate(setting bool, opts *bind.TransactO
 // Get info for voting to scrub a minipool
 func (c *MinipoolCommon) VoteScrub(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return c.txMgr.CreateTransactionInfo(c.contract.Contract, "voteScrub", opts)
-}
-
-// === MinipoolStatus ===
-
-// Get info for submitting a minipool withdrawable event
-func (c *MinipoolCommon) SubmitMinipoolWithdrawable(opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
-	return c.txMgr.CreateTransactionInfo(c.mpStatus.Contract, "submitMinipoolWithdrawable", opts, c.Address)
 }
 
 // =============
