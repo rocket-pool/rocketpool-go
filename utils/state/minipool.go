@@ -299,11 +299,11 @@ func getAllMinipoolAddressesFast(rp *rocketpool.RocketPool, contracts *NetworkCo
 	}
 
 	// Get minipool count
-	var minipoolCount uint64
 	err = rp.Query(nil, opts, mgr.MinipoolCount)
 	if err != nil {
 		return []common.Address{}, err
 	}
+	minipoolCount := mgr.MinipoolCount.Formatted()
 
 	// Sync
 	var wg errgroup.Group
