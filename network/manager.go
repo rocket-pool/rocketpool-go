@@ -79,7 +79,7 @@ type BalancesUpdated struct {
 
 // Info for a balances updated event
 type balancesUpdatedRaw struct {
-	BlockNumber    *big.Int `json:"blockNumber"`
+	Block          *big.Int `json:"block"`
 	SlotTimestamp  *big.Int `json:"slotTimestamp"`
 	TotalEth       *big.Int `json:"totalEth"`
 	StakingEth     *big.Int `json:"stakingEth"`
@@ -97,7 +97,7 @@ type PriceUpdated struct {
 
 // Info for a price updated event
 type priceUpdatedRaw struct {
-	BlockNumber   *big.Int `json:"blockNumber"`
+	Block         *big.Int `json:"block"`
 	SlotTimestamp *big.Int `json:"slotTimestamp"`
 	RplPrice      *big.Int `json:"rplPrice"`
 	Time          *big.Int `json:"time"`
@@ -271,19 +271,31 @@ func (c *NetworkManager) GetLatestBalancesSubmissions(fromBlock uint64, interval
 }
 
 // Get the event emitted when the network balances were updated
-func (c *NetworkManager) GetBalancesUpdatedEvent(blockNumber uint64, opts *bind.CallOpts) (bool, BalancesUpdated, error) {
+func (c *NetworkManager) GetBalancesUpdatedEvent(blockNumber uint64, intervalSize *big.Int, balanceAddresses []common.Address, opts *bind.CallOpts) (bool, BalancesUpdated, error) {
 	// Create the list of addresses to check
 	currentAddress := c.networkBalances.Address
-	rocketNetworkBalancesAddress := []common.Address{currentAddress}
+	if balanceAddresses == nil {
+		balanceAddresses = []common.Address{currentAddress}
+	} else {
+		found := false
+		for _, address := range balanceAddresses {
+			if address == currentAddress {
+				found = true
+				break
+			}
+		}
+		if !found {
+			balanceAddresses = append(balanceAddresses, currentAddress)
+		}
+	}
 
 	// Construct a filter query for relevant logs
 	balancesUpdatedEvent := c.networkBalances.ABI.Events["BalancesUpdated"]
-	indexBytes := [32]byte{}
-	addressFilter := rocketNetworkBalancesAddress
-	topicFilter := [][]common.Hash{{balancesUpdatedEvent.ID}, {indexBytes}}
+	addressFilter := balanceAddresses
+	topicFilter := [][]common.Hash{{balancesUpdatedEvent.ID}}
 
-	// Get the event logs
-	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, big.NewInt(1), big.NewInt(int64(blockNumber)), big.NewInt(int64(blockNumber)), nil)
+	// Get the event logs, starting with the target and ending with the chain head
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(blockNumber)), nil, nil)
 	if err != nil {
 		return false, BalancesUpdated{}, err
 	}
@@ -291,28 +303,37 @@ func (c *NetworkManager) GetBalancesUpdatedEvent(blockNumber uint64, opts *bind.
 		return false, BalancesUpdated{}, nil
 	}
 
-	// Get the log info values
-	values, err := balancesUpdatedEvent.Inputs.Unpack(logs[0].Data)
-	if err != nil {
-		return false, BalancesUpdated{}, fmt.Errorf("error unpacking price updated event data: %w", err)
+	// Get the list of events
+	for _, log := range logs {
+		// Get the log info values
+		values, err := balancesUpdatedEvent.Inputs.Unpack(log.Data)
+		if err != nil {
+			return false, BalancesUpdated{}, fmt.Errorf("error unpacking balance updated event data: %w", err)
+		}
+
+		// Convert to a native struct
+		var eventData balancesUpdatedRaw
+		err = balancesUpdatedEvent.Inputs.Copy(&eventData, values)
+		if err != nil {
+			return false, BalancesUpdated{}, fmt.Errorf("error converting balance updated event data to struct: %w", err)
+		}
+
+		// Filter on events that target the block number
+		if eventData.Block.Uint64() == blockNumber {
+			balancesUpdated := BalancesUpdated{
+				BlockNumber:    blockNumber,
+				SlotTimestamp:  time.Unix(eventData.SlotTimestamp.Int64(), 0),
+				TotalEth:       eventData.TotalEth,
+				StakingEth:     eventData.StakingEth,
+				RethSupply:     eventData.RethSupply,
+				BlockTimestamp: time.Unix(eventData.BlockTimestamp.Int64(), 0),
+			}
+
+			return true, balancesUpdated, nil
+		}
 	}
 
-	// Convert to a native struct
-	var eventData balancesUpdatedRaw
-	err = balancesUpdatedEvent.Inputs.Copy(&eventData, values)
-	if err != nil {
-		return false, BalancesUpdated{}, fmt.Errorf("error converting price updated event data to struct: %w", err)
-	}
-	balancesUpdated := BalancesUpdated{
-		BlockNumber:    eventData.BlockNumber.Uint64(),
-		SlotTimestamp:  time.Unix(eventData.SlotTimestamp.Int64(), 0),
-		TotalEth:       eventData.TotalEth,
-		StakingEth:     eventData.StakingEth,
-		RethSupply:     eventData.RethSupply,
-		BlockTimestamp: time.Unix(eventData.BlockTimestamp.Int64(), 0),
-	}
-
-	return true, balancesUpdated, nil
+	return false, BalancesUpdated{}, nil
 }
 
 // Returns an array of block numbers for prices submissions the given trusted node has submitted since fromBlock
@@ -360,19 +381,31 @@ func (c *NetworkManager) GetLatestPricesSubmissions(fromBlock uint64, intervalSi
 }
 
 // Get the event info for a price update
-func (c *NetworkManager) GetPriceUpdatedEvent(blockNumber uint64, opts *bind.CallOpts) (bool, PriceUpdated, error) {
+func (c *NetworkManager) GetPriceUpdatedEvent(blockNumber uint64, intervalSize *big.Int, priceAddresses []common.Address, opts *bind.CallOpts) (bool, PriceUpdated, error) {
 	// Create the list of addresses to check
-	currentAddress := c.networkPrices.Address
-	rocketNetworkPricesAddress := []common.Address{currentAddress}
+	currentAddress := c.networkBalances.Address
+	if priceAddresses == nil {
+		priceAddresses = []common.Address{currentAddress}
+	} else {
+		found := false
+		for _, address := range priceAddresses {
+			if address == currentAddress {
+				found = true
+				break
+			}
+		}
+		if !found {
+			priceAddresses = append(priceAddresses, currentAddress)
+		}
+	}
 
 	// Construct a filter query for relevant logs
 	pricesUpdatedEvent := c.networkPrices.ABI.Events["PricesUpdated"]
-	indexBytes := [32]byte{}
-	addressFilter := rocketNetworkPricesAddress
-	topicFilter := [][]common.Hash{{pricesUpdatedEvent.ID}, {indexBytes}}
+	addressFilter := priceAddresses
+	topicFilter := [][]common.Hash{{pricesUpdatedEvent.ID}}
 
-	// Get the event logs
-	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, big.NewInt(1), big.NewInt(int64(blockNumber)), big.NewInt(int64(blockNumber)), nil)
+	// Get the event logs, starting with the target and ending with the chain head
+	logs, err := utils.GetLogs(c.rp, addressFilter, topicFilter, intervalSize, big.NewInt(int64(blockNumber)), nil, nil)
 	if err != nil {
 		return false, PriceUpdated{}, err
 	}
@@ -380,24 +413,35 @@ func (c *NetworkManager) GetPriceUpdatedEvent(blockNumber uint64, opts *bind.Cal
 		return false, PriceUpdated{}, nil
 	}
 
-	// Get the log info values
-	values, err := pricesUpdatedEvent.Inputs.Unpack(logs[0].Data)
-	if err != nil {
-		return false, PriceUpdated{}, fmt.Errorf("error unpacking price updated event data: %w", err)
+	// Get the list of events
+	for _, log := range logs {
+		// Get the log info values
+		values, err := pricesUpdatedEvent.Inputs.Unpack(log.Data)
+		if err != nil {
+			return false, PriceUpdated{}, fmt.Errorf("error unpacking price updated event data: %w", err)
+		}
+
+		// Convert to a native struct
+		var eventData priceUpdatedRaw
+		err = pricesUpdatedEvent.Inputs.Copy(&eventData, values)
+		if err != nil {
+			return false, PriceUpdated{}, fmt.Errorf("error converting price updated event data to struct: %w", err)
+		}
+
+		fmt.Printf("Found event for block %d on block %d, eventData: %v\n", eventData.Block, log.BlockNumber, eventData)
+
+		// Filter on events that target the block number
+		if eventData.Block.Uint64() == blockNumber {
+			priceUpdated := PriceUpdated{
+				BlockNumber:   eventData.Block.Uint64(),
+				SlotTimestamp: time.Unix(eventData.SlotTimestamp.Int64(), 0),
+				RplPrice:      eventData.RplPrice,
+				Time:          time.Unix(eventData.Time.Int64(), 0),
+			}
+
+			return true, priceUpdated, nil
+		}
 	}
 
-	// Convert to a native struct
-	var eventData priceUpdatedRaw
-	err = pricesUpdatedEvent.Inputs.Copy(&eventData, values)
-	if err != nil {
-		return false, PriceUpdated{}, fmt.Errorf("error converting price updated event data to struct: %w", err)
-	}
-	priceUpdated := PriceUpdated{
-		BlockNumber:   eventData.BlockNumber.Uint64(),
-		SlotTimestamp: time.Unix(eventData.SlotTimestamp.Int64(), 0),
-		RplPrice:      eventData.RplPrice,
-		Time:          time.Unix(eventData.Time.Int64(), 0),
-	}
-
-	return true, priceUpdated, nil
+	return false, PriceUpdated{}, nil
 }
