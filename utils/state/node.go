@@ -187,7 +187,7 @@ func GetAllNativeNodeDetails(rp *rocketpool.RocketPool, contracts *NetworkContra
 }
 
 // Calculate the average node fee and user/node shares of the distributor's balance
-func CalculateAverageFeeAndDistributorShares(rp *rocketpool.RocketPool, contracts *NetworkContracts, node NativeNodeDetails, minipoolDetails []*NativeMinipoolDetails) error {
+func CalculateAverageFeeAndDistributorShares(rp *rocketpool.RocketPool, contracts *NetworkContracts, node NativeNodeDetails, minipoolDetails []*NativeMinipoolDetails) {
 
 	// Calculate the total of all fees for staking minipools that aren't finalized
 	totalFee := big.NewInt(0)
@@ -234,7 +234,7 @@ func CalculateAverageFeeAndDistributorShares(rp *rocketpool.RocketPool, contract
 		node.DistributorBalanceUserETH = big.NewInt(0)
 	}
 
-	return nil
+	return
 }
 
 // Get all node addresses using the multicaller
