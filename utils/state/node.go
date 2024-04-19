@@ -43,14 +43,17 @@ type NativeNodeDetails struct {
 	DepositCreditBalance             *big.Int
 	DistributorBalanceUserETH        *big.Int // Must call CalculateAverageFeeAndDistributorShares to get this
 	DistributorBalanceNodeETH        *big.Int // Must call CalculateAverageFeeAndDistributorShares to get this
-	WithdrawalAddress                common.Address
-	PendingWithdrawalAddress         common.Address
+	PrimaryWithdrawalAddress         common.Address
+	PendingPrimaryWithdrawalAddress  common.Address
 	SmoothingPoolRegistrationState   bool
 	SmoothingPoolRegistrationChanged *big.Int
 	NodeAddress                      common.Address
 	AverageNodeFee                   *big.Int // Must call CalculateAverageFeeAndDistributorShares to get this
 	CollateralisationRatio           *big.Int
 	DistributorBalance               *big.Int
+	IsRplWithdrawalAddressSet        bool
+	RplWithdrawalAddress             common.Address
+	PendingRplWithdrawalAddress      common.Address
 }
 
 // Gets the details for a node using the efficient multicall contract
@@ -307,12 +310,17 @@ func addNodeDetailsCalls(contracts *NetworkContracts, mc *batch.MultiCaller, det
 	core.AddCall(mc, contracts.RocketTokenRETH, &details.BalanceRETH, "balanceOf", address)
 	core.AddCall(mc, contracts.RocketTokenRPL, &details.BalanceRPL, "balanceOf", address)
 	core.AddCall(mc, contracts.RocketTokenRPLFixedSupply, &details.BalanceOldRPL, "balanceOf", address)
-	core.AddCall(mc, contracts.RocketStorage, &details.WithdrawalAddress, "getNodeWithdrawalAddress", address)
-	core.AddCall(mc, contracts.RocketStorage, &details.PendingWithdrawalAddress, "getNodePendingWithdrawalAddress", address)
+	core.AddCall(mc, contracts.RocketStorage, &details.PrimaryWithdrawalAddress, "getNodeWithdrawalAddress", address)
+	core.AddCall(mc, contracts.RocketStorage, &details.PendingPrimaryWithdrawalAddress, "getNodePendingWithdrawalAddress", address)
 	core.AddCall(mc, contracts.RocketNodeManager, &details.SmoothingPoolRegistrationState, "getSmoothingPoolRegistrationState", address)
 	core.AddCall(mc, contracts.RocketNodeManager, &details.SmoothingPoolRegistrationChanged, "getSmoothingPoolRegistrationChanged", address)
 
 	// Atlas
 	core.AddCall(mc, contracts.RocketNodeDeposit, &details.DepositCreditBalance, "getNodeDepositCredit", address)
 	core.AddCall(mc, contracts.RocketNodeStaking, &details.CollateralisationRatio, "getNodeETHCollateralisationRatio", address)
+
+	// Houston
+	core.AddCall(mc, contracts.RocketNodeManager, &details.IsRplWithdrawalAddressSet, "getNodeRPLWithdrawalAddressIsSet", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.RplWithdrawalAddress, "getNodeRPLWithdrawalAddress", address)
+	core.AddCall(mc, contracts.RocketNodeManager, &details.PendingRplWithdrawalAddress, "getNodePendingRPLWithdrawalAddress", address)
 }
