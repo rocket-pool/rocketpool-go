@@ -22,7 +22,8 @@ func GetProtocolDaoProposalDetails(rp *rocketpool.RocketPool, contracts *Network
 
 	// Get all of the parameters
 	err = rp.Query(func(mc *batch.MultiCaller) error {
-		return eth.QueryAllFields(prop, mc)
+		eth.QueryAllFields(prop, mc)
+		return nil
 	}, opts)
 	return prop, err
 }
