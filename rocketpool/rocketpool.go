@@ -364,6 +364,20 @@ func (rp *RocketPool) FlexBatchQuery(count int, batchSize int, query func(*batch
 // Signs a transaction but does not submit it to the network. Use this if you want to sign something offline and submit it later,
 // or submit it as part of a bundle.
 func (rp *RocketPool) SignTransaction(txInfo *eth.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	// Copy the opts
+	opts = &bind.TransactOpts{
+		From:      opts.From,
+		Nonce:     opts.Nonce,
+		Signer:    opts.Signer,
+		Value:     opts.Value,
+		GasFeeCap: opts.GasFeeCap,
+		GasTipCap: opts.GasTipCap,
+		GasLimit:  opts.GasLimit,
+		Context:   opts.Context,
+		GasPrice:  opts.GasPrice,
+		NoSend:    opts.NoSend,
+	}
+
 	return rp.txMgr.SignTransaction(txInfo, opts)
 }
 
@@ -371,6 +385,20 @@ func (rp *RocketPool) SignTransaction(txInfo *eth.TransactionInfo, opts *bind.Tr
 // The nonce and gas fee info in the provided opts will be used.
 // The value will come from the provided txInfo. It will *not* use the value in the provided opts.
 func (rp *RocketPool) ExecuteTransaction(txInfo *eth.TransactionInfo, opts *bind.TransactOpts) (*types.Transaction, error) {
+	// Copy the opts
+	opts = &bind.TransactOpts{
+		From:      opts.From,
+		Nonce:     opts.Nonce,
+		Signer:    opts.Signer,
+		Value:     opts.Value,
+		GasFeeCap: opts.GasFeeCap,
+		GasTipCap: opts.GasTipCap,
+		GasLimit:  opts.GasLimit,
+		Context:   opts.Context,
+		GasPrice:  opts.GasPrice,
+		NoSend:    opts.NoSend,
+	}
+
 	return rp.txMgr.ExecuteTransaction(txInfo, opts)
 }
 
@@ -426,6 +454,20 @@ func (rp *RocketPool) CreateAndWaitForTransaction(creator func() (*eth.Transacti
 // NOTE: this assumes the bundle is meant to be submitted sequentially, so the nonce of each one will be incremented.
 // Assign the Nonce in the opts tto the nonce you want to use for the first transaction.
 func (rp *RocketPool) BatchExecuteTransactions(txSubmissions []*eth.TransactionSubmission, opts *bind.TransactOpts) ([]*types.Transaction, error) {
+	// Copy the opts
+	opts = &bind.TransactOpts{
+		From:      opts.From,
+		Nonce:     opts.Nonce,
+		Signer:    opts.Signer,
+		Value:     opts.Value,
+		GasFeeCap: opts.GasFeeCap,
+		GasTipCap: opts.GasTipCap,
+		GasLimit:  opts.GasLimit,
+		Context:   opts.Context,
+		GasPrice:  opts.GasPrice,
+		NoSend:    opts.NoSend,
+	}
+
 	if opts.Nonce == nil {
 		// Get the latest nonce and use that as the nonce for the first TX
 		nonce, err := rp.Client.NonceAt(context.Background(), opts.From, nil)

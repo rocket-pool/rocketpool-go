@@ -23,6 +23,9 @@ type TokenRpl struct {
 	// The RPL total supply
 	TotalSupply *core.SimpleField[*big.Int]
 
+	// The number of seconds in an RPL inflation interval
+	InflationInterval *core.FormattedUint256Field[time.Duration]
+
 	// The RPL inflation interval rate
 	InflationIntervalRate *core.SimpleField[*big.Int]
 
@@ -49,6 +52,7 @@ func NewTokenRpl(rp *rocketpool.RocketPool) (*TokenRpl, error) {
 
 	return &TokenRpl{
 		TotalSupply:                core.NewSimpleField[*big.Int](rpl, "totalSupply"),
+		InflationInterval:          core.NewFormattedUint256Field[time.Duration](rpl, "getInflationIntervalTime"),
 		InflationIntervalRate:      core.NewSimpleField[*big.Int](rpl, "getInflationIntervalRate"),
 		InflationIntervalStartTime: core.NewFormattedUint256Field[time.Time](rpl, "getInflationIntervalStartTime"),
 

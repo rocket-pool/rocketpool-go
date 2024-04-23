@@ -82,6 +82,9 @@ const (
 	ContractName_RocketTokenRETH           ContractName = "rocketTokenRETH"
 	ContractName_RocketTokenRPLFixedSupply ContractName = "rocketTokenRPLFixedSupply"
 	ContractName_RocketTokenRPL            ContractName = "rocketTokenRPL"
+
+	// Vault
+	ContractName_RocketVault ContractName = "rocketVault"
 )
 
 // List of all singleton contract names
@@ -148,6 +151,8 @@ var ContractNames = []ContractName{
 	ContractName_RocketTokenRETH,
 	ContractName_RocketTokenRPLFixedSupply,
 	ContractName_RocketTokenRPL,
+
+	ContractName_RocketVault,
 }
 
 // List of all instanceable contract names

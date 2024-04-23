@@ -2,7 +2,7 @@
 
 ## Settings
 RP_REPO_URL="https://github.com/rocket-pool/rocketpool.git"
-RP_REPO_BRANCH="v1.2"
+RP_REPO_BRANCH="houston"
 HARDHAT_PORT=8545
 
 

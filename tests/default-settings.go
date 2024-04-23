@@ -104,7 +104,7 @@ func CreateDefaults(mgr *TestManager) error {
 		PDaoDefaults.Node.MaximumPerMinipoolStake.Set(1.5) // 150% of node ETH value (provided ETH)
 
 		// Rewards
-		PDaoDefaults.Rewards.IntervalTime.Set(28 * 24 * time.Hour) // 28 days
+		PDaoDefaults.Rewards.IntervalPeriods.Set(28) // 28 periods
 
 		// ==================
 		// === Oracle DAO ===
@@ -124,9 +124,9 @@ func CreateDefaults(mgr *TestManager) error {
 		ODaoDefaults.Member.RplBond.Set(eth.EthToWei(1750))
 
 		// Minipools
-		ODaoDefaults.Minipool.BondReductionWindowStart.Set(12 * time.Hour)
+		ODaoDefaults.Minipool.BondReductionWindowStart.Set(2 * 24 * time.Hour)
 		ODaoDefaults.Minipool.BondReductionWindowLength.Set(2 * 24 * time.Hour)
-		ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Set(true)
+		ODaoDefaults.Minipool.IsScrubPenaltyEnabled.Set(false)
 		ODaoDefaults.Minipool.ScrubPeriod.Set(12 * time.Hour)
 		ODaoDefaults.Minipool.ScrubQuorum.Set(0.51)
 		ODaoDefaults.Minipool.PromotionScrubPeriod.Set(3 * 24 * time.Hour) // 3 days

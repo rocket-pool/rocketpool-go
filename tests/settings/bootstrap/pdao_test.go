@@ -386,11 +386,11 @@ func Test_BootstrapMaximumPerMinipoolStake(t *testing.T) {
 }
 
 func Test_BootstrapRewardsIntervalTime(t *testing.T) {
-	newVal := tests.PDaoDefaults.Rewards.IntervalTime.Formatted() + (24 * time.Hour)
+	newVal := tests.PDaoDefaults.Rewards.IntervalPeriods.Formatted() + 1
 	testPdaoParameterBootstrap(t, func(newSettings *protocol.ProtocolDaoSettings) {
-		newSettings.Rewards.IntervalTime.Set(newVal)
+		newSettings.Rewards.IntervalPeriods.Set(newVal)
 	}, func() (*eth.TransactionInfo, error) {
-		return pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(core.GetValueForUint256(newVal), opts)
+		return pdaoMgr.Settings.Rewards.IntervalPeriods.Bootstrap(core.GetValueForUint256(newVal), opts)
 	})
 }
 
@@ -463,7 +463,7 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 	newPdaoSettings.Node.AreVacantMinipoolsEnabled.Set(!tests.PDaoDefaults.Node.AreVacantMinipoolsEnabled.Get())
 	newPdaoSettings.Node.MinimumPerMinipoolStake.Set(tests.PDaoDefaults.Node.MinimumPerMinipoolStake.Formatted() + 0.1)
 	newPdaoSettings.Node.MaximumPerMinipoolStake.Set(tests.PDaoDefaults.Node.MaximumPerMinipoolStake.Formatted() + 0.1)
-	newPdaoSettings.Rewards.IntervalTime.Set(tests.PDaoDefaults.Rewards.IntervalTime.Formatted() + (24 * time.Hour))
+	newPdaoSettings.Rewards.IntervalPeriods.Set(tests.PDaoDefaults.Rewards.IntervalPeriods.Formatted() + 1)
 
 	// Ensure they're all different from the default
 	settings_test.EnsureDifferentDetails(t.Fatalf, &tests.PDaoDefaults, &newPdaoSettings)
@@ -596,7 +596,7 @@ func Test_AllPDaoBoostrapFunctions(t *testing.T) {
 			return eth.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Node.MaximumPerMinipoolStake.Bootstrap(newPdaoSettings.Node.MaximumPerMinipoolStake.Raw(), opts))
 		},
 		func() (*eth.TransactionSubmission, error) {
-			return eth.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Rewards.IntervalTime.Bootstrap(newPdaoSettings.Rewards.IntervalTime.Raw(), opts))
+			return eth.CreateTxSubmissionFromInfo(pdaoMgr.Settings.Rewards.IntervalPeriods.Bootstrap(newPdaoSettings.Rewards.IntervalPeriods.Raw(), opts))
 		},
 	}
 	for i, bootstrapper := range bootstrappers {
