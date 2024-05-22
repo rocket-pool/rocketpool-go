@@ -33,6 +33,7 @@ const (
 // Proposal details
 type ProtocolDaoProposalDetails struct {
 	ID                   uint64                         `json:"id"`
+	DAO                  string                         `json:"dao"`
 	ProposerAddress      common.Address                 `json:"proposerAddress"`
 	TargetBlock          uint32                         `json:"targetBlock"`
 	Message              string                         `json:"message"`
