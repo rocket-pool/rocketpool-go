@@ -27,6 +27,9 @@ type ProtocolDaoProposal struct {
 	// The proposal's ID
 	ID uint64
 
+	// The DAO identifier
+	DAO string
+
 	// The address of the node that created the proposal
 	ProposerAddress *core.SimpleField[common.Address]
 

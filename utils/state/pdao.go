@@ -38,6 +38,7 @@ func GetAllProtocolDaoProposalDetails(rp *rocketpool.RocketPool, contracts *Netw
 	if err != nil {
 		return nil, err
 	}
+
 	err = rp.Query(nil, opts, mgr.ProposalCount)
 	if err != nil {
 		return nil, err
