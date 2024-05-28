@@ -52,6 +52,7 @@ type NetworkContracts struct {
 	// Houston
 	RocketDAOProtocolProposal *rocketpool.Contract
 	RocketDAOProtocolVerifier *rocketpool.Contract
+	RocketSignerRegistry      *rocketpool.Contract
 }
 
 type contractArtifacts struct {
@@ -76,8 +77,9 @@ func NewNetworkContracts(rp *rocketpool.RocketPool, multicallerAddress common.Ad
 
 	// Create the contract binding
 	contracts := &NetworkContracts{
-		RocketStorage: rp.RocketStorageContract,
-		ElBlockNumber: opts.BlockNumber,
+		RocketStorage:        rp.RocketStorageContract,
+		RocketSignerRegistry: rp.RocketSignerRegistryContract,
+		ElBlockNumber:        opts.BlockNumber,
 	}
 
 	// Create the multicaller

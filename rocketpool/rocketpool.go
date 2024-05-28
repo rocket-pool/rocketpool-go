@@ -34,16 +34,18 @@ type cachedContract struct {
 
 // Rocket Pool contract manager
 type RocketPool struct {
-	Client                ExecutionClient
-	RocketStorage         *contracts.RocketStorage
-	RocketStorageContract *Contract
-	VersionManager        *VersionManager
-	addresses             map[string]cachedAddress
-	abis                  map[string]cachedABI
-	contracts             map[string]cachedContract
-	addressesLock         sync.RWMutex
-	abisLock              sync.RWMutex
-	contractsLock         sync.RWMutex
+	Client                       ExecutionClient
+	RocketStorage                *contracts.RocketStorage
+	RocketStorageContract        *Contract
+	RocketSignerRegistry         *contracts.RocketSignerRegistry
+	RocketSignerRegistryContract *Contract
+	VersionManager               *VersionManager
+	addresses                    map[string]cachedAddress
+	abis                         map[string]cachedABI
+	contracts                    map[string]cachedContract
+	addressesLock                sync.RWMutex
+	abisLock                     sync.RWMutex
+	contractsLock                sync.RWMutex
 }
 
 // Create new contract manager
