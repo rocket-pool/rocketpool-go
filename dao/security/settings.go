@@ -27,7 +27,7 @@ const (
 // Wrapper for a settings category, with all of its settings
 type SettingsCategory struct {
 	ContractName rocketpool.ContractName
-	BoolSettings []ISecurityCouncilSetting[bool]
+	BoolSettings []SecurityCouncilBoolSetting
 }
 
 // Binding for security council settings
@@ -130,7 +130,7 @@ func (c *SecurityCouncilSettings) GetSettings() map[rocketpool.ContractName]Sett
 			if !exists {
 				panic(fmt.Sprintf("Security Council settings field named %s does not exist in the contract map.", name))
 			}
-			boolSettings := []ISecurityCouncilSetting[bool]{}
+			boolSettings := []SecurityCouncilBoolSetting{}
 
 			// Get all of the settings in this cateogry
 			categoryFieldVal := settingsVal.Field(i)
@@ -139,9 +139,9 @@ func (c *SecurityCouncilSettings) GetSettings() map[rocketpool.ContractName]Sett
 				setting := categoryFieldVal.Field(j).Interface()
 
 				// Try bool settings
-				boolSetting, isBoolSetting := setting.(ISecurityCouncilSetting[bool])
+				boolSetting, isBoolSetting := setting.(*SecurityCouncilBoolSetting)
 				if isBoolSetting {
-					boolSettings = append(boolSettings, boolSetting)
+					boolSettings = append(boolSettings, *boolSetting)
 					continue
 				}
 			}
