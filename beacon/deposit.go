@@ -51,5 +51,5 @@ func NewBeaconDeposit(rp *rocketpool.RocketPool) (*BeaconDeposit, error) {
 
 // Deposit to the Beacon contract, creating a new validator
 func (c *BeaconDeposit) Deposit(opts *bind.TransactOpts, pubkey beacon.ValidatorPubkey, withdrawalCredentials common.Hash, signature beacon.ValidatorSignature, depositDataRoot common.Hash) (*eth.TransactionInfo, error) {
-	return c.txMgr.CreateTransactionInfo(c.cd.Contract, "deposit", opts, pubkey[:], withdrawalCredentials, signature, depositDataRoot)
+	return c.txMgr.CreateTransactionInfo(c.cd.Contract, "deposit", opts, pubkey[:], withdrawalCredentials[:], signature[:], depositDataRoot[:])
 }
