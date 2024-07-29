@@ -341,6 +341,11 @@ func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*eth.Trans
 	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "stakeRPL", opts, rplAmount)
 }
 
+// Get info for staking RPL on behalf of this node - should be called by something other than the node itself
+func (c *Node) StakeRplFor(rplAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "stakeRPLFor", opts, c.Address, rplAmount)
+}
+
 // Get info for adding or removing an address from the stake-RPL-on-behalf allowlist
 func (c *Node) SetStakeRplForAllowed(caller common.Address, allowed bool, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "setStakeRPLForAllowed", opts, caller, allowed)

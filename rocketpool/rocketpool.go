@@ -270,6 +270,19 @@ func (rp *RocketPool) GetProtocolVersion(opts *bind.CallOpts) (*version.Version,
 	}
 
 	// Fall back to the legacy checking behavior
+	contractsToLoad := []ContractName{}
+	if _, exists := rp.contracts[ContractName_RocketNodeStaking]; !exists {
+		contractsToLoad = append(contractsToLoad, ContractName_RocketNodeStaking)
+	}
+	if _, exists := rp.contracts[ContractName_RocketNodeManager]; !exists {
+		contractsToLoad = append(contractsToLoad, ContractName_RocketNodeManager)
+	}
+	if len(contractsToLoad) > 0 {
+		err = rp.LoadContracts(opts, contractsToLoad...)
+		if err != nil {
+			return nil, fmt.Errorf("error loading contracts: %w", err)
+		}
+	}
 	nodeStaking, err := rp.GetContract(ContractName_RocketNodeStaking)
 	if err != nil {
 		return nil, fmt.Errorf("error getting node staking contract: %w", err)
@@ -281,6 +294,11 @@ func (rp *RocketPool) GetProtocolVersion(opts *bind.CallOpts) (*version.Version,
 
 	nodeStakingVersion := nodeStaking.Version
 	nodeMgrVersion := nodeMgr.Version
+	// Check for v1.3 (Houston)
+	if nodeStakingVersion > 4 {
+		return version.NewSemver("1.3.0")
+	}
+
 	// Check for v1.2 (Atlas)
 	if nodeStakingVersion > 3 {
 		return version.NewSemver("1.2.0")

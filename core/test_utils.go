@@ -8,9 +8,6 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
-
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/rocket-pool/node-manager-core/beacon"
 )
 
 // ==================
@@ -28,28 +25,6 @@ type ICopyable interface {
 // ===================
 // === SimpleField ===
 // ===================
-
-func (f *SimpleField[ValueType]) Set(value ValueType) {
-	switch val := any(&f.value).(type) {
-	case **big.Int:
-		castedValue := any(value).(*big.Int)
-		*val = big.NewInt(0).Set(castedValue)
-	case *common.Address:
-		castedValue := any(value).(common.Address)
-		copy((*val).Bytes(), castedValue.Bytes())
-	case *common.Hash:
-		castedValue := any(value).(common.Hash)
-		copy((*val).Bytes(), castedValue.Bytes())
-	case *beacon.ValidatorPubkey:
-		castedValue := any(value).(beacon.ValidatorPubkey)
-		copy((*val)[:], castedValue[:])
-	case *[]byte:
-		castedValue := any(value).([]byte)
-		copy(*val, castedValue)
-	default:
-		f.value = value
-	}
-}
 
 func (f *SimpleField[ValueType]) Equals(other IEquatable) (bool, string, string) {
 	castedOther, ok := other.(*SimpleField[ValueType])
@@ -81,14 +56,6 @@ func (f *SimpleField[ValueType]) Copy(other ICopyable) {
 // === FormattedUint256Field ===
 // =============================
 
-func (f *FormattedUint256Field[ValueType]) Set(value ValueType) {
-	f.value = GetValueForUint256(value)
-}
-
-func (f *FormattedUint256Field[ValueType]) SetRawValue(value *big.Int) {
-	f.value = big.NewInt(0).Set(value)
-}
-
 func (f *FormattedUint256Field[ValueType]) Equals(other IEquatable) (bool, string, string) {
 	castedOther, ok := other.(*FormattedUint256Field[ValueType])
 	if !ok {
@@ -108,11 +75,6 @@ func (f *FormattedUint256Field[ValueType]) Copy(other ICopyable) {
 // ===========================
 // === FormattedUint8Field ===
 // ===========================
-
-// Gets the raw value after it's been queried
-func (f *FormattedUint8Field[ValueType]) Set(value ValueType) {
-	f.value = uint8(value)
-}
 
 func (f *FormattedUint8Field[ValueType]) Equals(other IEquatable) (bool, string, string) {
 	castedOther, ok := other.(*FormattedUint8Field[ValueType])
