@@ -48,6 +48,9 @@ type MinipoolManager struct {
 	// The effective capacity of the minipool queue (used in node demand calculation)
 	EffectiveQueueCapacity *core.SimpleField[*big.Int]
 
+	// The complete amount of ETH required for a validator to be activated on the Beacon Chain.
+	LaunchBalance *core.SimpleField[*big.Int]
+
 	// The amount of ETH required to include when creating a minipool (entering initialize / prelaunch)
 	PrelaunchValue *core.SimpleField[*big.Int]
 
@@ -109,6 +112,7 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 		EffectiveQueueCapacity: core.NewSimpleField[*big.Int](mq, "getEffectiveCapacity"),
 
 		// DAOProtocolSettingsMinipool
+		LaunchBalance:  core.NewSimpleField[*big.Int](dpsm, "getLaunchBalance"),
 		PrelaunchValue: core.NewSimpleField[*big.Int](dpsm, "getPreLaunchValue"),
 		StakeValue:     core.NewSimpleField[*big.Int](dpsm, "getVariableDepositAmount"),
 
