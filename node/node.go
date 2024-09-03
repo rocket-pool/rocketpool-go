@@ -80,6 +80,9 @@ type Node struct {
 	// The time the node last staked RPL
 	RplStakedTime *core.FormattedUint256Field[time.Time]
 
+	// The amount of ETH the node has provided as a bond to create its minipools
+	EthProvided *core.SimpleField[*big.Int]
+
 	// The amount of ETH the node has borrowed from the deposit pool to create its minipools
 	EthMatched *core.SimpleField[*big.Int]
 
@@ -209,6 +212,7 @@ func NewNode(rp *rocketpool.RocketPool, address common.Address) (*Node, error) {
 		MinimumRplStake:     core.NewSimpleField[*big.Int](nodeStaking, "getNodeMinimumRPLStake", address),
 		MaximumRplStake:     core.NewSimpleField[*big.Int](nodeStaking, "getNodeMaximumRPLStake", address),
 		RplStakedTime:       core.NewFormattedUint256Field[time.Time](nodeStaking, "getNodeRPLStakedTime", address),
+		EthProvided:         core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHProvided", address),
 		EthMatched:          core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatched", address),
 		EthMatchedLimit:     core.NewSimpleField[*big.Int](nodeStaking, "getNodeETHMatchedLimit", address),
 		RplLocked:           core.NewSimpleField[*big.Int](nodeStaking, "getNodeRPLLocked", address),
@@ -339,6 +343,11 @@ func (c *Node) ConfirmRplWithdrawalAddress(opts *bind.TransactOpts) (*eth.Transa
 // Get info for staking RPL
 func (c *Node) StakeRpl(rplAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
 	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "stakeRPL", opts, rplAmount)
+}
+
+// Get info for staking RPL on behalf of this node - should be called by something other than the node itself
+func (c *Node) StakeRplFor(rplAmount *big.Int, opts *bind.TransactOpts) (*eth.TransactionInfo, error) {
+	return c.txMgr.CreateTransactionInfo(c.nodeStaking.Contract, "stakeRPLFor", opts, c.Address, rplAmount)
 }
 
 // Get info for adding or removing an address from the stake-RPL-on-behalf allowlist

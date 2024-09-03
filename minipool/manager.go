@@ -48,10 +48,20 @@ type MinipoolManager struct {
 	// The effective capacity of the minipool queue (used in node demand calculation)
 	EffectiveQueueCapacity *core.SimpleField[*big.Int]
 
+	// The complete amount of ETH required for a validator to be activated on the Beacon Chain.
+	LaunchBalance *core.SimpleField[*big.Int]
+
+	// The amount of ETH required to include when creating a minipool (entering initialize / prelaunch)
+	PrelaunchValue *core.SimpleField[*big.Int]
+
+	// The amount of ETH that will be sent from a minipool to the Beacon deposit contract when staking the minipool
+	StakeValue *core.SimpleField[*big.Int]
+
 	// === Internal fields ===
 	rp    *rocketpool.RocketPool
 	mpMgr *core.Contract
 	mq    *core.Contract
+	dpsm  *core.Contract
 }
 
 // The counts of minipools per status
@@ -83,6 +93,10 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting minipool queue contract: %w", err)
 	}
+	dpsm, err := rp.GetContract(rocketpool.ContractName_RocketDAOProtocolSettingsMinipool)
+	if err != nil {
+		return nil, fmt.Errorf("error getting minipool DAO protocol settings contract: %w", err)
+	}
 
 	return &MinipoolManager{
 		// MinipoolManager
@@ -97,9 +111,15 @@ func NewMinipoolManager(rp *rocketpool.RocketPool) (*MinipoolManager, error) {
 		TotalQueueCapacity:     core.NewSimpleField[*big.Int](mq, "getTotalCapacity"),
 		EffectiveQueueCapacity: core.NewSimpleField[*big.Int](mq, "getEffectiveCapacity"),
 
+		// DAOProtocolSettingsMinipool
+		LaunchBalance:  core.NewSimpleField[*big.Int](dpsm, "getLaunchBalance"),
+		PrelaunchValue: core.NewSimpleField[*big.Int](dpsm, "getPreLaunchValue"),
+		StakeValue:     core.NewSimpleField[*big.Int](dpsm, "getVariableDepositAmount"),
+
 		rp:    rp,
 		mpMgr: mpMgr,
 		mq:    mq,
+		dpsm:  dpsm,
 	}, nil
 }
 

@@ -4,7 +4,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	batch "github.com/rocket-pool/batch-query"
+	"github.com/rocket-pool/node-manager-core/beacon"
 	"github.com/rocket-pool/node-manager-core/eth"
 	"github.com/rocket-pool/rocketpool-go/v2/types"
 )
@@ -38,6 +40,29 @@ func (f *SimpleField[ValueType]) AddToQuery(mc *batch.MultiCaller) {
 // Gets the field's value after it's been queried
 func (f *SimpleField[ValueType]) Get() ValueType {
 	return f.value
+}
+
+// Sets the field's value directly, instead of querying via the contracts.
+func (f *SimpleField[ValueType]) Set(value ValueType) {
+	switch val := any(&f.value).(type) {
+	case **big.Int:
+		castedValue := any(value).(*big.Int)
+		*val = big.NewInt(0).Set(castedValue)
+	case *common.Address:
+		castedValue := any(value).(common.Address)
+		copy((*val).Bytes(), castedValue.Bytes())
+	case *common.Hash:
+		castedValue := any(value).(common.Hash)
+		copy((*val).Bytes(), castedValue.Bytes())
+	case *beacon.ValidatorPubkey:
+		castedValue := any(value).(beacon.ValidatorPubkey)
+		copy((*val)[:], castedValue[:])
+	case *[]byte:
+		castedValue := any(value).([]byte)
+		copy(*val, castedValue)
+	default:
+		f.value = value
+	}
 }
 
 // =============================
@@ -97,6 +122,16 @@ func (f *FormattedUint256Field[ValueType]) Formatted() ValueType {
 	return out
 }
 
+// Sets the field's value directly to a well-formatted value, instead of querying via the contracts.
+func (f *FormattedUint256Field[ValueType]) Set(value ValueType) {
+	f.value = GetValueForUint256(value)
+}
+
+// Sets the field's value directly to a raw big.Int value, instead of querying via the contracts.
+func (f *FormattedUint256Field[ValueType]) SetRawValue(value *big.Int) {
+	f.value = new(big.Int).Set(value)
+}
+
 // ===========================
 // === FormattedUint8Field ===
 // ===========================
@@ -148,4 +183,9 @@ func (f *FormattedUint8Field[ValueType]) Formatted() ValueType {
 		*outPtr = types.ProtocolDaoProposalState(f.value)
 	}
 	return out
+}
+
+// Sets the field's value directly to a well-formatted value, instead of querying via the contracts.
+func (f *FormattedUint8Field[ValueType]) Set(value ValueType) {
+	f.value = uint8(value)
 }
