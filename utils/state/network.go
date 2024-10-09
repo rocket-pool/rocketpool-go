@@ -51,7 +51,7 @@ type NetworkDetails struct {
 	TotalRPLStake                 *big.Int
 	SmoothingPoolBalance          *big.Int
 	NodeFee                       float64
-	BalancesBlock                 *big.Int
+	BalancesBlock                 uint64
 	LatestReportableBalancesBlock uint64
 	SubmitBalancesEnabled         bool
 	SubmitPricesEnabled           bool
@@ -175,7 +175,7 @@ func NewNetworkDetails(rp *rocketpool.RocketPool, contracts *NetworkContracts, i
 	details.ETHUtilizationRate = eth.WeiToEth(ethUtilizationRate)
 	details.RETHExchangeRate = eth.WeiToEth(rETHExchangeRate)
 	details.NodeFee = eth.WeiToEth(nodeFee)
-	details.BalancesBlock = balancesBlock
+	details.BalancesBlock = balancesBlock.Uint64()
 	details.MinipoolLaunchTimeout = minipoolLaunchTimeout
 	details.PromotionScrubPeriod = convertToDuration(promotionScrubPeriodSeconds)
 	details.BondReductionWindowStart = convertToDuration(windowStartRaw)
