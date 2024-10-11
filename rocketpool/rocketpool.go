@@ -277,6 +277,9 @@ func (rp *RocketPool) GetProtocolVersion(opts *bind.CallOpts) (*version.Version,
 	if _, exists := rp.contracts[ContractName_RocketNodeManager]; !exists {
 		contractsToLoad = append(contractsToLoad, ContractName_RocketNodeManager)
 	}
+	if _, exists := rp.contracts[ContractName_RocketNetworkVoting]; !exists {
+		contractsToLoad = append(contractsToLoad, ContractName_RocketNetworkVoting)
+	}
 	if len(contractsToLoad) > 0 {
 		err = rp.LoadContracts(opts, contractsToLoad...)
 		if err != nil {
@@ -291,9 +294,20 @@ func (rp *RocketPool) GetProtocolVersion(opts *bind.CallOpts) (*version.Version,
 	if err != nil {
 		return nil, fmt.Errorf("error getting node manager contract: %w", err)
 	}
+	rocketNetworkVoting, err := rp.GetContract(ContractName_RocketNetworkVoting)
+	if err != nil {
+		return nil, fmt.Errorf("error getting node manager contract: %w", err)
+	}
 
 	nodeStakingVersion := nodeStaking.Version
 	nodeMgrVersion := nodeMgr.Version
+	rocketNetworkVotingVersion := rocketNetworkVoting.Version
+
+	// Check for v1.3.1 (Houston Hotfix)
+	if rocketNetworkVotingVersion > 1 {
+		return version.NewSemver("1.3.1")
+	}
+
 	// Check for v1.3 (Houston)
 	if nodeStakingVersion > 4 {
 		return version.NewSemver("1.3.0")
